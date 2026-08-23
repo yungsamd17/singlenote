@@ -21,6 +21,7 @@ import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,6 +40,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -52,6 +55,7 @@ import com.yungsamd17.singlenote.R
 fun NoteScreen(
     viewModel: NoteViewModel,
     onOpenArchive: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
@@ -102,6 +106,12 @@ fun NoteScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            Icons.Outlined.Settings,
+                            contentDescription = stringResource(R.string.cd_open_settings)
+                        )
+                    }
                     IconButton(onClick = ::requestPinToggle) {
                         Icon(
                             if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
@@ -132,9 +142,21 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
+        val editorFontFamily = when (viewModel.fontFamily.collectAsStateWithLifecycle().value) {
+            "mono" -> FontFamily.Monospace
+            "serif" -> FontFamily.Serif
+            else -> FontFamily.SansSerif
+        }
+        val editorFontSize = when (viewModel.textSize.collectAsStateWithLifecycle().value) {
+            "small" -> 18.sp
+            "large" -> 28.sp
+            else -> 22.sp
+        }
         NoteEditor(
             text = text,
             onTextChange = viewModel::onTextChange,
+            fontFamily = editorFontFamily,
+            fontSize = editorFontSize,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -146,6 +168,8 @@ fun NoteScreen(
 private fun NoteEditor(
     text: String,
     onTextChange: (String) -> Unit,
+    fontFamily: FontFamily,
+    fontSize: TextUnit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState: ScrollState = rememberScrollState()
@@ -154,8 +178,9 @@ private fun NoteEditor(
         onValueChange = onTextChange,
         modifier = modifier.verticalScroll(scrollState),
         textStyle = TextStyle(
-            fontSize = 22.sp,
-            lineHeight = 32.sp,
+            fontFamily = fontFamily,
+            fontSize = fontSize,
+            lineHeight = (fontSize.value * 1.45f).sp,
             color = MaterialTheme.colorScheme.onSurface
         ),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -170,8 +195,9 @@ private fun NoteEditor(
                     Text(
                         text = stringResource(R.string.hint_write_one_thing),
                         style = TextStyle(
-                            fontSize = 22.sp,
-                            lineHeight = 32.sp
+                            fontFamily = fontFamily,
+                            fontSize = fontSize,
+                            lineHeight = (fontSize.value * 1.45f).sp
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

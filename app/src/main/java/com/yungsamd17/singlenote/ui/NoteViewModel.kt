@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.Note
-import com.yungsamd17.singlenote.data.NoteRepository
+import com.yungsamd17.singlenote.data.NoteStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,16 +15,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
+class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text.asStateFlow()
 
-    val pinned: StateFlow<Boolean> = repository.pinned
+    val pinned: StateFlow<Boolean> = store.pinned
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val fontFamily: StateFlow<String> = store.fontFamily
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
+
+    val textSize: StateFlow<String> = store.textSize
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
+
     fun togglePinned() {
-        viewModelScope.launch { repository.setPinned(!pinned.value) }
+        viewModelScope.launch { store.setPinned(!pinned.value) }
     }
 
     private var currentNoteId: Long? = null
@@ -32,7 +38,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            adopt(repository.activeNote.first())
+            adopt(store.activeNote.first())
         }
     }
 
@@ -43,7 +49,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
     fun refreshFromDatabase() {
         viewModelScope.launch {
-            adopt(repository.getActive())
+            adopt(store.getActive())
         }
     }
 
@@ -56,7 +62,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         saveJob?.cancel()
         viewModelScope.launch {
             persist()
-            repository.archiveActive()
+            store.archiveActive()
             currentNoteId = null
             _text.value = ""
         }
@@ -70,7 +76,7 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
         }
     }
 
-    private suspend fun persist() = repository.saveActive(_text.value)
+    private suspend fun persist() = store.saveActive(_text.value)
 
     private fun adopt(note: Note?) {
         if (note?.id == currentNoteId) return
@@ -82,10 +88,10 @@ class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
     companion object {
         private const val SAVE_DEBOUNCE_MS = 500L
 
-        fun factory(repository: NoteRepository) = object : ViewModelProvider.Factory {
+        fun factory(store: NoteStore) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                NoteViewModel(repository) as T
+                NoteViewModel(store) as T
         }
     }
 }

@@ -9,6 +9,8 @@ import android.service.quicksettings.TileService
 import com.yungsamd17.singlenote.MainActivity
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
+import com.yungsamd17.singlenote.util.firstNonBlankLine
+import com.yungsamd17.singlenote.util.truncate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,9 +28,8 @@ class NoteTileService : TileService() {
             val summary = withContext(Dispatchers.Default) {
                 AppDatabase.get(applicationContext).noteDao().getActive()
                     ?.content
-                    ?.lineSequence()
-                    ?.firstOrNull { it.isNotBlank() }
-                    ?.take(MAX_SUBTITLE_LENGTH)
+                    ?.let(::firstNonBlankLine)
+                    ?.let { truncate(it, MAX_SUBTITLE_LENGTH) }
             }
             val tile = qsTile ?: return@launch
             tile.label = getString(R.string.app_name)

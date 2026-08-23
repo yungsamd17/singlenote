@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import kotlinx.coroutines.flow.Flow
 
 const val ACTION_NOTE_UPDATED = "com.yungsamd17.singlenote.NOTE_UPDATED"
 
@@ -27,41 +28,63 @@ abstract class AppDatabase : RoomDatabase() {
     }
 }
 
-class NoteRepository(private val dao: NoteDao, private val context: Context) {
+interface NoteStore {
+    val activeNote: Flow<Note?>
+    val pinned: Flow<Boolean>
+    val themeMode: Flow<String>
+    val fontFamily: Flow<String>
+    val textSize: Flow<String>
+
+    suspend fun getActive(): Note?
+    suspend fun saveActive(content: String)
+    suspend fun archiveActive()
+    suspend fun setPinned(value: Boolean)
+    suspend fun setThemeMode(value: String)
+    suspend fun setFontFamily(value: String)
+    suspend fun setTextSize(value: String)
+}
+
+interface ArchiveStore {
+    val archivedNotes: Flow<List<Note>>
+    suspend fun restore(noteId: Long): Boolean
+    suspend fun deleteArchived(noteId: Long)
+}
+
+class NoteRepository(private val dao: NoteDao, private val context: Context) :
+    NoteStore, ArchiveStore {
 
     private val preferences = NotePreferences(context)
 
-    val activeNote: Flow<Note?> = dao.observeActive()
-    val archivedNotes: Flow<List<Note>> = dao.observeArchived()
-    val pinned: Flow<Boolean> = preferences.pinned
+    override val activeNote: Flow<Note?> = dao.observeActive()
+    override val pinned: Flow<Boolean> = preferences.pinned
+    override val themeMode: Flow<String> = preferences.themeMode
+    override val fontFamily: Flow<String> = preferences.fontFamily
+    override val textSize: Flow<String> = preferences.textSize
+    override val archivedNotes: Flow<List<Note>> = dao.observeArchived()
 
-    suspend fun getActive(): Note? = dao.getActive()
+    override suspend fun getActive(): Note? = dao.getActive()
 
-    suspend fun setPinned(value: Boolean) {
-        preferences.setPinned(value)
-        notifyNoteChanged()
-    }
-
-    suspend fun saveActive(content: String) {
+    override suspend fun saveActive(content: String) {
         val now = System.currentTimeMillis()
         val existing = dao.getActive()
         when {
             existing == null && content.isBlank() -> return
-            existing == null -> dao.insert(Note(content = content, createdAt = now, updatedAt = now))
+            existing == null ->
+                dao.insert(Note(content = content, createdAt = now, updatedAt = now))
             existing.content != content ->
                 dao.update(existing.copy(content = content, updatedAt = now))
         }
         notifyNoteChanged()
     }
 
-    suspend fun archiveActive() {
+    override suspend fun archiveActive() {
         dao.getActive()?.let {
             dao.archive(it.id)
             notifyNoteChanged()
         }
     }
 
-    suspend fun restore(noteId: Long): Boolean {
+    override suspend fun restore(noteId: Long): Boolean {
         val canRestore = dao.getActive() == null
         if (canRestore) {
             dao.restore(noteId)
@@ -70,7 +93,18 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) {
         return canRestore
     }
 
-    suspend fun deleteArchived(noteId: Long) = dao.deleteById(noteId)
+    override suspend fun deleteArchived(noteId: Long) = dao.deleteById(noteId)
+
+    override suspend fun setPinned(value: Boolean) {
+        preferences.setPinned(value)
+        notifyNoteChanged()
+    }
+
+    override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
+
+    override suspend fun setFontFamily(value: String) = preferences.setFontFamily(value)
+
+    override suspend fun setTextSize(value: String) = preferences.setTextSize(value)
 
     private suspend fun notifyNoteChanged() {
         context.sendBroadcast(Intent(ACTION_NOTE_UPDATED).setPackage(context.packageName))
