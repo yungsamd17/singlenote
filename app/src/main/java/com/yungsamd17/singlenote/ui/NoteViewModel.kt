@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NoteStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay

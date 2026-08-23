@@ -56,7 +56,6 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = "note") {
                         composable("note") {
-                            FirstRunTip()
                             NoteScreen(
                                 viewModel = viewModel(factory = NoteViewModel.factory(repository)),
                                 onOpenArchive = { navController.navigate("archive") },
@@ -76,6 +75,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     }
+                    FirstRunTip()
                 }
             }
         }
