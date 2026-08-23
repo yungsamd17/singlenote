@@ -17,6 +17,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".widget.SinglenoteWidgetReceiver"
+            android:exported="false"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/singlenote_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.NoteChangedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.yungsamd17.singlenote.NOTE_UPDATED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
