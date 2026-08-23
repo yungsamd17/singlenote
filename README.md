@@ -1,6 +1,6 @@
-# Singlenote
-
 <div align="center">
+
+# Singlenote
 
 **Focus on one note at a time.**
 
@@ -34,10 +34,10 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 Grab the latest APK from [Releases](https://github.com/yungsamd17/singlenote/releases/latest):
 
-| | |
+| Requirement | Detail |
 |---|---|
-| **Requires** | Android 10 (API 29) or newer |
-| **Recommended** | `app-release.apk` (`app-debug.apk` also available) |
+| **OS** | Android 10 (API 29) or newer |
+| **APK** | `app-release.apk` recommended — `app-debug.apk` also available |
 
 ## Build
 
