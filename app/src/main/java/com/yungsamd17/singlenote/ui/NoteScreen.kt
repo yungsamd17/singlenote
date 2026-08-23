@@ -38,7 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.tooltipTrigger
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -276,7 +276,7 @@ private fun TooltipIconButton(
     onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val tooltipState = remember { PlainTooltipState() }
+    val tooltipState = rememberTooltipState()
     TooltipBox(
         positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
         tooltip = { PlainTooltip { Text(tooltip) } },

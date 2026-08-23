@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
+import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
@@ -370,4 +371,25 @@ private fun AboutDialog(onDismiss: () -> Unit) {
 
 private fun openUrl(context: Context, url: String) {
     context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+}
+
+@Composable
+private fun themeLabel(key: String): String = when (key) {
+    NotePreferences.THEME_LIGHT -> stringResource(R.string.theme_light)
+    NotePreferences.THEME_DARK -> stringResource(R.string.theme_dark)
+    else -> stringResource(R.string.theme_system)
+}
+
+@Composable
+private fun fontLabel(key: String): String = when (key) {
+    NotePreferences.FONT_MONO -> stringResource(R.string.font_mono)
+    NotePreferences.FONT_SERIF -> stringResource(R.string.font_serif)
+    else -> stringResource(R.string.font_default)
+}
+
+@Composable
+private fun sizeLabel(key: String): String = when (key) {
+    NotePreferences.SIZE_SMALL -> stringResource(R.string.size_small)
+    NotePreferences.SIZE_LARGE -> stringResource(R.string.size_large)
+    else -> stringResource(R.string.size_medium)
 }
