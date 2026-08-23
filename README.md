@@ -11,7 +11,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 [![Release](https://img.shields.io/github/v/release/yungsamd17/singlenote?logo=github)](https://github.com/yungsamd17/singlenote/releases/latest)
 [![License](https://img.shields.io/github/license/yungsamd17/singlenote)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)](https://www.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 
 [Download](https://github.com/yungsamd17/singlenote/releases/latest) · [Report a bug](https://github.com/yungsamd17/singlenote/issues) · [Request a feature](https://github.com/yungsamd17/singlenote/issues)
 
