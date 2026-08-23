@@ -12,7 +12,9 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -153,10 +155,12 @@ fun NoteScreen(
                         }
                         DropdownMenu(
                             expanded = menuOpen,
-                            onDismissRequest = { menuOpen = false }
+                            onDismissRequest = { menuOpen = false },
+                            modifier = Modifier.widthIn(min = 200.dp)
                         ) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_share)) },
+                                modifier = Modifier.heightIn(min = 56.dp),
                                 enabled = text.isNotBlank(),
                                 onClick = {
                                     menuOpen = false
@@ -165,6 +169,7 @@ fun NoteScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_copy)) },
+                                modifier = Modifier.heightIn(min = 56.dp),
                                 enabled = text.isNotBlank(),
                                 onClick = {
                                     menuOpen = false
@@ -173,6 +178,7 @@ fun NoteScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_settings)) },
+                                modifier = Modifier.heightIn(min = 56.dp),
                                 onClick = {
                                     menuOpen = false
                                     onOpenSettings()

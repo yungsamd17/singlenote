@@ -27,7 +27,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.BuildConfig
@@ -60,7 +58,6 @@ import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
-import java.util.Calendar
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
 private const val AUTHOR_URL = "https://github.com/yungsamd17"
@@ -174,29 +171,7 @@ fun SettingsScreen(
                         onClick = { openUrl(context, GITHUB_URL) }
                     )
                 }
-                SettingCard {
-                    ValueRow(
-                        icon = Icons.Outlined.Person,
-                        title = stringResource(R.string.about_author),
-                        value = stringResource(R.string.about_author_name),
-                        onClick = { openUrl(context, AUTHOR_URL) }
-                    )
-                }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = stringResource(
-                    R.string.settings_footer,
-                    Calendar.getInstance().get(Calendar.YEAR)
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
-                textAlign = TextAlign.Center
-            )
         }
     }
 

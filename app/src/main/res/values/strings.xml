@@ -55,6 +55,4 @@
     <string name="about_source_code">Source code</string>
     <string name="about_inspired">Inspired by Mononote</string>
     <string name="about_author">Author</string>
-    <string name="about_author_name">yungsamd17</string>
-    <string name="settings_footer">© %1$d yungsamd17</string>
 </resources>
