@@ -26,6 +26,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val showPinButton: StateFlow<Boolean> = store.showPinButton
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     fun setThemeMode(value: String) {
         viewModelScope.launch { store.setThemeMode(value) }
     }
@@ -40,6 +43,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setNotificationsEnabled(value: Boolean) {
         viewModelScope.launch { store.setNotificationsEnabled(value) }
+    }
+
+    fun setShowPinButton(value: Boolean) {
+        viewModelScope.launch { store.setShowPinButton(value) }
     }
 
     companion object {

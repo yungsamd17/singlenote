@@ -71,6 +71,7 @@ fun NoteScreen(
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val pinned by viewModel.pinned.collectAsStateWithLifecycle()
+    val showPinButton by viewModel.showPinButton.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -122,18 +123,20 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    TooltipIconButton(
-                        tooltip = stringResource(
-                            if (pinned) R.string.cd_unpin else R.string.cd_pin
-                        ),
-                        onClick = ::requestPinToggle
-                    ) {
-                        Icon(
-                            if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                            contentDescription = stringResource(
+                    if (showPinButton) {
+                        TooltipIconButton(
+                            tooltip = stringResource(
                                 if (pinned) R.string.cd_unpin else R.string.cd_pin
+                            ),
+                            onClick = ::requestPinToggle
+                        ) {
+                            Icon(
+                                if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                                contentDescription = stringResource(
+                                    if (pinned) R.string.cd_unpin else R.string.cd_pin
+                                )
                             )
-                        )
+                        }
                     }
                     TooltipIconButton(
                         tooltip = stringResource(R.string.cd_archive),

@@ -27,6 +27,7 @@ class NoteViewModelTest {
         override val activeNote = MutableStateFlow<Note?>(null)
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
+        override val showPinButton = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -54,6 +55,10 @@ class NoteViewModelTest {
 
         override suspend fun setNotificationsEnabled(value: Boolean) {
             notificationsEnabled.value = value
+        }
+
+        override suspend fun setShowPinButton(value: Boolean) {
+            showPinButton.value = value
         }
 
         override suspend fun setThemeMode(value: String) {}

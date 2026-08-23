@@ -3,6 +3,7 @@ package com.yungsamd17.singlenote.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,25 +11,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.FontDownload
+import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -42,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.BuildConfig
@@ -50,8 +61,10 @@ import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
+import java.util.Calendar
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
+private const val AUTHOR_URL = "https://github.com/yungsamd17"
 private const val LICENSE_URL = "https://github.com/yungsamd17/singlenote/blob/main/LICENSE"
 private const val MONONOTE_URL = "https://www.digitalminimalist.com/apps/mononote"
 
@@ -72,13 +85,14 @@ fun SettingsScreen(
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSize by viewModel.textSize.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val showPinButton by viewModel.showPinButton.collectAsStateWithLifecycle()
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -95,59 +109,105 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
         ) {
-            SectionHeader(
-                icon = Icons.Outlined.Palette,
-                title = stringResource(R.string.settings_section_appearance)
-            )
-            SelectRow(
-                icon = null,
-                title = stringResource(R.string.settings_theme),
-                currentValue = themeLabel(themeMode),
-                onClick = { openDialog = DIALOG_THEME }
-            )
-            SelectRow(
-                icon = null,
-                title = stringResource(R.string.settings_font),
-                currentValue = fontLabel(fontFamily),
-                onClick = { openDialog = DIALOG_FONT }
-            )
-            SelectRow(
-                icon = null,
-                title = stringResource(R.string.settings_text_size),
-                currentValue = sizeLabel(textSize),
-                onClick = { openDialog = DIALOG_SIZE }
+            Text(
+                text = stringResource(R.string.settings_title),
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(top = 8.dp, bottom = 20.dp)
             )
 
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+            SectionLabel(text = stringResource(R.string.settings_section_appearance))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.Palette,
+                        title = stringResource(R.string.settings_theme),
+                        value = themeLabel(themeMode),
+                        onClick = { openDialog = DIALOG_THEME }
+                    )
+                }
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.FontDownload,
+                        title = stringResource(R.string.settings_font),
+                        value = fontLabel(fontFamily),
+                        onClick = { openDialog = DIALOG_FONT }
+                    )
+                }
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.FormatSize,
+                        title = stringResource(R.string.settings_text_size),
+                        value = sizeLabel(textSize),
+                        onClick = { openDialog = DIALOG_SIZE }
+                    )
+                }
+            }
 
-            SectionHeader(
-                icon = Icons.Outlined.Notifications,
-                title = stringResource(R.string.settings_section_notifications)
+            SectionLabel(text = stringResource(R.string.settings_section_notifications))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SettingCard {
+                    ToggleRow(
+                        icon = Icons.Outlined.PushPin,
+                        title = stringResource(R.string.setting_show_pin_button),
+                        subtitle = stringResource(R.string.setting_show_pin_button_desc),
+                        checked = showPinButton,
+                        onCheckedChange = { viewModel.setShowPinButton(it) }
+                    )
+                }
+                SettingCard {
+                    ToggleRow(
+                        icon = Icons.Outlined.Notifications,
+                        title = stringResource(R.string.setting_show_notifications),
+                        subtitle = stringResource(R.string.setting_show_notifications_desc),
+                        checked = notificationsEnabled,
+                        onCheckedChange = { viewModel.setNotificationsEnabled(it) }
+                    )
+                }
+            }
+
+            SectionLabel(text = stringResource(R.string.settings_section_about))
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.Info,
+                        title = stringResource(R.string.about_title),
+                        value = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
+                        onClick = { openDialog = DIALOG_ABOUT }
+                    )
+                }
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.Code,
+                        title = stringResource(R.string.about_source_code),
+                        value = GITHUB_URL.removePrefix("https://"),
+                        onClick = { openUrl(context, GITHUB_URL) }
+                    )
+                }
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.Person,
+                        title = stringResource(R.string.about_author),
+                        value = stringResource(R.string.about_author_name),
+                        onClick = { openUrl(context, AUTHOR_URL) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(
+                    R.string.settings_footer,
+                    Calendar.getInstance().get(Calendar.YEAR)
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                textAlign = TextAlign.Center
             )
-            ToggleRow(
-                title = stringResource(R.string.setting_show_notifications),
-                subtitle = stringResource(R.string.setting_show_notifications_desc),
-                checked = notificationsEnabled,
-                onCheckedChange = { viewModel.setNotificationsEnabled(it) }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-
-            SectionHeader(
-                icon = Icons.Outlined.Info,
-                title = stringResource(R.string.settings_section_about)
-            )
-            LinkRow(
-                icon = Icons.Outlined.Info,
-                title = stringResource(R.string.about_title)
-            ) { openDialog = DIALOG_ABOUT }
-            LinkRow(
-                icon = Icons.Outlined.Code,
-                title = stringResource(R.string.about_source_code)
-            ) { openUrl(context, GITHUB_URL) }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 
@@ -187,57 +247,55 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SectionHeader(icon: ImageVector, title: String) {
-    Row(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(start = 12.dp)
-        )
+private fun SectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 4.dp, top = 20.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
+private fun SettingCard(content: @Composable () -> Unit) {
+    Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) { content() }
     }
 }
 
 @Composable
-private fun SelectRow(
-    icon: ImageVector?,
+private fun ValueRow(
+    icon: ImageVector,
     title: String,
-    currentValue: String,
+    value: String,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = false, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Column(modifier = Modifier.padding(start = 20.dp)) {
             Text(text = title, style = MaterialTheme.typography.bodyLarge)
             Text(
-                text = currentValue,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
             )
         }
-        Text(
-            text = stringResource(R.string.change),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
     }
 }
 
 @Composable
 private fun ToggleRow(
+    icon: ImageVector,
     title: String,
     subtitle: String,
     checked: Boolean,
@@ -246,32 +304,8 @@ private fun ToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
-
-@Composable
-private fun LinkRow(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .selectable(selected = false, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .selectable(selected = checked, onClick = { onCheckedChange(!checked) })
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -279,10 +313,28 @@ private fun LinkRow(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 16.dp)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 20.dp, end = 12.dp)
+        ) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            thumbContent = {
+                Icon(
+                    imageVector = if (checked) Icons.Filled.Check else Icons.Outlined.Close,
+                    contentDescription = null,
+                    modifier = Modifier.size(SwitchDefaults.IconSize)
+                )
+            }
         )
     }
 }
@@ -352,6 +404,9 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                     }
                     TextButton(onClick = { openUrl(context, LICENSE_URL) }) {
                         Text(stringResource(R.string.about_license))
+                    }
+                    TextButton(onClick = { openUrl(context, AUTHOR_URL) }) {
+                        Text(stringResource(R.string.about_author))
                     }
                 }
                 TextButton(onClick = { openUrl(context, MONONOTE_URL) }) {
