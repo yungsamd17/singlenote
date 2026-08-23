@@ -46,8 +46,6 @@
     <string name="settings_section_about">About</string>
     <string name="setting_show_notifications">Pinned notification</string>
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
-    <string name="setting_show_pin_button">Pin button in top bar</string>
-    <string name="setting_show_pin_button_desc">Show the pin action in the top bar</string>
     <string name="change">Change</string>
     <string name="about_title">About Singlenote</string>
     <string name="about_version">Version %1$s</string>

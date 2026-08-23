@@ -28,7 +28,6 @@ import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -85,7 +84,6 @@ fun SettingsScreen(
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSize by viewModel.textSize.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
-    val showPinButton by viewModel.showPinButton.collectAsStateWithLifecycle()
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
 
@@ -147,15 +145,6 @@ fun SettingsScreen(
 
             SectionLabel(text = stringResource(R.string.settings_section_notifications))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SettingCard {
-                    ToggleRow(
-                        icon = Icons.Outlined.PushPin,
-                        title = stringResource(R.string.setting_show_pin_button),
-                        subtitle = stringResource(R.string.setting_show_pin_button_desc),
-                        checked = showPinButton,
-                        onCheckedChange = { viewModel.setShowPinButton(it) }
-                    )
-                }
                 SettingCard {
                     ToggleRow(
                         icon = Icons.Outlined.Notifications,
@@ -370,7 +359,9 @@ private fun SelectionDialog(
                 }
             }
         },
-        confirmButton = {}
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        }
     )
 }
 

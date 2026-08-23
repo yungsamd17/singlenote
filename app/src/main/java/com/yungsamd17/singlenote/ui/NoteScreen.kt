@@ -18,17 +18,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
-import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +67,7 @@ fun NoteScreen(
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val pinned by viewModel.pinned.collectAsStateWithLifecycle()
-    val showPinButton by viewModel.showPinButton.collectAsStateWithLifecycle()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -123,7 +119,7 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    if (showPinButton) {
+                    if (notificationsEnabled) {
                         TooltipIconButton(
                             tooltip = stringResource(
                                 if (pinned) R.string.cd_unpin else R.string.cd_pin
@@ -161,7 +157,6 @@ fun NoteScreen(
                         ) {
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_share)) },
-                                leadingIcon = { Icon(Icons.Outlined.Share, null) },
                                 enabled = text.isNotBlank(),
                                 onClick = {
                                     menuOpen = false
@@ -170,17 +165,14 @@ fun NoteScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_copy)) },
-                                leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) },
                                 enabled = text.isNotBlank(),
                                 onClick = {
                                     menuOpen = false
                                     copyNote(context, text)
                                 }
                             )
-                            HorizontalDivider()
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.menu_settings)) },
-                                leadingIcon = { Icon(Icons.Outlined.Settings, null) },
                                 onClick = {
                                     menuOpen = false
                                     onOpenSettings()

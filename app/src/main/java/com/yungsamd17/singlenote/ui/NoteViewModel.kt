@@ -28,9 +28,6 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    val showPinButton: StateFlow<Boolean> = store.showPinButton
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
     val fontFamily: StateFlow<String> = store.fontFamily
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
 
