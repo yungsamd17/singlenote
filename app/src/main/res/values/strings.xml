@@ -9,6 +9,8 @@
     <string name="cd_unpin">Unpin note</string>
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
+    <string name="tile_label">Singlenote</string>
+    <string name="tile_no_note">Write a note first</string>
     <string name="archive_title">Archive</string>
     <string name="cd_back">Back</string>
     <string name="cd_open_archive">Open archive</string>

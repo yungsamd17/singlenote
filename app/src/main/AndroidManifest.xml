@@ -40,6 +40,20 @@
                 <action android:name="com.yungsamd17.singlenote.NOTE_UPDATED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".tile.NoteTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+        </service>
     </application>
 
 </manifest>
