@@ -1,6 +1,7 @@
 package com.yungsamd17.singlenote.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,21 +28,22 @@ class SinglenoteWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val note = AppDatabase.get(context).noteDao().getActive()
+        val openIntent = Intent(context, MainActivity::class.java)
         provideContent {
-            WidgetContent(content = note?.content.orEmpty())
+            WidgetContent(openIntent = openIntent, content = note?.content.orEmpty())
         }
     }
 }
 
 @Composable
-private fun WidgetContent(content: String) {
+private fun WidgetContent(openIntent: Intent, content: String) {
     GlanceTheme {
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
                 .background(GlanceTheme.colors.widgetBackground)
                 .cornerRadius(16.dp)
-                .clickable(actionStartActivity<MainActivity>())
+                .clickable(actionStartActivity(openIntent))
                 .padding(14.dp),
             contentAlignment = Alignment.CenterStart
         ) {
