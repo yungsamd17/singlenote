@@ -9,7 +9,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 [![Build](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml/badge.svg)](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/yungsamd17/singlenote?logo=github)](https://github.com/yungsamd17/singlenote/releases/latest)
-[![License](https://img.shields.io/github/license/yungsamd17/singlenote)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 [![Android](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)](https://www.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 
