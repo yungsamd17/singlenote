@@ -8,15 +8,24 @@ import com.yungsamd17.singlenote.data.NoteRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class NoteViewModel(private val repository: NoteRepository) : ViewModel() {
 
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text.asStateFlow()
+
+    val pinned: StateFlow<Boolean> = repository.pinned
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun togglePinned() {
+        viewModelScope.launch { repository.setPinned(!pinned.value) }
+    }
 
     private var currentNoteId: Long? = null
     private var saveJob: Job? = null

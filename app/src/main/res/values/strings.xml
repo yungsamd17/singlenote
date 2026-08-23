@@ -5,6 +5,10 @@
     <string name="cd_share">Share note</string>
     <string name="cd_copy">Copy note</string>
     <string name="cd_archive">Archive note</string>
+    <string name="cd_pin">Pin note to notifications</string>
+    <string name="cd_unpin">Unpin note</string>
+    <string name="channel_pinned_name">Pinned note</string>
+    <string name="channel_pinned_description">Shows your current note so it stays visible</string>
     <string name="archive_title">Archive</string>
     <string name="cd_back">Back</string>
     <string name="cd_open_archive">Open archive</string>

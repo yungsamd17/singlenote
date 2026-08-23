@@ -29,10 +29,18 @@ abstract class AppDatabase : RoomDatabase() {
 
 class NoteRepository(private val dao: NoteDao, private val context: Context) {
 
+    private val preferences = NotePreferences(context)
+
     val activeNote: Flow<Note?> = dao.observeActive()
     val archivedNotes: Flow<List<Note>> = dao.observeArchived()
+    val pinned: Flow<Boolean> = preferences.pinned
 
     suspend fun getActive(): Note? = dao.getActive()
+
+    suspend fun setPinned(value: Boolean) {
+        preferences.setPinned(value)
+        notifyNoteChanged()
+    }
 
     suspend fun saveActive(content: String) {
         val now = System.currentTimeMillis()
