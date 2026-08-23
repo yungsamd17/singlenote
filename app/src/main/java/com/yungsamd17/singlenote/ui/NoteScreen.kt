@@ -1,0 +1,149 @@
+package com.yungsamd17.singlenote.ui
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import androidx.compose.foundation.BasicTextField
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yungsamd17.singlenote.R
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NoteScreen(viewModel: NoteViewModel) {
+    val context = LocalContext.current
+    val text by viewModel.text.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> viewModel.refreshFromDatabase()
+                Lifecycle.Event.ON_STOP -> viewModel.flushSave()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.app_name)) },
+                actions = {
+                    IconButton(
+                        onClick = { shareNote(context, text) },
+                        enabled = text.isNotBlank()
+                    ) {
+                        Icon(Icons.Outlined.Share, contentDescription = stringResource(R.string.cd_share))
+                    }
+                    IconButton(
+                        onClick = { copyNote(context, text) },
+                        enabled = text.isNotBlank()
+                    ) {
+                        Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
+                    }
+                    IconButton(
+                        onClick = { viewModel.archiveCurrent() },
+                        enabled = text.isNotBlank()
+                    ) {
+                        Icon(Icons.Outlined.Archive, contentDescription = stringResource(R.string.cd_archive))
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        NoteEditor(
+            text = text,
+            onTextChange = viewModel::onTextChange,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        )
+    }
+}
+
+@Composable
+private fun NoteEditor(
+    text: String,
+    onTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState: ScrollState = rememberScrollState()
+    BasicTextField(
+        value = text,
+        onValueChange = onTextChange,
+        modifier = modifier.verticalScroll(scrollState),
+        textStyle = TextStyle(
+            fontSize = 22.sp,
+            lineHeight = 32.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                if (text.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.hint_write_one_thing),
+                        style = TextStyle(
+                            fontSize = 22.sp,
+                            lineHeight = 32.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                innerTextField()
+            }
+        }
+    )
+}
+
+private fun shareNote(context: Context, text: String) {
+    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(Intent.EXTRA_TEXT, text)
+    }
+    context.startActivity(Intent.createChooser(sendIntent, null))
+}
+
+private fun copyNote(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
+}

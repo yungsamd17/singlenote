@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Singlenote</string>
+    <string name="hint_write_one_thing">Write one thing to remember…</string>
+    <string name="cd_share">Share note</string>
+    <string name="cd_copy">Copy note</string>
+    <string name="cd_archive">Archive note</string>
+    <string name="cd_restore">Restore note</string>
+    <string name="cd_delete">Delete permanently</string>
+    <string name="archive_empty">Nothing archived yet.</string>
+    <string name="delete_dialog_title">Delete forever?</string>
+    <string name="delete_dialog_confirm">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="restored">Note restored</string>
+    <string name="no_active_note_warning">Archive is full — archive your current note first to restore this one.</string>
 </resources>
