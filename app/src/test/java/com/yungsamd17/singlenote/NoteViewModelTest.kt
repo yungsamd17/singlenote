@@ -10,6 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -65,7 +67,7 @@ class NoteViewModelTest {
     }
 
     private fun TestScope.installMain() {
-        Dispatchers.setMain(StandardTestDispatcher(scheduler))
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
     }
 
     @Test
