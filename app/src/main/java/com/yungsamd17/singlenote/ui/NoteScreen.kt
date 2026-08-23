@@ -284,8 +284,7 @@ private fun TooltipIconButton(
     ) {
         IconButton(
             onClick = onClick,
-            enabled = enabled,
-            modifier = Modifier.tooltipTrigger()
+            enabled = enabled
         ) {
             content()
         }
