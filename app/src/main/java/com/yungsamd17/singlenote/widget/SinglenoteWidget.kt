@@ -51,9 +51,9 @@ private fun WidgetContent(openIntent: Intent, content: String) {
                 text = content.ifBlank { FALLBACK_HINT },
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
-                    fontSize = 14.sp
+                    fontSize = 18.sp
                 ),
-                maxLines = 8
+                maxLines = 6
             )
         }
     }

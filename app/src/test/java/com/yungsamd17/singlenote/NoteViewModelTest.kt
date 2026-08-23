@@ -26,6 +26,7 @@ class NoteViewModelTest {
     private class FakeNoteStore : NoteStore {
         override val activeNote = MutableStateFlow<Note?>(null)
         override val pinned = MutableStateFlow(false)
+        override val notificationsEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -49,6 +50,10 @@ class NoteViewModelTest {
 
         override suspend fun setPinned(value: Boolean) {
             pinned.value = value
+        }
+
+        override suspend fun setNotificationsEnabled(value: Boolean) {
+            notificationsEnabled.value = value
         }
 
         override suspend fun setThemeMode(value: String) {}

@@ -23,6 +23,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val textSize: StateFlow<String> = store.textSize
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
 
+    val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     fun setThemeMode(value: String) {
         viewModelScope.launch { store.setThemeMode(value) }
     }
@@ -33,6 +36,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setTextSize(value: String) {
         viewModelScope.launch { store.setTextSize(value) }
+    }
+
+    fun setNotificationsEnabled(value: Boolean) {
+        viewModelScope.launch { store.setNotificationsEnabled(value) }
     }
 
     companion object {

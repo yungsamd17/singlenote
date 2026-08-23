@@ -36,11 +36,13 @@ object PinNotification {
     suspend fun refresh(context: Context) {
         ensureChannel(context)
         val manager = NotificationManagerCompat.from(context)
+        val prefs = NotePreferences(context)
 
-        val pinned = NotePreferences(context).pinned.first()
+        val notificationsEnabled = prefs.notificationsEnabled.first()
+        val pinned = prefs.pinned.first()
         val note = AppDatabase.get(context).noteDao().getActive()
 
-        if (!pinned || note == null || note.content.isBlank()) {
+        if (!notificationsEnabled || !pinned || note == null || note.content.isBlank()) {
             manager.cancel(NOTIFICATION_ID)
             return
         }

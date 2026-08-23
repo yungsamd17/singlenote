@@ -20,20 +20,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.tooltipTrigger
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -93,12 +104,17 @@ fun NoteScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    var menuOpen by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 navigationIcon = {
-                    IconButton(onClick = onOpenArchive) {
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.cd_open_archive),
+                        onClick = onOpenArchive
+                    ) {
                         Icon(
                             Icons.Outlined.Inventory2,
                             contentDescription = stringResource(R.string.cd_open_archive)
@@ -106,13 +122,12 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onOpenSettings) {
-                        Icon(
-                            Icons.Outlined.Settings,
-                            contentDescription = stringResource(R.string.cd_open_settings)
-                        )
-                    }
-                    IconButton(onClick = ::requestPinToggle) {
+                    TooltipIconButton(
+                        tooltip = stringResource(
+                            if (pinned) R.string.cd_unpin else R.string.cd_pin
+                        ),
+                        onClick = ::requestPinToggle
+                    ) {
                         Icon(
                             if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
                             contentDescription = stringResource(
@@ -120,23 +135,55 @@ fun NoteScreen(
                             )
                         )
                     }
-                    IconButton(
-                        onClick = { shareNote(context, text) },
-                        enabled = text.isNotBlank()
-                    ) {
-                        Icon(Icons.Outlined.Share, contentDescription = stringResource(R.string.cd_share))
-                    }
-                    IconButton(
-                        onClick = { copyNote(context, text) },
-                        enabled = text.isNotBlank()
-                    ) {
-                        Icon(Icons.Outlined.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
-                    }
-                    IconButton(
-                        onClick = { viewModel.archiveCurrent() },
-                        enabled = text.isNotBlank()
+                    TooltipIconButton(
+                        tooltip = stringResource(R.string.cd_archive),
+                        enabled = text.isNotBlank(),
+                        onClick = { viewModel.archiveCurrent() }
                     ) {
                         Icon(Icons.Outlined.Archive, contentDescription = stringResource(R.string.cd_archive))
+                    }
+                    Box {
+                        TooltipIconButton(
+                            tooltip = stringResource(R.string.more_options),
+                            onClick = { menuOpen = true }
+                        ) {
+                            Icon(
+                                Icons.Outlined.MoreVert,
+                                contentDescription = stringResource(R.string.more_options)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuOpen,
+                            onDismissRequest = { menuOpen = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_share)) },
+                                leadingIcon = { Icon(Icons.Outlined.Share, null) },
+                                enabled = text.isNotBlank(),
+                                onClick = {
+                                    menuOpen = false
+                                    shareNote(context, text)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_copy)) },
+                                leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) },
+                                enabled = text.isNotBlank(),
+                                onClick = {
+                                    menuOpen = false
+                                    copyNote(context, text)
+                                }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.menu_settings)) },
+                                leadingIcon = { Icon(Icons.Outlined.Settings, null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onOpenSettings()
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -219,4 +266,28 @@ private fun shareNote(context: Context, text: String) {
 private fun copyNote(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TooltipIconButton(
+    tooltip: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val tooltipState = remember { PlainTooltipState() }
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = { PlainTooltip { Text(tooltip) } },
+        state = tooltipState
+    ) {
+        IconButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier.tooltipTrigger()
+        ) {
+            content()
+        }
+    }
 }

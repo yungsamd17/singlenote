@@ -25,6 +25,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     val pinned: StateFlow<Boolean> = store.pinned
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val fontFamily: StateFlow<String> = store.fontFamily
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
 
@@ -32,7 +35,12 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
 
     fun togglePinned() {
-        viewModelScope.launch { store.setPinned(!pinned.value) }
+        viewModelScope.launch {
+            if (!pinned.value && !notificationsEnabled.value) {
+                store.setNotificationsEnabled(true)
+            }
+            store.setPinned(!pinned.value)
+        }
     }
 
     private var currentNoteId: Long? = null

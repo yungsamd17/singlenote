@@ -13,6 +13,8 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 class NotePreferences(private val context: Context) {
 
     val pinned: Flow<Boolean> = context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
+    val notificationsEnabled: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
     val themeMode: Flow<String> = context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     val fontFamily: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_FONT_FAMILY] ?: FONT_DEFAULT }
@@ -21,6 +23,10 @@ class NotePreferences(private val context: Context) {
 
     suspend fun setPinned(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_PINNED] = value }
+    }
+
+    suspend fun setNotificationsEnabled(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_NOTIFICATIONS] = value }
     }
 
     suspend fun setThemeMode(value: String) {
@@ -39,6 +45,7 @@ class NotePreferences(private val context: Context) {
         const val KEY_PINNED_NAME = "pin_current_note"
 
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
+        val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")
