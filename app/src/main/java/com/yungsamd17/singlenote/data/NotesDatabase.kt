@@ -53,10 +53,13 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) {
         }
     }
 
-    suspend fun restore(noteId: Long) {
-        val hasActive = dao.getActive() != null
-        if (!hasActive) dao.restore(noteId)
-        notifyNoteChanged()
+    suspend fun restore(noteId: Long): Boolean {
+        val canRestore = dao.getActive() == null
+        if (canRestore) {
+            dao.restore(noteId)
+            notifyNoteChanged()
+        }
+        return canRestore
     }
 
     suspend fun deleteArchived(noteId: Long) = dao.deleteById(noteId)

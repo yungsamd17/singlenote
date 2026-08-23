@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,7 +42,10 @@ import com.yungsamd17.singlenote.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteScreen(viewModel: NoteViewModel) {
+fun NoteScreen(
+    viewModel: NoteViewModel,
+    onOpenArchive: () -> Unit,
+) {
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -62,6 +66,14 @@ fun NoteScreen(viewModel: NoteViewModel) {
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
+                navigationIcon = {
+                    IconButton(onClick = onOpenArchive) {
+                        Icon(
+                            Icons.Outlined.Inventory2,
+                            contentDescription = stringResource(R.string.cd_open_archive)
+                        )
+                    }
+                },
                 actions = {
                     IconButton(
                         onClick = { shareNote(context, text) },

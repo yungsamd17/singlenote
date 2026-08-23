@@ -5,6 +5,10 @@
     <string name="cd_share">Share note</string>
     <string name="cd_copy">Copy note</string>
     <string name="cd_archive">Archive note</string>
+    <string name="archive_title">Archive</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_open_archive">Open archive</string>
+    <string name="empty_note_placeholder">(empty note)</string>
     <string name="cd_restore">Restore note</string>
     <string name="cd_delete">Delete permanently</string>
     <string name="archive_empty">Nothing archived yet.</string>
