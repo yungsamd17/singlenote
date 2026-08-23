@@ -1,6 +1,7 @@
 package com.yungsamd17.singlenote.tile
 
 import android.app.PendingIntent
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -38,6 +39,7 @@ class NoteTileService : TileService() {
         }
     }
 
+    @SuppressLint("Deprecation")
     override fun onClick() {
         super.onClick()
         val launchIntent = Intent(this, MainActivity::class.java)
