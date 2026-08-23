@@ -39,7 +39,7 @@ class NoteTileService : TileService() {
         }
     }
 
-    @SuppressLint("Deprecation")
+    @SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
         val launchIntent = Intent(this, MainActivity::class.java)
