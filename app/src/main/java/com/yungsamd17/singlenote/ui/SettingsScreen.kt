@@ -20,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
@@ -47,8 +46,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -165,9 +167,9 @@ fun SettingsScreen(
                 }
                 SettingCard {
                     ValueRow(
-                        icon = Icons.Outlined.Code,
-                        title = stringResource(R.string.about_source_code),
-                        value = GITHUB_URL.removePrefix("https://"),
+                        icon = painterResource(R.drawable.ic_github),
+                        title = stringResource(R.string.about_github),
+                        value = stringResource(R.string.about_source_code),
                         onClick = { openUrl(context, GITHUB_URL) }
                     )
                 }
@@ -234,15 +236,30 @@ private fun ValueRow(
     value: String,
     onClick: () -> Unit,
 ) {
+    ValueRow(
+        icon = rememberVectorPainter(icon),
+        title = title,
+        value = value,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun ValueRow(
+    icon: Painter,
+    title: String,
+    value: String,
+    onClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = false, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = icon,
+            painter = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -269,7 +286,7 @@ private fun ToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = checked, onClick = { onCheckedChange(!checked) })
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
