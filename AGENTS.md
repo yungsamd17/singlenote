@@ -58,7 +58,7 @@ Key patterns:
 
 ## Commit Messages
 
-Format: `type: short imperative summary` (lowercase after type, no trailing period).
+Format: `type(scope): short imperative summary` — lowercase after type, no trailing period.
 Keep commits atomic — one logical change per commit.
 
 | Type | Use for |
@@ -72,24 +72,51 @@ Keep commits atomic — one logical change per commit.
 | `chore` | build, deps, CI, tooling |
 | `release` | version bump / release tagging |
 
+Scope is a short area name for this repo: `app`, `widget`, `tile`, `notify`, `data`, `ci`, `docs`.
+Use plain `type:` only when a change genuinely spans everything (rare).
+
 Examples:
 
 ```
-feat: add archive screen with restore and delete
-fix: keep keyboard open while typing in the editor
-refactor: extract NoteStore interface from NoteRepository
-style: card-per-row settings layout with switch thumb icons
-test: cover debounced save behavior in NoteViewModelTest
-docs: document commit message types in AGENTS.md
-chore: bump compileSdk to 35
+feat(app): add archive screen with restore and delete
+fix(editor): keep keyboard open while typing
+refactor(data): extract NoteStore interface from NoteRepository
+style(settings): card-per-row layout with switch thumb icons
+test(app): cover debounced save behavior in NoteViewModelTest
+docs(agents): document commit message types in AGENTS.md
+chore(ci): bump compileSdk to 35
 release: v0.1.0
 ```
 
+## Agent Guardrails
+
+- Never commit or push directly to `main`; all changes land through pull requests.
+- Never open a PR unless the developer explicitly asks for it.
+- One concern per change. If the description says "also", split it into another branch/PR.
+- Do not commit secrets, keystores, or local-only files (e.g. `.and-code/`).
+- When watching CI/bot feedback on your PRs: poll checks and comments newer than the last push,
+  verify each bot finding against the source before "fixing" it, dismiss false positives with a
+  written reason, and stop when checks are green on the latest commit.
+
 ## Pull Requests
 
-- One feature/fix per PR, branch named after the change (e.g. `settings-redesign-pin-toggle`).
-- PR body: summary of changes, table or list of touched areas, testing checklist (tick before merge).
-- End the PR body with an AI attribution line in this exact format:
+All changes land on `main` through pull requests.
+
+1. Create a branch off `main`: `<type>/<short-description>` (e.g. `feat/archive-screen`, `fix/editor-keyboard`).
+2. Commit there using the format from **Commit Messages**; keep commits atomic.
+3. Push the branch and open a PR against `main`.
+
+PR rules:
+
+- One feature/fix per PR — small and focused beats large and thorough.
+- Title follows the commit message format: `type(scope): short imperative summary`
+  (e.g. `feat(app): add archive screen with restore and delete`) — it becomes the squash-merge commit message.
+- Body stays concise, following the PR template: what changed and why, bullet list of touched areas,
+  evidence if applicable, testing checklist (tick before merge).
+- UI changes must include clear before/after screenshots; motion/timing changes need a short video.
+  Upload evidence directly to GitHub — never commit PR-only screenshots or asset files.
+- End the body with an AI attribution line stating exactly which model and agent made the changes,
+  in this exact format:
 
   ```
   Built with {model} in the {agent} harness.
