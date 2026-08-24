@@ -159,7 +159,12 @@ fun NoteScreen(
                             modifier = Modifier.widthIn(min = 200.dp)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_share)) },
+                                text = {
+                                    Text(
+                                        stringResource(R.string.menu_share),
+                                        fontSize = 18.sp
+                                    )
+                                },
                                 modifier = Modifier.heightIn(min = 56.dp),
                                 enabled = text.isNotBlank(),
                                 onClick = {
@@ -168,7 +173,12 @@ fun NoteScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_copy)) },
+                                text = {
+                                    Text(
+                                        stringResource(R.string.menu_copy),
+                                        fontSize = 18.sp
+                                    )
+                                },
                                 modifier = Modifier.heightIn(min = 56.dp),
                                 enabled = text.isNotBlank(),
                                 onClick = {
@@ -177,7 +187,12 @@ fun NoteScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text(stringResource(R.string.menu_settings)) },
+                                text = {
+                                    Text(
+                                        stringResource(R.string.menu_settings),
+                                        fontSize = 18.sp
+                                    )
+                                },
                                 modifier = Modifier.heightIn(min = 56.dp),
                                 onClick = {
                                     menuOpen = false
