@@ -46,6 +46,19 @@ jobs:
       - name: Build, test, lint
         run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest lintDebug
 
+      - name: Keystore diagnostics (temporary)
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          echo "secret length: ${#DEBUG_KEYSTORE_BASE64}"
+          echo "--- all debug.keystore files on runner:"
+          find / -name 'debug.keystore' 2>/dev/null | while read -r f; do sha256sum "$f"; done
+          echo "--- decoded file at ~/.android:"
+          sha256sum ~/.android/debug.keystore 2>/dev/null
+          keytool -list -v -keystore ~/.android/debug.keystore -storepass android 2>/dev/null | grep -E 'Alias name|SHA256: ' | head -4
+          echo "--- cert actually in built release APK:"
+          keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -E 'SHA-256' | head -2
+
       - name: Upload debug APK artifact
         if: github.ref_type != 'tag'
         uses: actions/upload-artifact@v4
