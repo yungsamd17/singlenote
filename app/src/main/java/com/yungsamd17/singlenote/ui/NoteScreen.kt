@@ -16,13 +16,17 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -156,13 +160,24 @@ fun NoteScreen(
                         DropdownMenu(
                             expanded = menuOpen,
                             onDismissRequest = { menuOpen = false },
-                            modifier = Modifier.widthIn(min = 200.dp)
+                            shape = RoundedCornerShape(28.dp),
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            shadowElevation = 8.dp,
+                            tonalElevation = 0.dp,
+                            modifier = Modifier.widthIn(min = 220.dp)
                         ) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
                                         stringResource(R.string.menu_share),
-                                        fontSize = 18.sp
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Outlined.Share,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
@@ -176,7 +191,14 @@ fun NoteScreen(
                                 text = {
                                     Text(
                                         stringResource(R.string.menu_copy),
-                                        fontSize = 18.sp
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Outlined.ContentCopy,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
@@ -190,7 +212,14 @@ fun NoteScreen(
                                 text = {
                                     Text(
                                         stringResource(R.string.menu_settings),
-                                        fontSize = 18.sp
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        Icons.Outlined.Settings,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
