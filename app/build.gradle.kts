@@ -13,8 +13,8 @@ android {
         applicationId = "com.yungsamd17.singlenote"
         minSdk = 29
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.2.5"
+        versionCode = 8
+        versionName = "0.2.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
