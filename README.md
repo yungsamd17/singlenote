@@ -30,6 +30,10 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 - **Privacy first** — fully offline; no accounts, no analytics, no tracking.
   The only permission requested is notifications (for the pinned note)
 
+## Roadmap
+
+`v0.2.6` is the current release. Track the checklist for the first stable release in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md) — features, improvements, fixes and release steps for `v1.0.0`.
+
 ## Download
 
 Grab the latest APK from [Releases](https://github.com/yungsamd17/singlenote/releases/latest):
