@@ -95,7 +95,10 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun deleteActive() {
         dao.getActive()?.let {
             dao.deleteById(it.id)
-            notifyNoteChanged()
+            // Unpin with the note: the next note starts unpinned instead of
+            // inheriting the deleted note's pinned state. setPinned already
+            // broadcasts the change.
+            setPinned(false)
         }
     }
 
