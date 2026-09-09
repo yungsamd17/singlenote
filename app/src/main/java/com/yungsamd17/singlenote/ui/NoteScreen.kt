@@ -71,7 +71,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
 
-private val NoShadowElevation = FloatingActionButtonDefaults.elevation(
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun noShadowElevation() = FloatingActionButtonDefaults.elevation(
     defaultElevation = 0.dp,
     pressedElevation = 0.dp,
     focusedElevation = 0.dp,
@@ -296,7 +298,7 @@ fun NoteScreen(
                         .align(Alignment.CenterStart)
                         .alpha(if (hasContent) 1f else 0.38f),
                     shape = CircleShape,
-                    elevation = NoShadowElevation
+                    elevation = noShadowElevation()
                 ) {
                     Icon(
                         Icons.Outlined.Archive,
@@ -318,7 +320,7 @@ fun NoteScreen(
                         .align(Alignment.CenterEnd)
                         .alpha(if (hasContent) 1f else 0.38f),
                     shape = CircleShape,
-                    elevation = NoShadowElevation
+                    elevation = noShadowElevation()
                 ) {
                     Icon(
                         Icons.Outlined.Delete,
@@ -362,7 +364,7 @@ fun FixedWidthPinButton(
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        elevation = NoShadowElevation,
+        elevation = noShadowElevation(),
         icon = {
             Icon(
                 if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
