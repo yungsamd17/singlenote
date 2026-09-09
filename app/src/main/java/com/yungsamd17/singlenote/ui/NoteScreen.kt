@@ -5,7 +5,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Rect
 import android.os.Build
+import android.view.ViewTreeObserver
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -45,6 +47,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -80,6 +83,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -187,12 +191,14 @@ fun NoteScreen(
         else -> 16.sp
     }
 
-    // Keeps the typed line in view while typing.
+    // Keeps the typed line in view while typing, and jumps to the tapped
+    // cursor when opening a long note (e.g. at its end).
     val scrollState = rememberScrollState()
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var viewportHeightPx by remember { mutableIntStateOf(0) }
-    val followPaddingPx = with(density) { 12.dp.toPx() }
-    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing) {
+    val followTopPaddingPx = with(density) { 12.dp.toPx() }
+    val followBottomPaddingPx = followTopPaddingPx + 10f
+    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing, viewportHeightPx) {
         if (!isEditing) return@LaunchedEffect
         if (viewportHeightPx <= 0) return@LaunchedEffect
         val layout = textLayoutResult ?: return@LaunchedEffect
@@ -202,9 +208,9 @@ fun NoteScreen(
         val viewBottom = viewTop + viewportHeightPx
         when {
             cursor.bottom > viewBottom ->
-                scrollState.scrollTo((cursor.bottom - viewportHeightPx + followPaddingPx).toInt())
+                scrollState.scrollTo((cursor.bottom - viewportHeightPx + followBottomPaddingPx).toInt())
             cursor.top < viewTop ->
-                scrollState.scrollTo(max(0f, cursor.top - followPaddingPx).toInt())
+                scrollState.scrollTo(max(0f, cursor.top - followTopPaddingPx).toInt())
         }
     }
 
@@ -212,6 +218,31 @@ fun NoteScreen(
         keyboard?.hide()
         focusManager.clearFocus()
         viewModel.flushSave()
+    }
+
+    // Dismissing the keyboard (system back, gesture) counts as Done:
+    // save the note and bring back the Archive/Pin/Delete bar.
+    val view = LocalView.current
+    var isKeyboardOpen by remember { mutableStateOf(false) }
+    DisposableEffect(view) {
+        val listener = ViewTreeObserver.OnGlobalLayoutListener {
+            val rect = Rect()
+            view.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = view.rootView.height
+            isKeyboardOpen = screenHeight > 0 &&
+                screenHeight - rect.bottom > screenHeight * 0.15
+        }
+        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
+        onDispose { view.viewTreeObserver.removeOnGlobalLayoutListener(listener) }
+    }
+    var keyboardWasOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(isKeyboardOpen) {
+        if (isKeyboardOpen) {
+            keyboardWasOpen = true
+        } else if (keyboardWasOpen) {
+            keyboardWasOpen = false
+            if (isEditing) finishEditing()
+        }
     }
 
     Scaffold(
@@ -448,12 +479,25 @@ fun NoteScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
             title = { Text(stringResource(R.string.delete_dialog_title)) },
+            text = { Text(stringResource(R.string.delete_dialog_message)) },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.deleteCurrent()
-                    showDeleteDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteCurrent()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
                     Text(stringResource(R.string.delete_dialog_confirm))
                 }
             },
