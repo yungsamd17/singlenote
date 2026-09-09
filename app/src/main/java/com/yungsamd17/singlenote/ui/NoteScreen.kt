@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -353,9 +354,12 @@ fun NoteScreen(
                 transitionSpec = {
                     fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
                 },
+                // Sole mover of this bar: the window is adjustNothing, so the
+                // animated IME inset glides it above the keyboard with no snap.
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
+                    .imePadding()
             ) { editing ->
                 if (editing) {
                     Button(
