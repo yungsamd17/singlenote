@@ -33,6 +33,7 @@ import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.NoteEditScreen
 import com.yungsamd17.singlenote.ui.NoteScreen
 import com.yungsamd17.singlenote.ui.NoteViewModel
 import com.yungsamd17.singlenote.ui.SettingsScreen
@@ -62,6 +63,10 @@ class MainActivity : ComponentActivity() {
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    // Shared between the note card and the editor so both
+                    // observe and edit the same in-memory text state.
+                    val noteViewModel: NoteViewModel =
+                        viewModel(factory = NoteViewModel.factory(repository))
                     NavHost(
                         navController = navController,
                         startDestination = "note",
@@ -92,9 +97,16 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("note") {
                             NoteScreen(
-                                viewModel = viewModel(factory = NoteViewModel.factory(repository)),
+                                viewModel = noteViewModel,
                                 onOpenArchive = { navController.navigate("archive") },
-                                onOpenSettings = { navController.navigate("settings") }
+                                onOpenSettings = { navController.navigate("settings") },
+                                onOpenEditor = { navController.navigate("note/edit") }
+                            )
+                        }
+                        composable("note/edit") {
+                            NoteEditScreen(
+                                viewModel = noteViewModel,
+                                onBack = { navController.popBackStack() }
                             )
                         }
                         composable("archive") {
