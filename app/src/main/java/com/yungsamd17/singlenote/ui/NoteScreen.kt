@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -235,7 +234,13 @@ fun NoteScreen(
                     Box {
                         TooltipIconButton(
                             tooltip = stringResource(R.string.more_options),
-                            onClick = { menuOpen = true }
+                            onClick = {
+                                // Close editing first so the keyboard glides
+                                // down and the bar fades before the menu pops
+                                // in, instead of everything snapping at once.
+                                if (isEditing) finishEditing()
+                                menuOpen = true
+                            }
                         ) {
                             Icon(
                                 Icons.Outlined.MoreVert,
@@ -351,7 +356,6 @@ fun NoteScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .imePadding()
             ) { editing ->
                 if (editing) {
                     Button(
@@ -491,11 +495,14 @@ private fun NoteEditorField(
         val cursorBottom = cursor.bottom + textTopPaddingPx
         val viewTop = scrollState.value.toFloat()
         val viewBottom = viewTop + viewportHeightPx
+        // Animated (not jumped) so the cursor glides with the card while the
+        // keyboard opens and while typing; restarting the effect retargets
+        // mid-flight instead of queueing.
         when {
             cursorBottom > viewBottom ->
-                scrollState.scrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
+                scrollState.animateScrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
             cursorTop < viewTop ->
-                scrollState.scrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
+                scrollState.animateScrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
         }
     }
 

@@ -5,12 +5,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -21,7 +22,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +57,8 @@ fun ArchiveScreen(
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    // Hoisted: creating formatters during scroll composition is needlessly heavy.
+    val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -119,6 +122,7 @@ fun ArchiveScreen(
                 items(notes, key = { it.id }) { note ->
                     ArchivedNoteItem(
                         note = note,
+                        date = dateFormat.format(Date(note.updatedAt)),
                         onRestore = { viewModel.restore(note) },
                         onDelete = { noteToDelete = note }
                     )
@@ -143,9 +147,6 @@ fun ArchiveScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { viewModel.swap(note) }) {
-                        Text(stringResource(R.string.action_swap))
-                    }
                     TextButton(
                         onClick = { viewModel.replace(note) },
                         colors = ButtonDefaults.textButtonColors(
@@ -153,6 +154,9 @@ fun ArchiveScreen(
                         )
                     ) {
                         Text(stringResource(R.string.action_replace))
+                    }
+                    TextButton(onClick = { viewModel.swap(note) }) {
+                        Text(stringResource(R.string.action_swap))
                     }
                     TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
                         Text(stringResource(R.string.cancel))
@@ -232,6 +236,7 @@ fun ArchiveScreen(
 @Composable
 private fun ArchivedNoteItem(
     note: Note,
+    date: String,
     onRestore: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -247,7 +252,7 @@ private fun ArchivedNoteItem(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(note.updatedAt)),
+                text = date,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp)
@@ -259,30 +264,22 @@ private fun ArchivedNoteItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ExtendedFloatingActionButton(
-                    onClick = onRestore,
-                    shape = CircleShape,
-                    elevation = noShadowElevation(),
-                    icon = {
-                        Icon(
-                            Icons.Outlined.Unarchive,
-                            contentDescription = null
-                        )
-                    },
-                    text = { Text(stringResource(R.string.action_restore)) }
-                )
-                ExtendedFloatingActionButton(
-                    onClick = onDelete,
-                    shape = CircleShape,
-                    elevation = noShadowElevation(),
-                    icon = {
-                        Icon(
-                            Icons.Outlined.Delete,
-                            contentDescription = null
-                        )
-                    },
-                    text = { Text(stringResource(R.string.action_delete)) }
-                )
+                FilledTonalButton(onClick = onRestore) {
+                    Icon(
+                        Icons.Outlined.Unarchive,
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.action_restore))
+                }
+                FilledTonalButton(onClick = onDelete) {
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text(stringResource(R.string.action_delete))
+                }
             }
         }
     }
