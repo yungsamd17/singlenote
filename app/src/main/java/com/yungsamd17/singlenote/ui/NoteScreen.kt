@@ -517,7 +517,6 @@ private fun NoteEditorField(
         if (!isEditing) return@LaunchedEffect
         cursorScrollTarget()?.let { scrollState.scrollTo(it) }
     }
-    }
 
     BasicTextField(
         value = fieldValue,
