@@ -88,7 +88,10 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun archiveActive() {
         dao.getActive()?.let {
             dao.archive(it.id)
-            notifyNoteChanged()
+            // Same as delete: archiving empties the main view, so the next
+            // note starts unpinned instead of inheriting the pinned state.
+            // setPinned already broadcasts the change.
+            setPinned(false)
         }
     }
 
