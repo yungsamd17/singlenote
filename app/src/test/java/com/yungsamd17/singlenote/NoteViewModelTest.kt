@@ -2,7 +2,9 @@ package com.yungsamd17.singlenote
 
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_SMALL
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
 import com.yungsamd17.singlenote.data.NoteStore
 import com.yungsamd17.singlenote.ui.NoteViewModel
@@ -48,6 +50,8 @@ class NoteViewModelTest {
         override suspend fun archiveActive() {
             archiveRequested = true
             activeNote.value = null
+            // Mirrors NoteRepository: archiving unpins the note.
+            pinned.value = false
         }
 
         override suspend fun deleteActive() {
@@ -165,6 +169,21 @@ class NoteViewModelTest {
     }
 
     @Test
+    fun archive_unpinsNote() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.archiveCurrent()
+        advanceUntilIdle()
+
+        assertTrue(store.archiveRequested)
+        assertFalse(store.pinned.value)
+    }
+
+    @Test
     fun typing_truncatesToSizeLimit() = runTest {
         installMain()
         val store = FakeNoteStore()
@@ -183,6 +202,9 @@ class NoteViewModelTest {
         assertTrue(NoteViewModel.MAX_LENGTH_MEDIUM > NoteViewModel.MAX_LENGTH_LARGE)
         assertTrue(NoteViewModel.MAX_LINES_SMALL > NoteViewModel.MAX_LINES_MEDIUM)
         assertTrue(NoteViewModel.MAX_LINES_MEDIUM > NoteViewModel.MAX_LINES_LARGE)
+        assertEquals(11, NoteViewModel.maxLinesForTextSize(SIZE_SMALL))
+        assertEquals(8, NoteViewModel.maxLinesForTextSize(SIZE_MEDIUM))
+        assertEquals(6, NoteViewModel.maxLinesForTextSize(SIZE_LARGE))
         assertEquals(
             NoteViewModel.MAX_LENGTH_MEDIUM,
             NoteViewModel.maxLengthForTextSize(SIZE_MEDIUM)
