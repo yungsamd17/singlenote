@@ -181,6 +181,8 @@ class NoteViewModelTest {
     fun limits_smallerFontFitsMore() {
         assertTrue(NoteViewModel.MAX_LENGTH_SMALL > NoteViewModel.MAX_LENGTH_MEDIUM)
         assertTrue(NoteViewModel.MAX_LENGTH_MEDIUM > NoteViewModel.MAX_LENGTH_LARGE)
+        assertTrue(NoteViewModel.MAX_LINES_SMALL > NoteViewModel.MAX_LINES_MEDIUM)
+        assertTrue(NoteViewModel.MAX_LINES_MEDIUM > NoteViewModel.MAX_LINES_LARGE)
         assertEquals(
             NoteViewModel.MAX_LENGTH_MEDIUM,
             NoteViewModel.maxLengthForTextSize(SIZE_MEDIUM)

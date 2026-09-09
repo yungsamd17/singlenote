@@ -20,6 +20,7 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,6 +76,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -174,13 +176,22 @@ fun NoteScreen(
         "large" -> 20.sp
         else -> 16.sp
     }
-    // Fixed editor capacity: the card never scrolls, so input is capped at
-    // what visibly fits. Smaller fonts fit more text, larger fonts less.
+    // Fixed editor capacity: the card below is exactly as tall as these
+    // lines, so input is capped at what visibly fits with nothing left to
+    // scroll to. Smaller fonts fit more text, larger fonts less.
     val noteMaxLength = NoteViewModel.maxLengthForTextSize(textSizeKey)
     val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
+    val noteLineHeight = noteFontSize * 1.45f
+    // Card height = line capacity plus the editor's vertical padding (16dp
+    // top + 16dp bottom). Fixed once per font size: it never resizes with
+    // the keyboard, only the bottom bar glides above it.
+    val density = LocalDensity.current
+    val noteCardHeight = with(density) {
+        (noteLineHeight * noteMaxLines.toFloat()).toDp() + 32.dp
+    }
 
-    // The editor card below is a fixed visible area with no scrolling:
-    // a tap puts the cursor exactly where it landed and the capped content
+    // The editor card below is a fixed-size area with no scrolling: a tap
+    // puts the cursor exactly where it landed and the capped content
     // always fits, so no follow-scroll is needed.
 
     fun finishEditing() {
@@ -327,7 +338,7 @@ fun NoteScreen(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .height(noteCardHeight)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 NoteEditorField(
@@ -336,11 +347,17 @@ fun NoteScreen(
                     interactionSource = fieldInteraction,
                     fontFamily = noteFontFamily,
                     fontSize = noteFontSize,
+                    lineHeight = noteLineHeight,
                     maxLength = noteMaxLength,
                     maxLines = noteMaxLines,
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
+            // Takes the slack so the bar sits at the bottom when the keyboard
+            // is closed, and collapses to zero when it opens — the card above
+            // never changes size, only the bar glides up.
+            Spacer(modifier = Modifier.weight(1f))
 
             AnimatedContent(
                 targetState = isEditing,
@@ -461,6 +478,7 @@ private fun NoteEditorField(
     interactionSource: MutableInteractionSource,
     fontFamily: FontFamily,
     fontSize: TextUnit,
+    lineHeight: TextUnit,
     maxLength: Int,
     maxLines: Int,
     modifier: Modifier = Modifier,
@@ -501,7 +519,7 @@ private fun NoteEditorField(
         textStyle = TextStyle(
             fontFamily = fontFamily,
             fontSize = fontSize,
-            lineHeight = (fontSize.value * 1.45f).sp,
+            lineHeight = lineHeight,
             color = MaterialTheme.colorScheme.onSurface
         ),
         cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -518,7 +536,7 @@ private fun NoteEditorField(
                         style = TextStyle(
                             fontFamily = fontFamily,
                             fontSize = fontSize,
-                            lineHeight = (fontSize.value * 1.45f).sp
+                            lineHeight = lineHeight
                         ),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
