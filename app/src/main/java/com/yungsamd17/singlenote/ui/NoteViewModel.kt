@@ -78,6 +78,15 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         }
     }
 
+    fun deleteCurrent() {
+        saveJob?.cancel()
+        viewModelScope.launch {
+            store.deleteActive()
+            currentNoteId = null
+            _text.value = ""
+        }
+    }
+
     private fun scheduleSave() {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {

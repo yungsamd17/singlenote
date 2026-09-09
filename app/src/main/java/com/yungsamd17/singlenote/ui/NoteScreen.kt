@@ -10,9 +10,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -22,24 +26,29 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -49,6 +58,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -108,10 +118,12 @@ fun NoteScreen(
     }
 
     var menuOpen by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val hasContent = text.isNotBlank()
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
                 navigationIcon = {
                     TooltipIconButton(
@@ -125,28 +137,6 @@ fun NoteScreen(
                     }
                 },
                 actions = {
-                    if (notificationsEnabled) {
-                        TooltipIconButton(
-                            tooltip = stringResource(
-                                if (pinned) R.string.cd_unpin else R.string.cd_pin
-                            ),
-                            onClick = ::requestPinToggle
-                        ) {
-                            Icon(
-                                if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                                contentDescription = stringResource(
-                                    if (pinned) R.string.cd_unpin else R.string.cd_pin
-                                )
-                            )
-                        }
-                    }
-                    TooltipIconButton(
-                        tooltip = stringResource(R.string.cd_archive),
-                        enabled = text.isNotBlank(),
-                        onClick = { viewModel.archiveCurrent() }
-                    ) {
-                        Icon(Icons.Outlined.Archive, contentDescription = stringResource(R.string.cd_archive))
-                    }
                     Box {
                         TooltipIconButton(
                             tooltip = stringResource(R.string.more_options),
@@ -181,7 +171,7 @@ fun NoteScreen(
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
-                                enabled = text.isNotBlank(),
+                                enabled = hasContent,
                                 onClick = {
                                     menuOpen = false
                                     shareNote(context, text)
@@ -202,7 +192,7 @@ fun NoteScreen(
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
-                                enabled = text.isNotBlank(),
+                                enabled = hasContent,
                                 onClick = {
                                     menuOpen = false
                                     copyNote(context, text)
@@ -244,14 +234,99 @@ fun NoteScreen(
             "large" -> 28.sp
             else -> 22.sp
         }
-        NoteEditor(
-            text = text,
-            onTextChange = viewModel::onTextChange,
-            fontFamily = editorFontFamily,
-            fontSize = editorFontSize,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+            NoteEditor(
+                text = text,
+                onTextChange = viewModel::onTextChange,
+                fontFamily = editorFontFamily,
+                fontSize = editorFontSize,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            if (notificationsEnabled) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .navigationBarsPadding()
+                        .imePadding()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    ExtendedFloatingActionButton(
+                        onClick = ::requestPinToggle,
+                        icon = {
+                            Icon(
+                                if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                                contentDescription = stringResource(
+                                    if (pinned) R.string.cd_unpin else R.string.cd_pin
+                                )
+                            )
+                        },
+                        text = {
+                            Text(
+                                stringResource(
+                                    if (pinned) R.string.pinned else R.string.pin_note
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                FloatingActionButton(
+                    onClick = { if (hasContent) viewModel.archiveCurrent() },
+                    modifier = Modifier.alpha(if (hasContent) 1f else 0.38f)
+                ) {
+                    Icon(
+                        Icons.Outlined.Archive,
+                        contentDescription = stringResource(R.string.cd_archive)
+                    )
+                }
+                FloatingActionButton(
+                    onClick = { if (hasContent) showDeleteDialog = true },
+                    modifier = Modifier.alpha(if (hasContent) 1f else 0.38f),
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ) {
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = stringResource(R.string.cd_delete)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.delete_dialog_title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteCurrent()
+                    showDeleteDialog = false
+                }) {
+                    Text(stringResource(R.string.delete_dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 }
@@ -280,7 +355,7 @@ private fun NoteEditor(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 120.dp),
                 contentAlignment = Alignment.TopStart
             ) {
                 if (text.isEmpty()) {

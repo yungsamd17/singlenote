@@ -33,6 +33,7 @@ class NoteViewModelTest {
 
         var savedContent: String? = null
         var archiveRequested = false
+        var deleteRequested = false
 
         override suspend fun getActive(): Note? = activeNote.value
 
@@ -45,6 +46,11 @@ class NoteViewModelTest {
 
         override suspend fun archiveActive() {
             archiveRequested = true
+            activeNote.value = null
+        }
+
+        override suspend fun deleteActive() {
+            deleteRequested = true
             activeNote.value = null
         }
 
@@ -121,6 +127,22 @@ class NoteViewModelTest {
         advanceUntilIdle()
 
         assertTrue(store.archiveRequested)
+        assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun delete_clearsEditorWithoutResaving() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.onTextChange("to do")
+        advanceUntilIdle()
+        vm.deleteCurrent()
+        advanceUntilIdle()
+
+        assertTrue(store.deleteRequested)
         assertEquals("", vm.text.value)
     }
 

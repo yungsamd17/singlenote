@@ -39,6 +39,7 @@ interface NoteStore {
     suspend fun getActive(): Note?
     suspend fun saveActive(content: String)
     suspend fun archiveActive()
+    suspend fun deleteActive()
     suspend fun setPinned(value: Boolean)
     suspend fun setNotificationsEnabled(value: Boolean)
     suspend fun setThemeMode(value: String)
@@ -83,6 +84,13 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun archiveActive() {
         dao.getActive()?.let {
             dao.archive(it.id)
+            notifyNoteChanged()
+        }
+    }
+
+    override suspend fun deleteActive() {
+        dao.getActive()?.let {
+            dao.deleteById(it.id)
             notifyNoteChanged()
         }
     }

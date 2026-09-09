@@ -19,6 +19,8 @@
     <string name="empty_note_placeholder">(empty note)</string>
     <string name="cd_pin">Pin note to notifications</string>
     <string name="cd_unpin">Unpin note</string>
+    <string name="pin_note">Pin Note</string>
+    <string name="pinned">Pinned</string>
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
     <string name="tile_label">Singlenote</string>
