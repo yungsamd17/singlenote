@@ -5,9 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Rect
 import android.os.Build
-import android.view.ViewTreeObserver
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -20,11 +19,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -81,7 +82,6 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -187,25 +187,14 @@ fun NoteScreen(
 
     fun finishEditing() {
         keyboard?.hide()
-        focusManager.clearFocus()
+        focusManager.clearFocus(force = true)
         viewModel.flushSave()
     }
 
-    // Dismissing the keyboard (system back, gesture) counts as Done:
-    // save the note and bring back the Archive/Pin/Delete bar.
-    val view = LocalView.current
-    var isKeyboardOpen by remember { mutableStateOf(false) }
-    DisposableEffect(view) {
-        val listener = ViewTreeObserver.OnGlobalLayoutListener {
-            val rect = Rect()
-            view.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = view.rootView.height
-            isKeyboardOpen = screenHeight > 0 &&
-                screenHeight - rect.bottom > screenHeight * 0.15
-        }
-        view.viewTreeObserver.addOnGlobalLayoutListener(listener)
-        onDispose { view.viewTreeObserver.removeOnGlobalLayoutListener(listener) }
-    }
+    // IME visibility straight from the Compose insets: no window relayout
+    // happens under adjustNothing, so there is no layout pass to observe —
+    // a global-layout listener would go silent and miss the close.
+    val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
     LaunchedEffect(isKeyboardOpen) {
         if (isKeyboardOpen) {
@@ -214,6 +203,12 @@ fun NoteScreen(
             keyboardWasOpen = false
             if (isEditing) finishEditing()
         }
+    }
+
+    // Guaranteed way out: with the keyboard already hidden, back ends
+    // editing (with it open, the IME consumes the press instead).
+    BackHandler(enabled = isEditing) {
+        finishEditing()
     }
 
     Scaffold(
@@ -486,10 +481,11 @@ private fun NoteEditorField(
     val textTopPaddingPx = with(density) { 16.dp.toPx() }
     val followTopPaddingPx = with(density) { 12.dp.toPx() }
     val followBottomPaddingPx = followTopPaddingPx + 10f
-    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing, viewportHeightPx) {
-        if (!isEditing) return@LaunchedEffect
-        if (viewportHeightPx <= 0) return@LaunchedEffect
-        val layout = textLayoutResult ?: return@LaunchedEffect
+
+    // Scroll offset needed to reveal the cursor, or null when it is visible.
+    fun cursorScrollTarget(): Int? {
+        val layout = textLayoutResult ?: return null
+        if (viewportHeightPx <= 0) return null
         // The layout can lag one frame behind fast typing (or IME
         // completions): never query past what it actually laid out.
         val layoutEnd = layout.layoutInput.text.length
@@ -498,16 +494,29 @@ private fun NoteEditorField(
         val cursorTop = cursor.top + textTopPaddingPx
         val cursorBottom = cursor.bottom + textTopPaddingPx
         val viewTop = scrollState.value.toFloat()
-        val viewBottom = viewTop + viewportHeightPx
-        // Animated (not jumped) so the cursor glides with the card while the
-        // keyboard opens and while typing; restarting the effect retargets
-        // mid-flight instead of queueing.
-        when {
-            cursorBottom > viewBottom ->
-                scrollState.animateScrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
+        return when {
+            cursorBottom > viewTop + viewportHeightPx ->
+                (cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt()
             cursorTop < viewTop ->
-                scrollState.animateScrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
+                max(0f, cursorTop - followTopPaddingPx).toInt()
+            else -> null
         }
+    }
+
+    // Discrete cursor moves (typing, taps, focus gain): glide there.
+    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing) {
+        if (!isEditing) return@LaunchedEffect
+        cursorScrollTarget()?.let { scrollState.animateScrollTo(it) }
+    }
+
+    // Resize frames (keyboard morph): pin instantly per frame. The layout
+    // itself is animating, so pinning tracks with zero lag — restarting a
+    // spring animation every frame would cancel itself into standing still
+    // and only jump once the morph finishes.
+    LaunchedEffect(viewportHeightPx) {
+        if (!isEditing) return@LaunchedEffect
+        cursorScrollTarget()?.let { scrollState.scrollTo(it) }
+    }
     }
 
     BasicTextField(
