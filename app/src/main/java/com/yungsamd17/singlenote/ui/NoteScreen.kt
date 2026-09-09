@@ -504,19 +504,26 @@ private fun NoteEditorField(
         }
     }
 
-    // Discrete cursor moves (typing, taps, focus gain): glide there.
-    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing) {
+    // Single driver for the follow-scroll. Resize frames (keyboard morph)
+    // pin instantly per frame — the layout itself is animating, so pinning
+    // tracks it with zero lag — while discrete cursor moves (typing, taps,
+    // focus gain) glide. This must stay ONE effect: with two competing
+    // effects on the same ScrollState, a text relayout during the morph
+    // restarts the animated glide every frame, the spring stands still, and
+    // the scroll visibly lands only after the keyboard finishes — the cursor
+    // lags the card instead of moving with it.
+    var lastViewportHeightPx by remember { mutableIntStateOf(0) }
+    LaunchedEffect(fieldValue.selection, textLayoutResult, viewportHeightPx, isEditing) {
         if (!isEditing) return@LaunchedEffect
-        cursorScrollTarget()?.let { scrollState.animateScrollTo(it) }
-    }
-
-    // Resize frames (keyboard morph): pin instantly per frame. The layout
-    // itself is animating, so pinning tracks with zero lag — restarting a
-    // spring animation every frame would cancel itself into standing still
-    // and only jump once the morph finishes.
-    LaunchedEffect(viewportHeightPx) {
-        if (!isEditing) return@LaunchedEffect
-        cursorScrollTarget()?.let { scrollState.scrollTo(it) }
+        val target = cursorScrollTarget()
+        val resized = viewportHeightPx != lastViewportHeightPx
+        lastViewportHeightPx = viewportHeightPx
+        if (target == null) return@LaunchedEffect
+        if (resized) {
+            scrollState.scrollTo(target)
+        } else {
+            scrollState.animateScrollTo(target)
+        }
     }
 
     BasicTextField(
