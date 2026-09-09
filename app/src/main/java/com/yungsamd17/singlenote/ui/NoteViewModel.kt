@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_SMALL
 import com.yungsamd17.singlenote.data.NoteStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -53,7 +55,11 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     }
 
     fun onTextChange(value: String) {
-        _text.value = value
+        // The editor card has a fixed visible size with no scrolling, so input
+        // is capped at what fits. Smaller fonts fit more text, larger less.
+        val capped = value.take(maxLengthForTextSize(textSize.value))
+        if (capped == _text.value) return
+        _text.value = capped
         scheduleSave()
     }
 
@@ -106,6 +112,28 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     companion object {
         private const val SAVE_DEBOUNCE_MS = 500L
+
+        // Fixed editor capacity per text size: the longest allowed note still
+        // fits the card without scrolling. Smaller font fits more text.
+        const val MAX_LENGTH_SMALL = 450
+        const val MAX_LENGTH_MEDIUM = 300
+        const val MAX_LENGTH_LARGE = 180
+
+        const val MAX_LINES_SMALL = 14
+        const val MAX_LINES_MEDIUM = 11
+        const val MAX_LINES_LARGE = 8
+
+        fun maxLengthForTextSize(key: String): Int = when (key) {
+            SIZE_SMALL -> MAX_LENGTH_SMALL
+            SIZE_LARGE -> MAX_LENGTH_LARGE
+            else -> MAX_LENGTH_MEDIUM
+        }
+
+        fun maxLinesForTextSize(key: String): Int = when (key) {
+            SIZE_SMALL -> MAX_LINES_SMALL
+            SIZE_LARGE -> MAX_LINES_LARGE
+            else -> MAX_LINES_MEDIUM
+        }
 
         fun factory(store: NoteStore) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

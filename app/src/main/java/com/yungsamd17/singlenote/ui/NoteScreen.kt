@@ -30,11 +30,9 @@ import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
@@ -70,7 +68,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,13 +75,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -97,8 +91,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
-import kotlin.math.max
-import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -182,9 +174,14 @@ fun NoteScreen(
         "large" -> 20.sp
         else -> 16.sp
     }
+    // Fixed editor capacity: the card never scrolls, so input is capped at
+    // what visibly fits. Smaller fonts fit more text, larger fonts less.
+    val noteMaxLength = NoteViewModel.maxLengthForTextSize(textSizeKey)
+    val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
 
-    // The editor field below owns the follow-scroll state; the top padding
-    // offset lives with it (see NoteEditorField).
+    // The editor card below is a fixed visible area with no scrolling:
+    // a tap puts the cursor exactly where it landed and the capped content
+    // always fits, so no follow-scroll is needed.
 
     fun finishEditing() {
         keyboard?.hide()
@@ -337,9 +334,10 @@ fun NoteScreen(
                     externalText = text,
                     onTextChange = viewModel::onTextChange,
                     interactionSource = fieldInteraction,
-                    isEditing = isEditing,
                     fontFamily = noteFontFamily,
                     fontSize = noteFontSize,
+                    maxLength = noteMaxLength,
+                    maxLines = noteMaxLines,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -457,86 +455,45 @@ private fun NoteEditorField(
     externalText: String,
     onTextChange: (String) -> Unit,
     interactionSource: MutableInteractionSource,
-    isEditing: Boolean,
     fontFamily: FontFamily,
     fontSize: TextUnit,
+    maxLength: Int,
+    maxLines: Int,
     modifier: Modifier = Modifier,
 ) {
     // Local editing state: keystrokes recompose only this field, not the
     // whole screen, which keeps typing smooth on slower devices.
-    val density = LocalDensity.current
-    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
-    LaunchedEffect(externalText) {
-        if (externalText != fieldValue.text) {
-            fieldValue = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
+    // The card never scrolls, so over-limit input (including legacy long
+    // notes and pastes) is capped to what visibly fits.
+    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText.take(maxLength))) }
+    LaunchedEffect(externalText, maxLength) {
+        val capped = externalText.take(maxLength)
+        if (capped != fieldValue.text) {
+            fieldValue = TextFieldValue(text = capped, selection = TextRange(capped.length))
         }
     }
 
-    // Keeps the typed line in view while typing, and jumps to the tapped
-    // cursor when opening a long note (e.g. at its end).
-    val scrollState = rememberScrollState()
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var viewportHeightPx by remember { mutableIntStateOf(0) }
-    // The text layout origin sits below the card's inner top padding, so the
-    // cursor rect has to be shifted down by it to match scroll coordinates.
-    val textTopPaddingPx = with(density) { 16.dp.toPx() }
-    val followTopPaddingPx = with(density) { 12.dp.toPx() }
-    val followBottomPaddingPx = followTopPaddingPx + 10f
-
-    // Scroll offset needed to reveal the cursor, or null when it is visible.
-    fun cursorScrollTarget(): Int? {
-        val layout = textLayoutResult ?: return null
-        if (viewportHeightPx <= 0) return null
-        // The layout can lag one frame behind fast typing (or IME
-        // completions): never query past what it actually laid out.
-        val layoutEnd = layout.layoutInput.text.length
-        val offset = fieldValue.selection.start.coerceIn(0, min(fieldValue.text.length, layoutEnd))
-        val cursor = layout.getCursorRect(offset)
-        val cursorTop = cursor.top + textTopPaddingPx
-        val cursorBottom = cursor.bottom + textTopPaddingPx
-        val viewTop = scrollState.value.toFloat()
-        return when {
-            cursorBottom > viewTop + viewportHeightPx ->
-                (cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt()
-            cursorTop < viewTop ->
-                max(0f, cursorTop - followTopPaddingPx).toInt()
-            else -> null
-        }
-    }
-
-    // Single driver for the follow-scroll. Resize frames (keyboard morph)
-    // pin instantly per frame — the layout itself is animating, so pinning
-    // tracks it with zero lag — while discrete cursor moves (typing, taps,
-    // focus gain) glide. This must stay ONE effect: with two competing
-    // effects on the same ScrollState, a text relayout during the morph
-    // restarts the animated glide every frame, the spring stands still, and
-    // the scroll visibly lands only after the keyboard finishes — the cursor
-    // lags the card instead of moving with it.
-    var lastViewportHeightPx by remember { mutableIntStateOf(0) }
-    LaunchedEffect(fieldValue.selection, textLayoutResult, viewportHeightPx, isEditing) {
-        if (!isEditing) return@LaunchedEffect
-        val target = cursorScrollTarget()
-        val resized = viewportHeightPx != lastViewportHeightPx
-        lastViewportHeightPx = viewportHeightPx
-        if (target == null) return@LaunchedEffect
-        if (resized) {
-            scrollState.scrollTo(target)
-        } else {
-            scrollState.animateScrollTo(target)
-        }
-    }
+    // No scroll state on purpose: the capped content always fits the card,
+    // so a tap puts the cursor exactly where it landed with nothing to
+    // follow or reveal while typing.
 
     BasicTextField(
         value = fieldValue,
         onValueChange = {
-            fieldValue = it
-            onTextChange(it.text)
+            // Reject anything past the visible capacity; pastes are
+            // truncated to the limit instead of dropped.
+            val cappedText = it.text.take(maxLength)
+            val capped = if (cappedText == it.text) {
+                it
+            } else {
+                TextFieldValue(text = cappedText, selection = TextRange(cappedText.length))
+            }
+            fieldValue = capped
+            onTextChange(capped.text)
         },
-        onTextLayout = { textLayoutResult = it },
+        maxLines = maxLines,
         interactionSource = interactionSource,
-        modifier = modifier
-            .onSizeChanged { viewportHeightPx = it.height }
-            .verticalScroll(scrollState),
+        modifier = modifier,
         textStyle = TextStyle(
             fontFamily = fontFamily,
             fontSize = fontSize,
