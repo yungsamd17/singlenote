@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -485,14 +486,35 @@ private fun NoteEditorField(
 ) {
     // Local editing state: keystrokes recompose only this field, not the
     // whole screen, which keeps typing smooth on slower devices.
-    // The card never scrolls, so over-limit input (including legacy long
-    // notes and pastes) is capped to what visibly fits.
+    // Two caps keep content inside the fixed card: a generous character
+    // backstop applied instantly on input, and an exact visual-line guard
+    // applied once laid out — so the note holds as many characters as
+    // visibly fit, whatever their width.
     var fieldValue by remember { mutableStateOf(TextFieldValue(externalText.take(maxLength))) }
-    LaunchedEffect(externalText, maxLength) {
+    // Last value known to fit the line budget: overflowing edits revert here.
+    var lastFitting by remember { mutableStateOf(fieldValue) }
+    // True while the content came from typing rather than an external sync:
+    // only then is a guard revert propagated back to the store.
+    var userEdit by remember { mutableStateOf(false) }
+    LaunchedEffect(externalText, maxLength, maxLines) {
         val capped = externalText.take(maxLength)
         if (capped != fieldValue.text) {
-            fieldValue = TextFieldValue(text = capped, selection = TextRange(capped.length))
+            val fresh = TextFieldValue(text = capped, selection = TextRange(capped.length))
+            fieldValue = fresh
+            lastFitting = fresh
         }
+        userEdit = false
+    }
+
+    // Drop enough trailing characters to re-enter the line budget, always
+    // shrinking so repeated layouts converge on a fitting prefix.
+    fun shrinkToFit(text: String, lineCount: Int): String {
+        if (text.isEmpty()) return text
+        val avgPerLine = text.length.toFloat() / lineCount.coerceAtLeast(1)
+        val target = (avgPerLine * maxLines).toInt()
+            .coerceAtMost(text.length - 1)
+            .coerceAtLeast(0)
+        return text.take(target)
     }
 
     // No scroll state on purpose: the capped content always fits the card,
@@ -502,8 +524,8 @@ private fun NoteEditorField(
     BasicTextField(
         value = fieldValue,
         onValueChange = {
-            // Reject anything past the visible capacity; pastes are
-            // truncated to the limit instead of dropped.
+            // Instant character backstop (pastes truncate); the line guard in
+            // onTextLayout then refines to the exact visible fit.
             val cappedText = it.text.take(maxLength)
             val capped = if (cappedText == it.text) {
                 it
@@ -511,9 +533,36 @@ private fun NoteEditorField(
                 TextFieldValue(text = cappedText, selection = TextRange(cappedText.length))
             }
             fieldValue = capped
+            userEdit = true
             onTextChange(capped.text)
         },
-        maxLines = maxLines,
+        // No maxLines cap on purpose: the field must report its true line
+        // count so the guard below sees overflow. The fixed card viewport
+        // can only ever show maxLines lines, so fitting content leaves the
+        // internal cursor-follow scroll with nowhere to go.
+        onTextLayout = { layout ->
+            // Never validate an active IME composition: that would destroy
+            // it. The commit ending it comes back through onValueChange and
+            // re-validates anyway.
+            if (fieldValue.composition != null) return@BasicTextField
+            if (layout.lineCount <= maxLines) {
+                lastFitting = fieldValue
+                userEdit = false
+            } else if (userEdit) {
+                // Undo the overflowing edit exactly. If the baseline itself
+                // no longer fits (e.g. font size changed since), the next
+                // layout falls through to shrinking below.
+                userEdit = false
+                fieldValue = lastFitting.copy(selection = TextRange(lastFitting.text.length))
+                onTextChange(lastFitting.text)
+            } else {
+                val shrunk = shrinkToFit(fieldValue.text, layout.lineCount)
+                if (shrunk != fieldValue.text) {
+                    fieldValue = TextFieldValue(text = shrunk, selection = TextRange(shrunk.length))
+                    onTextChange(shrunk)
+                }
+            }
+        },
         interactionSource = interactionSource,
         modifier = modifier,
         textStyle = TextStyle(

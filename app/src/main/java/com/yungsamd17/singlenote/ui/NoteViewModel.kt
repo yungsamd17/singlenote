@@ -55,8 +55,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     }
 
     fun onTextChange(value: String) {
-        // The editor card has a fixed visible size with no scrolling, so input
-        // is capped at what fits. Smaller fonts fit more text, larger less.
+        // Character backstop for the fixed-size editor card. The editor
+        // additionally guards the exact visual-line budget, which is what
+        // binds first in practice; smaller fonts fit more text.
         val capped = value.take(maxLengthForTextSize(textSize.value))
         if (capped == _text.value) return
         _text.value = capped
@@ -113,16 +114,17 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     companion object {
         private const val SAVE_DEBOUNCE_MS = 500L
 
-        // Fixed editor capacity per text size: the card height is sized to
-        // exactly these lines, so the longest allowed note fills it with
-        // nothing left to scroll to. Smaller font fits more text.
-        const val MAX_LENGTH_SMALL = 360
-        const val MAX_LENGTH_MEDIUM = 230
-        const val MAX_LENGTH_LARGE = 150
+        // Note capacity per text size, enforced on two levels: a generous
+        // character backstop here and in the editor, plus an exact
+        // visual-line guard in the editor — so the note holds as many
+        // characters as visibly fit its fixed card. Smaller font fits more.
+        const val MAX_LENGTH_SMALL = 1000
+        const val MAX_LENGTH_MEDIUM = 600
+        const val MAX_LENGTH_LARGE = 400
 
-        const val MAX_LINES_SMALL = 12
-        const val MAX_LINES_MEDIUM = 9
-        const val MAX_LINES_LARGE = 7
+        const val MAX_LINES_SMALL = 11
+        const val MAX_LINES_MEDIUM = 8
+        const val MAX_LINES_LARGE = 6
 
         fun maxLengthForTextSize(key: String): Int = when (key) {
             SIZE_SMALL -> MAX_LENGTH_SMALL
