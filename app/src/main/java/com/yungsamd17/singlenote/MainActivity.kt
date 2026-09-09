@@ -13,12 +13,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,29 +62,20 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = "note",
+                        // Fade-only page transitions: sliding full screens
+                        // recomposes the whole layout every frame and janks on
+                        // slower devices, while a short crossfade stays smooth.
                         enterTransition = {
-                            slideInHorizontally(
-                                initialOffsetX = { it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(250))
+                            fadeIn(animationSpec = tween(150))
                         },
                         exitTransition = {
-                            slideOutHorizontally(
-                                targetOffsetX = { -it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                            fadeOut(animationSpec = tween(150))
                         },
                         popEnterTransition = {
-                            slideInHorizontally(
-                                initialOffsetX = { -it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(250))
+                            fadeIn(animationSpec = tween(150))
                         },
                         popExitTransition = {
-                            slideOutHorizontally(
-                                targetOffsetX = { it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                            fadeOut(animationSpec = tween(150))
                         }
                     ) {
                         composable("note") {
