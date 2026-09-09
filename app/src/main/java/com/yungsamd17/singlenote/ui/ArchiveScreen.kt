@@ -65,11 +65,13 @@ fun ArchiveScreen(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            val messageRes = when (event) {
-                ArchiveEvent.Restored -> R.string.restored
-                ArchiveEvent.Cleared -> R.string.archive_cleared
+            when (event) {
+                // Back on the main note: the restored/swapped/replaced note
+                // is already visible there, so the archive closes itself.
+                ArchiveEvent.Restored -> onBack()
+                ArchiveEvent.Cleared ->
+                    snackbarHostState.showSnackbar(message = context.getString(R.string.archive_cleared))
             }
-            snackbarHostState.showSnackbar(message = context.getString(messageRes))
         }
     }
 
@@ -147,19 +149,14 @@ fun ArchiveScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(
-                        onClick = { viewModel.replace(note) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
+                    TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    TextButton(onClick = { viewModel.replace(note) }) {
                         Text(stringResource(R.string.action_replace))
                     }
                     TextButton(onClick = { viewModel.swap(note) }) {
                         Text(stringResource(R.string.action_swap))
-                    }
-                    TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
-                        Text(stringResource(R.string.cancel))
                     }
                 }
             }
@@ -261,10 +258,13 @@ private fun ArchivedNoteItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledTonalButton(onClick = onRestore) {
+                FilledTonalButton(
+                    onClick = onRestore,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         Icons.Outlined.Unarchive,
                         contentDescription = null
@@ -272,7 +272,10 @@ private fun ArchivedNoteItem(
                     Spacer(Modifier.width(ButtonDefaults.IconSpacing))
                     Text(stringResource(R.string.action_restore))
                 }
-                FilledTonalButton(onClick = onDelete) {
+                FilledTonalButton(
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         Icons.Outlined.Delete,
                         contentDescription = null

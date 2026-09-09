@@ -15,7 +15,6 @@
     <string name="delete_dialog_message">This note will be permanently deleted and can\'t be recovered.</string>
     <string name="delete_dialog_confirm">Delete</string>
     <string name="cancel">Cancel</string>
-    <string name="restored">Note restored</string>
     <string name="archive_cleared">Archive cleared</string>
     <string name="restore_conflict_title">Restore this note?</string>
     <string name="restore_conflict_message">The main view already has a note. Swap the two notes, or replace the main note with this one?</string>
