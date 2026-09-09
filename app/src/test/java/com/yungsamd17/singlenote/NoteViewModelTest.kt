@@ -17,6 +17,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -52,6 +53,8 @@ class NoteViewModelTest {
         override suspend fun deleteActive() {
             deleteRequested = true
             activeNote.value = null
+            // Mirrors NoteRepository: deleting unpins the note.
+            pinned.value = false
         }
 
         override suspend fun setPinned(value: Boolean) {
@@ -144,6 +147,44 @@ class NoteViewModelTest {
 
         assertTrue(store.deleteRequested)
         assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun delete_unpinsNote() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.deleteCurrent()
+        advanceUntilIdle()
+
+        assertTrue(store.deleteRequested)
+        assertFalse(store.pinned.value)
+    }
+
+    @Test
+    fun typing_truncatesToSizeLimit() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        // Default size is medium.
+        vm.onTextChange("a".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 50))
+
+        assertEquals(NoteViewModel.MAX_LENGTH_MEDIUM, vm.text.value.length)
+    }
+
+    @Test
+    fun limits_smallerFontFitsMore() {
+        assertTrue(NoteViewModel.MAX_LENGTH_SMALL > NoteViewModel.MAX_LENGTH_MEDIUM)
+        assertTrue(NoteViewModel.MAX_LENGTH_MEDIUM > NoteViewModel.MAX_LENGTH_LARGE)
+        assertEquals(
+            NoteViewModel.MAX_LENGTH_MEDIUM,
+            NoteViewModel.maxLengthForTextSize(SIZE_MEDIUM)
+        )
     }
 
     @Test
