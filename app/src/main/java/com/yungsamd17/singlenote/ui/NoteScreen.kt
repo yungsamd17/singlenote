@@ -9,17 +9,29 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
@@ -32,6 +44,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
@@ -52,17 +65,28 @@ import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.LocalFocusManager
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.TextRange
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -70,6 +94,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,13 +111,17 @@ fun NoteScreen(
     viewModel: NoteViewModel,
     onOpenArchive: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenEditor: () -> Unit,
 ) {
     val context = LocalContext.current
     val text by viewModel.text.collectAsStateWithLifecycle()
     val pinned by viewModel.pinned.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val fontFamilyKey by viewModel.fontFamily.collectAsStateWithLifecycle()
+    val textSizeKey by viewModel.textSize.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val density = LocalDensity.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -128,6 +157,62 @@ fun NoteScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val hasContent = text.isNotBlank()
+
+    // Editing starts the moment the note field gains focus (a tap puts the
+    // cursor exactly where it landed) and ends when Done clears focus.
+    val fieldInteraction = remember { MutableInteractionSource() }
+    val isEditing by fieldInteraction.collectIsFocusedAsState()
+
+    var fieldValue by remember { mutableStateOf(TextFieldValue(text)) }
+    LaunchedEffect(text) {
+        if (text != fieldValue.text) {
+            fieldValue = TextFieldValue(text = text, selection = TextRange(text.length))
+        }
+    }
+
+    val noteFontFamily = when (fontFamilyKey) {
+        "mono" -> FontFamily.Monospace
+        "serif" -> FontFamily.Serif
+        else -> FontFamily.SansSerif
+    }
+    val noteFontSize = when (textSizeKey) {
+        "small" -> 18.sp
+        "large" -> 28.sp
+        else -> 22.sp
+    }
+    // Button labels stay at the default size for "small" and grow with the setting.
+    val buttonFontSize = when (textSizeKey) {
+        "small" -> 14.sp
+        "large" -> 20.sp
+        else -> 16.sp
+    }
+
+    // Keeps the typed line in view while typing.
+    val scrollState = rememberScrollState()
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var viewportHeightPx by remember { mutableIntStateOf(0) }
+    val followPaddingPx = with(density) { 12.dp.toPx() }
+    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing) {
+        if (!isEditing) return@LaunchedEffect
+        if (viewportHeightPx <= 0) return@LaunchedEffect
+        val layout = textLayoutResult ?: return@LaunchedEffect
+        val offset = fieldValue.selection.start.coerceIn(0, fieldValue.text.length)
+        val cursor = layout.getCursorRect(offset)
+        val viewTop = scrollState.value.toFloat()
+        val viewBottom = viewTop + viewportHeightPx
+        when {
+            cursor.bottom > viewBottom ->
+                scrollState.scrollTo((cursor.bottom - viewportHeightPx + followPaddingPx).toInt())
+            cursor.top < viewTop ->
+                scrollState.scrollTo(max(0f, cursor.top - followPaddingPx).toInt())
+        }
+    }
+
+    fun finishEditing() {
+        keyboard?.hide()
+        focusManager.clearFocus()
+        viewModel.flushSave()
+    }
 
     Scaffold(
         topBar = {
@@ -232,100 +317,129 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
-        val noteFontFamily = when (viewModel.fontFamily.collectAsStateWithLifecycle().value) {
-            "mono" -> FontFamily.Monospace
-            "serif" -> FontFamily.Serif
-            else -> FontFamily.SansSerif
-        }
-        val noteFontSize = when (viewModel.textSize.collectAsStateWithLifecycle().value) {
-            "small" -> 18.sp
-            "large" -> 28.sp
-            else -> 22.sp
-        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
             Card(
-                onClick = onOpenEditor,
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Box(
+                BasicTextField(
+                    value = fieldValue,
+                    onValueChange = {
+                        fieldValue = it
+                        viewModel.onTextChange(it.text)
+                    },
+                    onTextLayout = { textLayoutResult = it },
+                    interactionSource = fieldInteraction,
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    if (text.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.hint_write_one_thing),
-                            style = TextStyle(
-                                fontFamily = noteFontFamily,
-                                fontSize = noteFontSize,
-                                lineHeight = (noteFontSize.value * 1.45f).sp
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            text = text,
-                            style = TextStyle(
-                                fontFamily = noteFontFamily,
-                                fontSize = noteFontSize,
-                                lineHeight = (noteFontSize.value * 1.45f).sp,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
+                        .onSizeChanged { viewportHeightPx = it.height }
+                        .verticalScroll(scrollState),
+                    textStyle = TextStyle(
+                        fontFamily = noteFontFamily,
+                        fontSize = noteFontSize,
+                        lineHeight = (noteFontSize.value * 1.45f).sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 20.dp, vertical = 16.dp),
+                            contentAlignment = Alignment.TopStart
+                        ) {
+                            if (fieldValue.text.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.hint_write_one_thing),
+                                    style = TextStyle(
+                                        fontFamily = noteFontFamily,
+                                        fontSize = noteFontSize,
+                                        lineHeight = (noteFontSize.value * 1.45f).sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            innerTextField()
+                        }
                     }
-                }
+                )
             }
 
-            Box(
+            AnimatedContent(
+                targetState = isEditing,
+                label = "bottomBar",
+                transitionSpec = {
+                    (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 })
+                        .togetherWith(fadeOut(tween(150)) + slideOutVertically(tween(150)) { it / 2 })
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-            ) {
-                FloatingActionButton(
-                    onClick = { if (hasContent) viewModel.archiveCurrent() },
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .alpha(if (hasContent) 1f else 0.38f),
-                    shape = CircleShape,
-                    elevation = noShadowElevation()
-                ) {
-                    Icon(
-                        Icons.Outlined.Archive,
-                        contentDescription = stringResource(R.string.cd_archive)
-                    )
-                }
+                    .imePadding()
+            ) { editing ->
+                if (editing) {
+                    Button(
+                        onClick = ::finishEditing,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                            .height(56.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.action_done),
+                            fontSize = buttonFontSize
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                    ) {
+                        FloatingActionButton(
+                            onClick = { if (hasContent) viewModel.archiveCurrent() },
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .alpha(if (hasContent) 1f else 0.38f),
+                            shape = CircleShape,
+                            elevation = noShadowElevation()
+                        ) {
+                            Icon(
+                                Icons.Outlined.Archive,
+                                contentDescription = stringResource(R.string.cd_archive)
+                            )
+                        }
 
-                if (notificationsEnabled) {
-                    FixedWidthPinButton(
-                        pinned = pinned,
-                        onClick = ::requestPinToggle,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                        if (notificationsEnabled) {
+                            FixedWidthPinButton(
+                                pinned = pinned,
+                                onClick = ::requestPinToggle,
+                                fontSize = buttonFontSize,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
 
-                FloatingActionButton(
-                    onClick = { if (hasContent) showDeleteDialog = true },
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .alpha(if (hasContent) 1f else 0.38f),
-                    shape = CircleShape,
-                    elevation = noShadowElevation()
-                ) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.cd_delete)
-                    )
+                        FloatingActionButton(
+                            onClick = { if (hasContent) showDeleteDialog = true },
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .alpha(if (hasContent) 1f else 0.38f),
+                            shape = CircleShape,
+                            elevation = noShadowElevation()
+                        ) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.cd_delete)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -357,6 +471,7 @@ fun FixedWidthPinButton(
     pinned: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    fontSize: TextUnit = TextUnit.Unspecified,
 ) {
     // Reserve the widest label width so the button never resizes when toggled.
     val widestLabel = stringResource(R.string.pin_note)
@@ -364,6 +479,7 @@ fun FixedWidthPinButton(
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
+        shape = CircleShape,
         elevation = noShadowElevation(),
         icon = {
             Icon(
@@ -378,15 +494,16 @@ fun FixedWidthPinButton(
                 Text(
                     widestLabel,
                     maxLines = 1,
+                    fontSize = fontSize,
                     modifier = Modifier.alpha(0f)
                 )
-                Text(pinLabel, maxLines = 1)
+                Text(pinLabel, maxLines = 1, fontSize = fontSize)
             }
         }
     )
 }
 
-fun shareNote(context: Context, text: String) {
+private fun shareNote(context: Context, text: String) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
@@ -394,7 +511,7 @@ fun shareNote(context: Context, text: String) {
     context.startActivity(Intent.createChooser(sendIntent, null))
 }
 
-fun copyNote(context: Context, text: String) {
+private fun copyNote(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
 }
