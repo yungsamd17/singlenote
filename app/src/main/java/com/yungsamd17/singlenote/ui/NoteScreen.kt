@@ -15,8 +15,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -99,6 +97,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
 import kotlin.math.max
+import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +124,6 @@ fun NoteScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    val density = LocalDensity.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -167,13 +165,6 @@ fun NoteScreen(
     val fieldInteraction = remember { MutableInteractionSource() }
     val isEditing by fieldInteraction.collectIsFocusedAsState()
 
-    var fieldValue by remember { mutableStateOf(TextFieldValue(text)) }
-    LaunchedEffect(text) {
-        if (text != fieldValue.text) {
-            fieldValue = TextFieldValue(text = text, selection = TextRange(text.length))
-        }
-    }
-
     val noteFontFamily = when (fontFamilyKey) {
         "mono" -> FontFamily.Monospace
         "serif" -> FontFamily.Serif
@@ -191,33 +182,8 @@ fun NoteScreen(
         else -> 16.sp
     }
 
-    // Keeps the typed line in view while typing, and jumps to the tapped
-    // cursor when opening a long note (e.g. at its end).
-    val scrollState = rememberScrollState()
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var viewportHeightPx by remember { mutableIntStateOf(0) }
-    // The text layout origin sits below the card's inner top padding, so the
-    // cursor rect has to be shifted down by it to match scroll coordinates.
-    val textTopPaddingPx = with(density) { 16.dp.toPx() }
-    val followTopPaddingPx = with(density) { 12.dp.toPx() }
-    val followBottomPaddingPx = followTopPaddingPx + 10f
-    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing, viewportHeightPx) {
-        if (!isEditing) return@LaunchedEffect
-        if (viewportHeightPx <= 0) return@LaunchedEffect
-        val layout = textLayoutResult ?: return@LaunchedEffect
-        val offset = fieldValue.selection.start.coerceIn(0, fieldValue.text.length)
-        val cursor = layout.getCursorRect(offset)
-        val cursorTop = cursor.top + textTopPaddingPx
-        val cursorBottom = cursor.bottom + textTopPaddingPx
-        val viewTop = scrollState.value.toFloat()
-        val viewBottom = viewTop + viewportHeightPx
-        when {
-            cursorBottom > viewBottom ->
-                scrollState.scrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
-            cursorTop < viewTop ->
-                scrollState.scrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
-        }
-    }
+    // The editor field below owns the follow-scroll state; the top padding
+    // offset lives with it (see NoteEditorField).
 
     fun finishEditing() {
         keyboard?.hide()
@@ -365,46 +331,14 @@ fun NoteScreen(
                     .weight(1f)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                BasicTextField(
-                    value = fieldValue,
-                    onValueChange = {
-                        fieldValue = it
-                        viewModel.onTextChange(it.text)
-                    },
-                    onTextLayout = { textLayoutResult = it },
+                NoteEditorField(
+                    externalText = text,
+                    onTextChange = viewModel::onTextChange,
                     interactionSource = fieldInteraction,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .onSizeChanged { viewportHeightPx = it.height }
-                        .verticalScroll(scrollState),
-                    textStyle = TextStyle(
-                        fontFamily = noteFontFamily,
-                        fontSize = noteFontSize,
-                        lineHeight = (noteFontSize.value * 1.45f).sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    decorationBox = { innerTextField ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 20.dp, vertical = 16.dp),
-                            contentAlignment = Alignment.TopStart
-                        ) {
-                            if (fieldValue.text.isEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.hint_write_one_thing),
-                                    style = TextStyle(
-                                        fontFamily = noteFontFamily,
-                                        fontSize = noteFontSize,
-                                        lineHeight = (noteFontSize.value * 1.45f).sp
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            innerTextField()
-                        }
-                    }
+                    isEditing = isEditing,
+                    fontFamily = noteFontFamily,
+                    fontSize = noteFontSize,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
@@ -412,8 +346,7 @@ fun NoteScreen(
                 targetState = isEditing,
                 label = "bottomBar",
                 transitionSpec = {
-                    (fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 2 })
-                        .togetherWith(fadeOut(tween(150)) + slideOutVertically(tween(150)) { it / 2 })
+                    fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -513,6 +446,99 @@ fun NoteScreen(
             }
         )
     }
+}
+
+@Composable
+private fun NoteEditorField(
+    externalText: String,
+    onTextChange: (String) -> Unit,
+    interactionSource: MutableInteractionSource,
+    isEditing: Boolean,
+    fontFamily: FontFamily,
+    fontSize: TextUnit,
+    modifier: Modifier = Modifier,
+) {
+    // Local editing state: keystrokes recompose only this field, not the
+    // whole screen, which keeps typing smooth on slower devices.
+    val density = LocalDensity.current
+    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
+    LaunchedEffect(externalText) {
+        if (externalText != fieldValue.text) {
+            fieldValue = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
+        }
+    }
+
+    // Keeps the typed line in view while typing, and jumps to the tapped
+    // cursor when opening a long note (e.g. at its end).
+    val scrollState = rememberScrollState()
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var viewportHeightPx by remember { mutableIntStateOf(0) }
+    // The text layout origin sits below the card's inner top padding, so the
+    // cursor rect has to be shifted down by it to match scroll coordinates.
+    val textTopPaddingPx = with(density) { 16.dp.toPx() }
+    val followTopPaddingPx = with(density) { 12.dp.toPx() }
+    val followBottomPaddingPx = followTopPaddingPx + 10f
+    LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing, viewportHeightPx) {
+        if (!isEditing) return@LaunchedEffect
+        if (viewportHeightPx <= 0) return@LaunchedEffect
+        val layout = textLayoutResult ?: return@LaunchedEffect
+        // The layout can lag one frame behind fast typing (or IME
+        // completions): never query past what it actually laid out.
+        val layoutEnd = layout.layoutInput.text.length
+        val offset = fieldValue.selection.start.coerceIn(0, min(fieldValue.text.length, layoutEnd))
+        val cursor = layout.getCursorRect(offset)
+        val cursorTop = cursor.top + textTopPaddingPx
+        val cursorBottom = cursor.bottom + textTopPaddingPx
+        val viewTop = scrollState.value.toFloat()
+        val viewBottom = viewTop + viewportHeightPx
+        when {
+            cursorBottom > viewBottom ->
+                scrollState.scrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
+            cursorTop < viewTop ->
+                scrollState.scrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
+        }
+    }
+
+    BasicTextField(
+        value = fieldValue,
+        onValueChange = {
+            fieldValue = it
+            onTextChange(it.text)
+        },
+        onTextLayout = { textLayoutResult = it },
+        interactionSource = interactionSource,
+        modifier = modifier
+            .onSizeChanged { viewportHeightPx = it.height }
+            .verticalScroll(scrollState),
+        textStyle = TextStyle(
+            fontFamily = fontFamily,
+            fontSize = fontSize,
+            lineHeight = (fontSize.value * 1.45f).sp,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        decorationBox = { innerTextField ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                contentAlignment = Alignment.TopStart
+            ) {
+                if (fieldValue.text.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.hint_write_one_thing),
+                        style = TextStyle(
+                            fontFamily = fontFamily,
+                            fontSize = fontSize,
+                            lineHeight = (fontSize.value * 1.45f).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                innerTextField()
+            }
+        }
+    )
 }
 
 @Composable

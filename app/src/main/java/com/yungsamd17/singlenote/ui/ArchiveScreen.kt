@@ -139,12 +139,13 @@ fun ArchiveScreen(
             title = { Text(stringResource(R.string.restore_conflict_title)) },
             text = { Text(stringResource(R.string.restore_conflict_message)) },
             confirmButton = {
-                TextButton(onClick = { viewModel.swap(note) }) {
-                    Text(stringResource(R.string.action_swap))
-                }
-            },
-            dismissButton = {
-                Row {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = { viewModel.swap(note) }) {
+                        Text(stringResource(R.string.action_swap))
+                    }
                     TextButton(
                         onClick = { viewModel.replace(note) },
                         colors = ButtonDefaults.textButtonColors(
