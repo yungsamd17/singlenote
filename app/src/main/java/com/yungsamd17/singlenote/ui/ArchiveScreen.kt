@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
@@ -17,7 +19,9 @@ import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +30,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -54,13 +57,14 @@ fun ArchiveScreen(
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
+    var showClearDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             val messageRes = when (event) {
                 ArchiveEvent.Restored -> R.string.restored
-                ArchiveEvent.BlockedByActiveNote -> R.string.no_active_note_warning
+                ArchiveEvent.Cleared -> R.string.archive_cleared
             }
             snackbarHostState.showSnackbar(message = context.getString(messageRes))
         }
@@ -68,7 +72,7 @@ fun ArchiveScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.archive_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -76,6 +80,16 @@ fun ArchiveScreen(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back)
                         )
+                    }
+                },
+                actions = {
+                    if (notes.isNotEmpty()) {
+                        IconButton(onClick = { showClearDialog = true }) {
+                            Icon(
+                                Icons.Outlined.Delete,
+                                contentDescription = stringResource(R.string.clear_archive)
+                            )
+                        }
                     }
                 }
             )
@@ -113,6 +127,40 @@ fun ArchiveScreen(
         }
     }
 
+    viewModel.restoreConflict?.let { note ->
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissRestoreConflict() },
+            icon = {
+                Icon(
+                    Icons.Outlined.Unarchive,
+                    contentDescription = null
+                )
+            },
+            title = { Text(stringResource(R.string.restore_conflict_title)) },
+            text = { Text(stringResource(R.string.restore_conflict_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.swap(note) }) {
+                    Text(stringResource(R.string.action_swap))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = { viewModel.replace(note) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.action_replace))
+                    }
+                    TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            }
+        )
+    }
+
     noteToDelete?.let { note ->
         AlertDialog(
             onDismissRequest = { noteToDelete = null },
@@ -145,6 +193,39 @@ fun ArchiveScreen(
             }
         )
     }
+
+    if (showClearDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDialog = false },
+            icon = {
+                Icon(
+                    Icons.Outlined.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = { Text(stringResource(R.string.clear_archive_title)) },
+            text = { Text(stringResource(R.string.clear_archive_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.clearArchive()
+                        showClearDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text(stringResource(R.string.delete_dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -153,7 +234,10 @@ private fun ArchivedNoteItem(
     onRestore: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) },
@@ -168,21 +252,36 @@ private fun ArchivedNoteItem(
                 modifier = Modifier.padding(top = 8.dp)
             )
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onRestore) {
-                    Icon(
-                        Icons.Outlined.Unarchive,
-                        contentDescription = stringResource(R.string.cd_restore)
-                    )
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.cd_delete)
-                    )
-                }
+                ExtendedFloatingActionButton(
+                    onClick = onRestore,
+                    shape = CircleShape,
+                    elevation = noShadowElevation(),
+                    icon = {
+                        Icon(
+                            Icons.Outlined.Unarchive,
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text(stringResource(R.string.action_restore)) }
+                )
+                ExtendedFloatingActionButton(
+                    onClick = onDelete,
+                    shape = CircleShape,
+                    elevation = noShadowElevation(),
+                    icon = {
+                        Icon(
+                            Icons.Outlined.Delete,
+                            contentDescription = null
+                        )
+                    },
+                    text = { Text(stringResource(R.string.action_delete)) }
+                )
             }
         }
     }

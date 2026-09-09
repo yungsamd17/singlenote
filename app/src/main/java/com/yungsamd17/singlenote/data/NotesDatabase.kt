@@ -51,6 +51,10 @@ interface ArchiveStore {
     val archivedNotes: Flow<List<Note>>
     suspend fun restore(noteId: Long): Boolean
     suspend fun deleteArchived(noteId: Long)
+    suspend fun hasActiveNote(): Boolean
+    suspend fun swapWithActive(noteId: Long)
+    suspend fun replaceActive(noteId: Long)
+    suspend fun clearArchived()
 }
 
 class NoteRepository(private val dao: NoteDao, private val context: Context) :
@@ -105,6 +109,31 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     }
 
     override suspend fun deleteArchived(noteId: Long) = dao.deleteById(noteId)
+
+    override suspend fun hasActiveNote(): Boolean = dao.getActive() != null
+
+    override suspend fun swapWithActive(noteId: Long) {
+        val active = dao.getActive()
+        val archived = dao.getById(noteId)
+        if (active != null && archived != null && archived.state == Note.STATE_ARCHIVED) {
+            dao.setState(active.id, Note.STATE_ARCHIVED)
+            dao.setState(archived.id, Note.STATE_ACTIVE)
+            notifyNoteChanged()
+        }
+    }
+
+    override suspend fun replaceActive(noteId: Long) {
+        val archived = dao.getById(noteId) ?: return
+        if (archived.state != Note.STATE_ARCHIVED) return
+        dao.getActive()?.let { dao.deleteById(it.id) }
+        dao.restore(noteId)
+        notifyNoteChanged()
+    }
+
+    override suspend fun clearArchived() {
+        dao.deleteArchived()
+        notifyNoteChanged()
+    }
 
     override suspend fun setPinned(value: Boolean) {
         preferences.setPinned(value)

@@ -102,7 +102,7 @@ import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun noShadowElevation() = FloatingActionButtonDefaults.elevation(
+internal fun noShadowElevation() = FloatingActionButtonDefaults.elevation(
     defaultElevation = 0.dp,
     pressedElevation = 0.dp,
     focusedElevation = 0.dp,
@@ -196,6 +196,9 @@ fun NoteScreen(
     val scrollState = rememberScrollState()
     var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
     var viewportHeightPx by remember { mutableIntStateOf(0) }
+    // The text layout origin sits below the card's inner top padding, so the
+    // cursor rect has to be shifted down by it to match scroll coordinates.
+    val textTopPaddingPx = with(density) { 16.dp.toPx() }
     val followTopPaddingPx = with(density) { 12.dp.toPx() }
     val followBottomPaddingPx = followTopPaddingPx + 10f
     LaunchedEffect(fieldValue.selection, textLayoutResult, isEditing, viewportHeightPx) {
@@ -204,13 +207,15 @@ fun NoteScreen(
         val layout = textLayoutResult ?: return@LaunchedEffect
         val offset = fieldValue.selection.start.coerceIn(0, fieldValue.text.length)
         val cursor = layout.getCursorRect(offset)
+        val cursorTop = cursor.top + textTopPaddingPx
+        val cursorBottom = cursor.bottom + textTopPaddingPx
         val viewTop = scrollState.value.toFloat()
         val viewBottom = viewTop + viewportHeightPx
         when {
-            cursor.bottom > viewBottom ->
-                scrollState.scrollTo((cursor.bottom - viewportHeightPx + followBottomPaddingPx).toInt())
-            cursor.top < viewTop ->
-                scrollState.scrollTo(max(0f, cursor.top - followTopPaddingPx).toInt())
+            cursorBottom > viewBottom ->
+                scrollState.scrollTo((cursorBottom - viewportHeightPx + followBottomPaddingPx).toInt())
+            cursorTop < viewTop ->
+                scrollState.scrollTo(max(0f, cursorTop - followTopPaddingPx).toInt())
         }
     }
 
