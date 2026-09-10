@@ -184,6 +184,43 @@ class NoteViewModelTest {
     }
 
     @Test
+    fun clearingText_unpinsNoteWithoutRepinning() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        // Typing never unpins a non-blank note.
+        vm.onTextChange("hello")
+        advanceUntilIdle()
+        assertTrue(store.pinned.value)
+
+        // Clearing it manually unpins, same as archive/delete.
+        vm.onTextChange("")
+        advanceUntilIdle()
+        assertFalse(store.pinned.value)
+
+        // And typing again does not pin it back automatically.
+        vm.onTextChange("new note")
+        advanceUntilIdle()
+        assertFalse(store.pinned.value)
+    }
+
+    @Test
+    fun adoptingBlankNote_unpinsNote() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        store.activeNote.value = Note(id = 3, content = "", createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        assertEquals("", vm.text.value)
+        assertFalse(store.pinned.value)
+    }
+
+    @Test
     fun typing_truncatesToSizeLimit() = runTest {
         installMain()
         val store = FakeNoteStore()
@@ -202,9 +239,9 @@ class NoteViewModelTest {
         assertTrue(NoteViewModel.MAX_LENGTH_MEDIUM > NoteViewModel.MAX_LENGTH_LARGE)
         assertTrue(NoteViewModel.MAX_LINES_SMALL > NoteViewModel.MAX_LINES_MEDIUM)
         assertTrue(NoteViewModel.MAX_LINES_MEDIUM > NoteViewModel.MAX_LINES_LARGE)
-        assertEquals(11, NoteViewModel.maxLinesForTextSize(SIZE_SMALL))
-        assertEquals(8, NoteViewModel.maxLinesForTextSize(SIZE_MEDIUM))
-        assertEquals(6, NoteViewModel.maxLinesForTextSize(SIZE_LARGE))
+        assertEquals(10, NoteViewModel.maxLinesForTextSize(SIZE_SMALL))
+        assertEquals(7, NoteViewModel.maxLinesForTextSize(SIZE_MEDIUM))
+        assertEquals(5, NoteViewModel.maxLinesForTextSize(SIZE_LARGE))
         assertEquals(
             NoteViewModel.MAX_LENGTH_MEDIUM,
             NoteViewModel.maxLengthForTextSize(SIZE_MEDIUM)
