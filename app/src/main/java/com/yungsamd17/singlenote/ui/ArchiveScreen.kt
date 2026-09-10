@@ -152,11 +152,16 @@ fun ArchiveScreen(
                     TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
                         Text(stringResource(R.string.cancel))
                     }
-                    TextButton(onClick = { viewModel.replace(note) }) {
-                        Text(stringResource(R.string.action_replace))
-                    }
                     TextButton(onClick = { viewModel.swap(note) }) {
                         Text(stringResource(R.string.action_swap))
+                    }
+                    TextButton(
+                        onClick = { viewModel.replace(note) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.action_replace))
                     }
                 }
             }
