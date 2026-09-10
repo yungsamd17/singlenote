@@ -61,6 +61,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         val capped = value.take(maxLengthForTextSize(textSize.value))
         if (capped == _text.value) return
         _text.value = capped
+        if (capped.isBlank()) unpinIfPinned()
         scheduleSave()
     }
 
@@ -109,6 +110,17 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         saveJob?.cancel()
         currentNoteId = note?.id
         _text.value = note?.content.orEmpty()
+        if (note?.content.isNullOrBlank()) unpinIfPinned()
+    }
+
+    // Clearing the main note manually unpins it, same as archiving or
+    // deleting: a blank note shows no notification, and the next note must
+    // not inherit the pinned state. Nothing ever re-pins automatically —
+    // only the pin button sets pinned to true (see togglePinned).
+    private fun unpinIfPinned() {
+        viewModelScope.launch {
+            if (store.pinned.first()) store.setPinned(false)
+        }
     }
 
     companion object {
