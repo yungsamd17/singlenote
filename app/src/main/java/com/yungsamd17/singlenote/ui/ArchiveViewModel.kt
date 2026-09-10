@@ -1,5 +1,8 @@
 package com.yungsamd17.singlenote.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,7 +17,7 @@ import kotlinx.coroutines.launch
 
 sealed interface ArchiveEvent {
     data object Restored : ArchiveEvent
-    data object BlockedByActiveNote : ArchiveEvent
+    data object Cleared : ArchiveEvent
 }
 
 class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
@@ -25,19 +28,48 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     private val _events = Channel<ArchiveEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    var restoreConflict by mutableStateOf<Note?>(null)
+        private set
+
     fun restore(note: Note) {
         viewModelScope.launch {
-            val event = if (archiveStore.restore(note.id)) {
-                ArchiveEvent.Restored
-            } else {
-                ArchiveEvent.BlockedByActiveNote
+            if (archiveStore.hasActiveNote()) {
+                restoreConflict = note
+            } else if (archiveStore.restore(note.id)) {
+                _events.send(ArchiveEvent.Restored)
             }
-            _events.send(event)
         }
+    }
+
+    fun swap(note: Note) {
+        viewModelScope.launch {
+            archiveStore.swapWithActive(note.id)
+            restoreConflict = null
+            _events.send(ArchiveEvent.Restored)
+        }
+    }
+
+    fun replace(note: Note) {
+        viewModelScope.launch {
+            archiveStore.replaceActive(note.id)
+            restoreConflict = null
+            _events.send(ArchiveEvent.Restored)
+        }
+    }
+
+    fun dismissRestoreConflict() {
+        restoreConflict = null
     }
 
     fun delete(note: Note) {
         viewModelScope.launch { archiveStore.deleteArchived(note.id) }
+    }
+
+    fun clearArchive() {
+        viewModelScope.launch {
+            archiveStore.clearArchived()
+            _events.send(ArchiveEvent.Cleared)
+        }
     }
 
     companion object {

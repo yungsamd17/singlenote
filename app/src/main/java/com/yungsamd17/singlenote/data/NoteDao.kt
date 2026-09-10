@@ -18,6 +18,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE state = ${Note.STATE_ARCHIVED} ORDER BY updatedAt DESC")
     fun observeArchived(): Flow<List<Note>>
 
+    @Query("SELECT * FROM notes WHERE id = :id")
+    suspend fun getById(id: Long): Note?
+
     @Insert
     suspend fun insert(note: Note): Long
 
@@ -30,6 +33,12 @@ interface NoteDao {
     @Query("UPDATE notes SET state = ${Note.STATE_ACTIVE} WHERE id = :id")
     suspend fun restore(id: Long)
 
+    @Query("UPDATE notes SET state = :state WHERE id = :id")
+    suspend fun setState(id: Long, state: Int)
+
     @Query("DELETE FROM notes WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM notes WHERE state = ${Note.STATE_ARCHIVED}")
+    suspend fun deleteArchived()
 }

@@ -65,28 +65,31 @@ class MainActivity : ComponentActivity() {
                     NavHost(
                         navController = navController,
                         startDestination = "note",
+                        // Slide + fade page transitions, kept short on purpose:
+                        // sliding full screens recomposes every frame, so a
+                        // long slide janks on slower devices.
                         enterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(250))
+                                animationSpec = tween(250, easing = FastOutSlowInEasing)
+                            ) + fadeIn(animationSpec = tween(200))
                         },
                         exitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { -it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                                animationSpec = tween(250, easing = FastOutSlowInEasing)
                             ) + fadeOut(animationSpec = tween(200))
                         },
                         popEnterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { -it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(250))
+                                animationSpec = tween(250, easing = FastOutSlowInEasing)
+                            ) + fadeIn(animationSpec = tween(200))
                         },
                         popExitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { it },
-                                animationSpec = tween(300, easing = FastOutSlowInEasing)
+                                animationSpec = tween(250, easing = FastOutSlowInEasing)
                             ) + fadeOut(animationSpec = tween(200))
                         }
                     ) {
