@@ -60,6 +60,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
@@ -69,8 +71,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,6 +98,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlinx.coroutines.launch
+
+private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,6 +162,9 @@ fun NoteScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     val hasContent = text.isNotBlank()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var lastLimitHintMs by remember { mutableLongStateOf(0L) }
 
     // Editing starts the moment the note field gains focus (a tap puts the
     // cursor exactly where it landed) and ends when Done clears focus.
@@ -201,6 +211,18 @@ fun NoteScreen(
         viewModel.flushSave()
     }
 
+    // Called by the editor when input hits the note limit. Over-limit
+    // keystrokes are swallowed silently; this hint fires at most once per
+    // cooldown so holding a key doesn't spam snackbars.
+    fun notifyLimitReached() {
+        val now = System.currentTimeMillis()
+        if (now - lastLimitHintMs < LIMIT_HINT_COOLDOWN_MS) return
+        lastLimitHintMs = now
+        scope.launch {
+            snackbarHostState.showSnackbar(context.getString(R.string.note_limit_reached))
+        }
+    }
+
     // IME visibility straight from the Compose insets: no window relayout
     // happens under adjustNothing, so there is no layout pass to observe —
     // a global-layout listener would go silent and miss the close.
@@ -222,6 +244,7 @@ fun NoteScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
@@ -345,6 +368,7 @@ fun NoteScreen(
                 NoteEditorField(
                     externalText = text,
                     onTextChange = viewModel::onTextChange,
+                    onLimitReached = ::notifyLimitReached,
                     interactionSource = fieldInteraction,
                     fontFamily = noteFontFamily,
                     fontSize = noteFontSize,
@@ -476,6 +500,7 @@ fun NoteScreen(
 private fun NoteEditorField(
     externalText: String,
     onTextChange: (String) -> Unit,
+    onLimitReached: () -> Unit,
     interactionSource: MutableInteractionSource,
     fontFamily: FontFamily,
     fontSize: TextUnit,
@@ -486,16 +511,22 @@ private fun NoteEditorField(
 ) {
     // Local editing state: keystrokes recompose only this field, not the
     // whole screen, which keeps typing smooth on slower devices.
-    // Two caps keep content inside the fixed card: a generous character
-    // backstop applied instantly on input, and an exact visual-line guard
-    // applied once laid out — so the note holds as many characters as
-    // visibly fit, whatever their width.
+    // Over-limit input is swallowed synchronously (the previous value is
+    // kept untouched, so nothing flashes and the cursor never jumps) and
+    // only genuinely new, fitting content is accepted. An exact
+    // visual-line guard on layout remains as the backstop for edits no
+    // synchronous check can judge (pastes, IME batch commits) — so the
+    // note holds as many characters as visibly fit, whatever their width.
     var fieldValue by remember { mutableStateOf(TextFieldValue(externalText.take(maxLength))) }
     // Last value known to fit the line budget: overflowing edits revert here.
     var lastFitting by remember { mutableStateOf(fieldValue) }
     // True while the content came from typing rather than an external sync:
     // only then is a guard revert propagated back to the store.
     var userEdit by remember { mutableStateOf(false) }
+    // Latest truthful layout, used to judge the next keystroke before it
+    // renders. Only trusted while it still describes the current value.
+    var lastLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var lastLayoutText by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(externalText, maxLength, maxLines) {
         val capped = externalText.take(maxLength)
         if (capped != fieldValue.text) {
@@ -517,24 +548,66 @@ private fun NoteEditorField(
         return text.take(target)
     }
 
+    // True when the last line has no room for another character, judged
+    // from the last truthful layout: its right edge is within ~1.25 average
+    // character widths of the field edge.
+    fun isLastLineFull(layout: TextLayoutResult): Boolean {
+        val last = layout.lineCount - 1
+        if (last < 0) return false
+        val start = layout.getLineStart(last)
+        val end = layout.getLineEnd(last, visibleEnd = true)
+        if (end <= start) return false
+        val left = layout.getLineLeft(last)
+        val right = layout.getLineRight(last)
+        val avgChar = (right - left) / (end - start).coerceAtLeast(1)
+        return right + avgChar * 1.25f >= layout.size.width
+    }
+
     // No scroll state on purpose: the capped content always fits the card,
     // so a tap puts the cursor exactly where it landed with nothing to
     // follow or reveal while typing.
 
     BasicTextField(
         value = fieldValue,
-        onValueChange = {
-            // Instant character backstop (pastes truncate); the line guard in
-            // onTextLayout then refines to the exact visible fit.
-            val cappedText = it.text.take(maxLength)
-            val capped = if (cappedText == it.text) {
-                it
-            } else {
-                TextFieldValue(text = cappedText, selection = TextRange(cappedText.length))
+        onValueChange = { new ->
+            // Swallow what certainly overflows before it ever renders.
+            // Anything uncertain is accepted tentatively and the line guard
+            // in onTextLayout refines it — that path stays rare.
+            if (new.text.length > maxLength) {
+                val truncated = new.text.take(maxLength)
+                if (truncated == fieldValue.text) {
+                    // Pure overtype at the cap: keep the previous value
+                    // instance untouched — no flash, no cursor jump — and
+                    // hint that the limit is reached.
+                    onLimitReached()
+                    return@BasicTextField
+                }
+                // A longer overage (e.g. a paste): keep the fitting prefix.
+                fieldValue = TextFieldValue(text = truncated, selection = TextRange(truncated.length))
+                userEdit = true
+                onTextChange(truncated)
+                onLimitReached()
+                return@BasicTextField
             }
-            fieldValue = capped
+            val layout = lastLayout
+            if (layout != null && lastLayoutText == fieldValue.text &&
+                fieldValue.composition == null && layout.lineCount >= maxLines
+            ) {
+                val addedBreaks = new.text.count { it == '\n' } -
+                    fieldValue.text.count { it == '\n' }
+                val appendedOne = new.text.length == fieldValue.text.length + 1 &&
+                    new.text.startsWith(fieldValue.text)
+                // A new hard break past a full budget always overflows, and a
+                // single appended character overflows when the last line is
+                // already full. Both are swallowed silently with a hint.
+                if (addedBreaks > 0 || (appendedOne && isLastLineFull(layout))) {
+                    onLimitReached()
+                    return@BasicTextField
+                }
+            }
+            fieldValue = new
             userEdit = true
-            onTextChange(capped.text)
+            onTextChange(new.text)
         },
         // No maxLines cap on purpose: the field must report its true line
         // count so the guard below sees overflow. The fixed card viewport
@@ -545,16 +618,31 @@ private fun NoteEditorField(
             // it. The commit ending it comes back through onValueChange and
             // re-validates anyway.
             if (fieldValue.composition != null) return@BasicTextField
+            // Snapshot every genuine layout: the next keystroke's pre-check
+            // must judge against current metrics (a text/line-count gate
+            // here would go stale across font-size changes and could wedge
+            // swallowing on. A snapshot write only recomposes; without
+            // changed layout inputs nothing relayouts, so this terminates.)
+            lastLayout = layout
+            lastLayoutText = fieldValue.text
             if (layout.lineCount <= maxLines) {
                 lastFitting = fieldValue
                 userEdit = false
             } else if (userEdit) {
-                // Undo the overflowing edit exactly. If the baseline itself
-                // no longer fits (e.g. font size changed since), the next
-                // layout falls through to shrinking below.
+                // Backstop for edits no synchronous check could judge
+                // (pastes, IME batch commits). Single keystrokes revert
+                // exactly; bulk input keeps its fitting prefix. Either way
+                // the limit was hit, so hint it.
                 userEdit = false
-                fieldValue = lastFitting.copy(selection = TextRange(lastFitting.text.length))
-                onTextChange(lastFitting.text)
+                val overBy = fieldValue.text.length - lastFitting.text.length
+                val reverted = if (overBy in 1..2) {
+                    lastFitting.text
+                } else {
+                    shrinkToFit(fieldValue.text, layout.lineCount)
+                }
+                fieldValue = TextFieldValue(text = reverted, selection = TextRange(reverted.length))
+                onTextChange(reverted)
+                onLimitReached()
             } else {
                 val shrunk = shrinkToFit(fieldValue.text, layout.lineCount)
                 if (shrunk != fieldValue.text) {
