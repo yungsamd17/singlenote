@@ -134,9 +134,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         const val MAX_LENGTH_MEDIUM = 600
         const val MAX_LENGTH_LARGE = 400
 
-        const val MAX_LINES_SMALL = 11
-        const val MAX_LINES_MEDIUM = 8
-        const val MAX_LINES_LARGE = 6
+        const val MAX_LINES_SMALL = 10
+        const val MAX_LINES_MEDIUM = 7
+        const val MAX_LINES_LARGE = 5
 
         fun maxLengthForTextSize(key: String): Int = when (key) {
             SIZE_SMALL -> MAX_LENGTH_SMALL
