@@ -194,11 +194,12 @@ fun NoteScreen(
     val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
     val noteLineHeight = noteFontSize * 1.45f
     // Card height = line capacity plus the editor's vertical padding (16dp
-    // top + 16dp bottom). Fixed once per font size: it never resizes with
-    // the keyboard, only the bottom bar glides above it.
+    // top + 16dp bottom) plus 10dp breathing room. Fixed once per font
+    // size: it never resizes with the keyboard, only the bottom bar glides
+    // above it.
     val density = LocalDensity.current
     val noteCardHeight = with(density) {
-        (noteLineHeight * noteMaxLines.toFloat()).toDp() + 32.dp
+        (noteLineHeight * noteMaxLines.toFloat()).toDp() + 42.dp
     }
 
     // The editor card below is a fixed-size area with no scrolling: a tap
