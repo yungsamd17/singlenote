@@ -244,6 +244,11 @@ fun NoteScreen(
         finishEditing()
     }
 
+    // Done stays put until the keyboard has fully closed: flipping the bar
+    // mid-glide is what read as a shift/stick at the end of the slide.
+    // Opening still reacts to focus instantly, so Done pops in without lag.
+    val showDone = isEditing || isKeyboardOpen
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -385,77 +390,90 @@ fun NoteScreen(
             // never changes size, only the bar glides up.
             Spacer(modifier = Modifier.weight(1f))
 
-            AnimatedContent(
-                targetState = isEditing,
-                label = "bottomBar",
-                transitionSpec = {
-                    fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
-                },
-                // Sole mover of this bar: the window is adjustNothing, so the
-                // animated IME inset glides it above the keyboard with no snap.
+            // Sole glider of this bar: the window is adjustNothing, so the
+            // animated IME inset moves this stable container above the
+            // keyboard with no snap. The content switch inside never changes
+            // size and never touches the insets, so the fade can't shift or
+            // stick at the end of the keyboard slide.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .imePadding()
-            ) { editing ->
-                if (editing) {
-                    Button(
-                        onClick = ::finishEditing,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                            .height(56.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.action_done),
-                            fontSize = buttonFontSize
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                    ) {
-                        FloatingActionButton(
-                            onClick = { if (hasContent) viewModel.archiveCurrent() },
+            ) {
+                AnimatedContent(
+                    targetState = showDone,
+                    label = "bottomBar",
+                    transitionSpec = {
+                        fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
+                    },
+                    // Fixed box: both bars are 56dp content + 16dp vertical
+                    // padding = 88dp, so the crossfade dissolves in place with
+                    // no size morph while the keyboard glides.
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                ) { done ->
+                    if (done) {
+                        Button(
+                            onClick = ::finishEditing,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
                             modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .alpha(if (hasContent) 1f else 0.38f),
-                            shape = CircleShape,
-                            elevation = noShadowElevation()
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp)
+                                .height(56.dp)
                         ) {
-                            Icon(
-                                Icons.Outlined.Archive,
-                                contentDescription = stringResource(R.string.cd_archive)
+                            Text(
+                                stringResource(R.string.action_done),
+                                fontSize = buttonFontSize
                             )
                         }
-
-                        if (notificationsEnabled) {
-                            FixedWidthPinButton(
-                                pinned = pinned,
-                                onClick = ::requestPinToggle,
-                                fontSize = buttonFontSize,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-
-                        FloatingActionButton(
-                            onClick = { if (hasContent) showDeleteDialog = true },
+                    } else {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .alpha(if (hasContent) 1f else 0.38f),
-                            shape = CircleShape,
-                            elevation = noShadowElevation()
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp)
                         ) {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                contentDescription = stringResource(R.string.cd_delete)
-                            )
+                            FloatingActionButton(
+                                onClick = { if (hasContent) viewModel.archiveCurrent() },
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .alpha(if (hasContent) 1f else 0.38f),
+                                shape = CircleShape,
+                                elevation = noShadowElevation()
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Archive,
+                                    contentDescription = stringResource(R.string.cd_archive)
+                                )
+                            }
+
+                            if (notificationsEnabled) {
+                                FixedWidthPinButton(
+                                    pinned = pinned,
+                                    onClick = ::requestPinToggle,
+                                    fontSize = buttonFontSize,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+
+                            FloatingActionButton(
+                                onClick = { if (hasContent) showDeleteDialog = true },
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .alpha(if (hasContent) 1f else 0.38f),
+                                shape = CircleShape,
+                                elevation = noShadowElevation()
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.cd_delete)
+                                )
+                            }
                         }
                     }
                 }
@@ -515,11 +533,14 @@ private fun NoteEditorField(
     // Over-limit input is swallowed synchronously (the previous value is
     // kept untouched, so nothing flashes and the cursor never jumps) and
     // only genuinely new, fitting content is accepted. An exact
-    // visual-line guard on layout remains as the backstop for edits no
-    // synchronous check can judge (pastes, IME batch commits) — so the
-    // note holds as many characters as visibly fit, whatever their width.
-    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText.take(maxLength))) }
-    // Last value known to fit the line budget: overflowing edits revert here.
+    // visual-line guard on layout remains as the backstop for user edits no
+    // synchronous check can judge (pastes, IME batch commits).
+    // Stored content is never truncated here: a note saved under a smaller
+    // font holds more than a larger font allows, and must survive relaunch
+    // and font-size changes unchanged.
+    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
+    // Last value known before the current user edit: overflowing user edits
+    // revert here.
     var lastFitting by remember { mutableStateOf(fieldValue) }
     // True while the content came from typing rather than an external sync:
     // only then is a guard revert propagated back to the store.
@@ -528,10 +549,12 @@ private fun NoteEditorField(
     // renders. Only trusted while it still describes the current value.
     var lastLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
     var lastLayoutText by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(externalText, maxLength, maxLines) {
-        val capped = externalText.take(maxLength)
-        if (capped != fieldValue.text) {
-            val fresh = TextFieldValue(text = capped, selection = TextRange(capped.length))
+    // Sync external truth (database load, restore, archive clear) whole —
+    // never capped. Deliberately keyed on externalText only so a font-size
+    // change never resets the field or moves the cursor.
+    LaunchedEffect(externalText) {
+        if (externalText != fieldValue.text) {
+            val fresh = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
             fieldValue = fresh
             lastFitting = fresh
         }
@@ -575,6 +598,16 @@ private fun NoteEditorField(
             // Anything uncertain is accepted tentatively and the line guard
             // in onTextLayout refines it — that path stays rare.
             if (new.text.length > maxLength) {
+                // Net deletions toward the budget are always accepted as-is,
+                // even while still over it: after a font-size increase the
+                // stored note can start over maxLength, and a backspace must
+                // delete one character — never truncate to the cap.
+                if (new.text.length < fieldValue.text.length) {
+                    fieldValue = new
+                    userEdit = true
+                    onTextChange(new.text)
+                    return@BasicTextField
+                }
                 val truncated = new.text.take(maxLength)
                 if (truncated == fieldValue.text) {
                     // Pure overtype at the cap: keep the previous value
@@ -630,10 +663,17 @@ private fun NoteEditorField(
                 lastFitting = fieldValue
                 userEdit = false
             } else if (userEdit) {
-                // Backstop for edits no synchronous check could judge
-                // (pastes, IME batch commits). Single keystrokes revert
-                // exactly; bulk input keeps its fitting prefix. Either way
-                // the limit was hit, so hint it.
+                // Backstop for user edits no synchronous check could judge
+                // (pastes, IME batch commits). Net deletions and same-length
+                // replacements are always accepted as the new baseline —
+                // after a font increase the stored note can start over
+                // budget, and editing toward fit must never truncate.
+                // Only genuine growth past the budget reverts with a hint.
+                if (fieldValue.text.length <= lastFitting.text.length) {
+                    lastFitting = fieldValue
+                    userEdit = false
+                    return@BasicTextField
+                }
                 userEdit = false
                 val overBy = fieldValue.text.length - lastFitting.text.length
                 val reverted = if (overBy in 1..2) {
@@ -645,11 +685,12 @@ private fun NoteEditorField(
                 onTextChange(reverted)
                 onLimitReached()
             } else {
-                val shrunk = shrinkToFit(fieldValue.text, layout.lineCount)
-                if (shrunk != fieldValue.text) {
-                    fieldValue = TextFieldValue(text = shrunk, selection = TextRange(shrunk.length))
-                    onTextChange(shrunk)
-                }
+                // Stored content over the current line budget (relaunch
+                // before prefs resolve, or a font-size increase): keep it
+                // whole and never propagate a shrink — data outranks fit.
+                // The fixed card simply clips the overflow until a smaller
+                // font shows it all again.
+                lastFitting = fieldValue
             }
         },
         interactionSource = interactionSource,

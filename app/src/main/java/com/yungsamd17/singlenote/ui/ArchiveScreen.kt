@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -266,7 +267,11 @@ private fun ArchivedNoteItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                FilledTonalButton(
+                // Restore is the primary action: filled button for the
+                // strongest contrast on light theme. Delete is destructive:
+                // tonal button in error colors so it reads as danger without
+                // competing with restore.
+                Button(
                     onClick = onRestore,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -279,7 +284,11 @@ private fun ArchivedNoteItem(
                 }
                 FilledTonalButton(
                     onClick = onDelete,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    )
                 ) {
                     Icon(
                         Icons.Outlined.Delete,

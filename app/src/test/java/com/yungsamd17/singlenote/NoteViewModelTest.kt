@@ -224,16 +224,30 @@ class NoteViewModelTest {
     }
 
     @Test
-    fun typing_truncatesToSizeLimit() = runTest {
+    fun typing_truncatesToAbsoluteMax() = runTest {
         installMain()
         val store = FakeNoteStore()
         val vm = NoteViewModel(store)
         advanceUntilIdle()
 
-        // Default size is medium.
-        vm.onTextChange("a".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 50))
+        // ViewModel is the absolute backstop only; per-size limits live in
+        // the editor. A medium default must not cut input a small font allows.
+        vm.onTextChange("a".repeat(NoteViewModel.MAX_LENGTH_SMALL + 50))
 
-        assertEquals(NoteViewModel.MAX_LENGTH_MEDIUM, vm.text.value.length)
+        assertEquals(NoteViewModel.MAX_LENGTH_SMALL, vm.text.value.length)
+    }
+
+    @Test
+    fun typing_preservesSmallFontNoteUnderMediumDefault() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        val smallFontNote = "a".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 100)
+        vm.onTextChange(smallFontNote)
+
+        assertEquals(smallFontNote, vm.text.value)
     }
 
     @Test
@@ -260,5 +274,19 @@ class NoteViewModelTest {
         advanceUntilIdle()
 
         assertEquals("existing", vm.text.value)
+    }
+
+    @Test
+    fun init_adoptsLongSmallFontNoteWhole() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        // Saved under small font: longer than medium/large allow. Relaunch
+        // must adopt it whole regardless of the current text-size setting.
+        val longNote = "b".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 200)
+        store.activeNote.value = Note(id = 8, content = longNote, createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        assertEquals(longNote, vm.text.value)
     }
 }
