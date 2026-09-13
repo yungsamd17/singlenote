@@ -55,10 +55,12 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     }
 
     fun onTextChange(value: String) {
-        // Character backstop for the fixed-size editor card. The editor
-        // additionally guards the exact visual-line budget, which is what
-        // binds first in practice; smaller fonts fit more text.
-        val capped = value.take(maxLengthForTextSize(textSize.value))
+        // Absolute character backstop only. Per-size limits are enforced by
+        // the editor for new keystrokes; capping here to the current size
+        // would truncate loaded notes while the text-size preference is
+        // still resolving (default medium vs stored small) and destroy data.
+        // Loaded content is always adopted whole — see adopt().
+        val capped = value.take(MAX_LENGTH_SMALL)
         if (capped == _text.value) return
         _text.value = capped
         if (capped.isBlank()) unpinIfPinned()
@@ -109,6 +111,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         if (note?.id == currentNoteId) return
         saveJob?.cancel()
         currentNoteId = note?.id
+        // Never truncate here: a note saved under a smaller font holds more
+        // characters than a larger font allows, and must survive relaunch
+        // unchanged regardless of the current text-size setting.
         _text.value = note?.content.orEmpty()
         if (note?.content.isNullOrBlank()) unpinIfPinned()
     }
@@ -126,10 +131,11 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     companion object {
         private const val SAVE_DEBOUNCE_MS = 500L
 
-        // Note capacity per text size, enforced on two levels: a generous
-        // character backstop here and in the editor, plus an exact
-        // visual-line guard in the editor — so the note holds as many
-        // characters as visibly fit its fixed card. Smaller font fits more.
+        // Note capacity per text size, enforced in the editor for new
+        // input: a character cap (maxLength) plus an exact visual-line
+        // guard — so the note holds as many characters as visibly fit its
+        // fixed card. Smaller font fits more. The ViewModel backstop above
+        // stays at the absolute max so stored notes are never truncated.
         const val MAX_LENGTH_SMALL = 1000
         const val MAX_LENGTH_MEDIUM = 600
         const val MAX_LENGTH_LARGE = 400
