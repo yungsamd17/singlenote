@@ -244,6 +244,11 @@ fun NoteScreen(
         finishEditing()
     }
 
+    // Done stays put until the keyboard has fully closed: flipping the bar
+    // mid-glide is what read as a shift/stick at the end of the slide.
+    // Opening still reacts to focus instantly, so Done pops in without lag.
+    val showDone = isEditing || isKeyboardOpen
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -385,77 +390,90 @@ fun NoteScreen(
             // never changes size, only the bar glides up.
             Spacer(modifier = Modifier.weight(1f))
 
-            AnimatedContent(
-                targetState = isEditing,
-                label = "bottomBar",
-                transitionSpec = {
-                    fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
-                },
-                // Sole mover of this bar: the window is adjustNothing, so the
-                // animated IME inset glides it above the keyboard with no snap.
+            // Sole glider of this bar: the window is adjustNothing, so the
+            // animated IME inset moves this stable container above the
+            // keyboard with no snap. The content switch inside never changes
+            // size and never touches the insets, so the fade can't shift or
+            // stick at the end of the keyboard slide.
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .imePadding()
-            ) { editing ->
-                if (editing) {
-                    Button(
-                        onClick = ::finishEditing,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                            .height(56.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.action_done),
-                            fontSize = buttonFontSize
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 16.dp)
-                    ) {
-                        FloatingActionButton(
-                            onClick = { if (hasContent) viewModel.archiveCurrent() },
+            ) {
+                AnimatedContent(
+                    targetState = showDone,
+                    label = "bottomBar",
+                    transitionSpec = {
+                        fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
+                    },
+                    // Fixed box: both bars are 56dp content + 16dp vertical
+                    // padding = 88dp, so the crossfade dissolves in place with
+                    // no size morph while the keyboard glides.
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(88.dp)
+                ) { done ->
+                    if (done) {
+                        Button(
+                            onClick = ::finishEditing,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
                             modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .alpha(if (hasContent) 1f else 0.38f),
-                            shape = CircleShape,
-                            elevation = noShadowElevation()
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp)
+                                .height(56.dp)
                         ) {
-                            Icon(
-                                Icons.Outlined.Archive,
-                                contentDescription = stringResource(R.string.cd_archive)
+                            Text(
+                                stringResource(R.string.action_done),
+                                fontSize = buttonFontSize
                             )
                         }
-
-                        if (notificationsEnabled) {
-                            FixedWidthPinButton(
-                                pinned = pinned,
-                                onClick = ::requestPinToggle,
-                                fontSize = buttonFontSize,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-
-                        FloatingActionButton(
-                            onClick = { if (hasContent) showDeleteDialog = true },
+                    } else {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .alpha(if (hasContent) 1f else 0.38f),
-                            shape = CircleShape,
-                            elevation = noShadowElevation()
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 16.dp)
                         ) {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                contentDescription = stringResource(R.string.cd_delete)
-                            )
+                            FloatingActionButton(
+                                onClick = { if (hasContent) viewModel.archiveCurrent() },
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .alpha(if (hasContent) 1f else 0.38f),
+                                shape = CircleShape,
+                                elevation = noShadowElevation()
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Archive,
+                                    contentDescription = stringResource(R.string.cd_archive)
+                                )
+                            }
+
+                            if (notificationsEnabled) {
+                                FixedWidthPinButton(
+                                    pinned = pinned,
+                                    onClick = ::requestPinToggle,
+                                    fontSize = buttonFontSize,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+
+                            FloatingActionButton(
+                                onClick = { if (hasContent) showDeleteDialog = true },
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .alpha(if (hasContent) 1f else 0.38f),
+                                shape = CircleShape,
+                                elevation = noShadowElevation()
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.cd_delete)
+                                )
+                            }
                         }
                     }
                 }
