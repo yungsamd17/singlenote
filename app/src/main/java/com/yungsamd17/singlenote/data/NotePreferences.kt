@@ -20,6 +20,8 @@ class NotePreferences(private val context: Context) {
         context.settingsDataStore.data.map { it[KEY_FONT_FAMILY] ?: FONT_DEFAULT }
     val textSize: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_TEXT_SIZE] ?: SIZE_MEDIUM }
+    val accentColor: Flow<String> =
+        context.settingsDataStore.data.map { it[KEY_ACCENT] ?: ACCENT_DEFAULT }
 
     suspend fun setPinned(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_PINNED] = value }
@@ -41,6 +43,10 @@ class NotePreferences(private val context: Context) {
         context.settingsDataStore.edit { it[KEY_TEXT_SIZE] = value }
     }
 
+    suspend fun setAccentColor(value: String) {
+        context.settingsDataStore.edit { it[KEY_ACCENT] = value }
+    }
+
     companion object {
         const val KEY_PINNED_NAME = "pin_current_note"
 
@@ -49,6 +55,7 @@ class NotePreferences(private val context: Context) {
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")
+        val KEY_ACCENT = stringPreferencesKey("accent_color")
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"
@@ -62,8 +69,17 @@ class NotePreferences(private val context: Context) {
         const val SIZE_MEDIUM = "medium"
         const val SIZE_LARGE = "large"
 
+        const val ACCENT_DEFAULT = "default"
+        const val ACCENT_BLUE = "blue"
+        const val ACCENT_TEAL = "teal"
+        const val ACCENT_GREEN = "green"
+        const val ACCENT_ORANGE = "orange"
+        const val ACCENT_PINK = "pink"
+
         val THEMES = listOf(THEME_SYSTEM, THEME_LIGHT, THEME_DARK)
         val FONTS = listOf(FONT_DEFAULT, FONT_MONO, FONT_SERIF)
         val SIZES = listOf(SIZE_SMALL, SIZE_MEDIUM, SIZE_LARGE)
+        val ACCENTS =
+            listOf(ACCENT_DEFAULT, ACCENT_BLUE, ACCENT_TEAL, ACCENT_GREEN, ACCENT_ORANGE, ACCENT_PINK)
     }
 }

@@ -35,6 +35,7 @@ interface NoteStore {
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
+    val accentColor: Flow<String>
 
     suspend fun getActive(): Note?
     suspend fun saveActive(content: String)
@@ -45,6 +46,7 @@ interface NoteStore {
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
+    suspend fun setAccentColor(value: String)
 }
 
 interface ArchiveStore {
@@ -68,6 +70,7 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
+    override val accentColor: Flow<String> = preferences.accentColor
     override val archivedNotes: Flow<List<Note>> = dao.observeArchived()
 
     override suspend fun getActive(): Note? = dao.getActive()
@@ -157,6 +160,8 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun setFontFamily(value: String) = preferences.setFontFamily(value)
 
     override suspend fun setTextSize(value: String) = preferences.setTextSize(value)
+
+    override suspend fun setAccentColor(value: String) = preferences.setAccentColor(value)
 
     private suspend fun notifyNoteChanged() {
         context.sendBroadcast(Intent(ACTION_NOTE_UPDATED).setPackage(context.packageName))

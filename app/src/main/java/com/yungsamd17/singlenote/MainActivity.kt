@@ -11,8 +11,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -31,12 +29,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
 import com.yungsamd17.singlenote.ui.NoteScreen
 import com.yungsamd17.singlenote.ui.NoteViewModel
 import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
+import com.yungsamd17.singlenote.ui.accentScheme
 
 class MainActivity : ComponentActivity() {
 
@@ -52,13 +52,19 @@ class MainActivity : ComponentActivity() {
                     NotePreferences(applicationContext).themeMode.collect { value = it }
                 }
             )
+            val accent by produceState(
+                initialValue = ACCENT_DEFAULT,
+                producer = {
+                    NotePreferences(applicationContext).accentColor.collect { value = it }
+                }
+            )
             val darkTheme = when (themeMode) {
                 NotePreferences.THEME_DARK -> true
                 NotePreferences.THEME_LIGHT -> false
                 else -> isSystemInDarkTheme()
             }
             MaterialTheme(
-                colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme()
+                colorScheme = accentScheme(accent, darkTheme)
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()

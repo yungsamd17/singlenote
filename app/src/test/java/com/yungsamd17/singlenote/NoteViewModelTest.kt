@@ -1,6 +1,7 @@
 package com.yungsamd17.singlenote
 
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
@@ -33,6 +34,7 @@ class NoteViewModelTest {
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
+        override val accentColor = MutableStateFlow(ACCENT_DEFAULT)
 
         var savedContent: String? = null
         var archiveRequested = false
@@ -72,6 +74,7 @@ class NoteViewModelTest {
         override suspend fun setThemeMode(value: String) {}
         override suspend fun setFontFamily(value: String) {}
         override suspend fun setTextSize(value: String) {}
+        override suspend fun setAccentColor(value: String) {}
     }
 
     @Before
@@ -221,16 +224,30 @@ class NoteViewModelTest {
     }
 
     @Test
-    fun typing_truncatesToSizeLimit() = runTest {
+    fun typing_truncatesToAbsoluteMax() = runTest {
         installMain()
         val store = FakeNoteStore()
         val vm = NoteViewModel(store)
         advanceUntilIdle()
 
-        // Default size is medium.
-        vm.onTextChange("a".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 50))
+        // ViewModel is the absolute backstop only; per-size limits live in
+        // the editor. A medium default must not cut input a small font allows.
+        vm.onTextChange("a".repeat(NoteViewModel.MAX_LENGTH_SMALL + 50))
 
-        assertEquals(NoteViewModel.MAX_LENGTH_MEDIUM, vm.text.value.length)
+        assertEquals(NoteViewModel.MAX_LENGTH_SMALL, vm.text.value.length)
+    }
+
+    @Test
+    fun typing_preservesSmallFontNoteUnderMediumDefault() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        val smallFontNote = "a".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 100)
+        vm.onTextChange(smallFontNote)
+
+        assertEquals(smallFontNote, vm.text.value)
     }
 
     @Test
@@ -257,5 +274,19 @@ class NoteViewModelTest {
         advanceUntilIdle()
 
         assertEquals("existing", vm.text.value)
+    }
+
+    @Test
+    fun init_adoptsLongSmallFontNoteWhole() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        // Saved under small font: longer than medium/large allow. Relaunch
+        // must adopt it whole regardless of the current text-size setting.
+        val longNote = "b".repeat(NoteViewModel.MAX_LENGTH_MEDIUM + 200)
+        store.activeNote.value = Note(id = 8, content = longNote, createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        assertEquals(longNote, vm.text.value)
     }
 }
