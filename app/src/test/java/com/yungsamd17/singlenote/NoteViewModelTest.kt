@@ -1,6 +1,7 @@
 package com.yungsamd17.singlenote
 
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
@@ -33,6 +34,7 @@ class NoteViewModelTest {
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
+        override val accentColor = MutableStateFlow(ACCENT_DEFAULT)
 
         var savedContent: String? = null
         var archiveRequested = false
@@ -72,6 +74,7 @@ class NoteViewModelTest {
         override suspend fun setThemeMode(value: String) {}
         override suspend fun setFontFamily(value: String) {}
         override suspend fun setTextSize(value: String) {}
+        override suspend fun setAccentColor(value: String) {}
     }
 
     @Before
