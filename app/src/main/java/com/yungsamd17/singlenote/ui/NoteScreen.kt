@@ -244,6 +244,11 @@ fun NoteScreen(
         finishEditing()
     }
 
+    // Done stays put until the keyboard has fully closed: flipping the bar
+    // mid-glide is what read as a shift/stick at the end of the slide.
+    // Opening still reacts to focus instantly, so Done pops in without lag.
+    val showDone = isEditing || isKeyboardOpen
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -397,7 +402,7 @@ fun NoteScreen(
                     .imePadding()
             ) {
                 AnimatedContent(
-                    targetState = isEditing,
+                    targetState = showDone,
                     label = "bottomBar",
                     transitionSpec = {
                         fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
@@ -409,8 +414,8 @@ fun NoteScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(88.dp)
-                ) { editing ->
-                    if (editing) {
+                ) { done ->
+                    if (done) {
                         Button(
                             onClick = ::finishEditing,
                             colors = ButtonDefaults.buttonColors(
