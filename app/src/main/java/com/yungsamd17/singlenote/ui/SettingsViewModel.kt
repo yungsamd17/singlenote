@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.NoteStore
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
@@ -23,6 +24,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val textSize: StateFlow<String> = store.textSize
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
 
+    val accentColor: StateFlow<String> = store.accentColor
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ACCENT_DEFAULT)
+
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -36,6 +40,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setTextSize(value: String) {
         viewModelScope.launch { store.setTextSize(value) }
+    }
+
+    fun setAccentColor(value: String) {
+        viewModelScope.launch { store.setAccentColor(value) }
     }
 
     fun setNotificationsEnabled(value: Boolean) {

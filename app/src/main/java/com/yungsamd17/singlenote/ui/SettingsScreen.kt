@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
@@ -57,6 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
@@ -68,6 +70,7 @@ private const val MONONOTE_URL = "https://www.digitalminimalist.com/apps/mononot
 
 private const val DIALOG_NONE = "none"
 private const val DIALOG_THEME = "theme"
+private const val DIALOG_ACCENT = "accent"
 private const val DIALOG_FONT = "font"
 private const val DIALOG_SIZE = "size"
 private const val DIALOG_ABOUT = "about"
@@ -80,6 +83,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val accentColor by viewModel.accentColor.collectAsStateWithLifecycle()
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSize by viewModel.textSize.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
@@ -122,6 +126,14 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_theme),
                         value = themeLabel(themeMode),
                         onClick = { openDialog = DIALOG_THEME }
+                    )
+                }
+                SettingCard {
+                    ValueRow(
+                        icon = Icons.Outlined.ColorLens,
+                        title = stringResource(R.string.settings_accent),
+                        value = accentLabel(accentColor),
+                        onClick = { openDialog = DIALOG_ACCENT }
                     )
                 }
                 SettingCard {
@@ -184,6 +196,16 @@ fun SettingsScreen(
             selected = themeMode,
             onSelect = {
                 viewModel.setThemeMode(it)
+                openDialog = DIALOG_NONE
+            },
+            onDismiss = { openDialog = DIALOG_NONE }
+        )
+        DIALOG_ACCENT -> SelectionDialog(
+            title = stringResource(R.string.settings_accent),
+            options = ACCENTS.map { it to accentLabel(it) },
+            selected = accentColor,
+            onSelect = {
+                viewModel.setAccentColor(it)
                 openDialog = DIALOG_NONE
             },
             onDismiss = { openDialog = DIALOG_NONE }
@@ -416,6 +438,16 @@ private fun themeLabel(key: String): String = when (key) {
     NotePreferences.THEME_LIGHT -> stringResource(R.string.theme_light)
     NotePreferences.THEME_DARK -> stringResource(R.string.theme_dark)
     else -> stringResource(R.string.theme_system)
+}
+
+@Composable
+private fun accentLabel(key: String): String = when (key) {
+    NotePreferences.ACCENT_BLUE -> stringResource(R.string.accent_blue)
+    NotePreferences.ACCENT_TEAL -> stringResource(R.string.accent_teal)
+    NotePreferences.ACCENT_GREEN -> stringResource(R.string.accent_green)
+    NotePreferences.ACCENT_ORANGE -> stringResource(R.string.accent_orange)
+    NotePreferences.ACCENT_PINK -> stringResource(R.string.accent_pink)
+    else -> stringResource(R.string.accent_default)
 }
 
 @Composable
