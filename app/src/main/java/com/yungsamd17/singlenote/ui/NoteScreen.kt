@@ -533,11 +533,14 @@ private fun NoteEditorField(
     // Over-limit input is swallowed synchronously (the previous value is
     // kept untouched, so nothing flashes and the cursor never jumps) and
     // only genuinely new, fitting content is accepted. An exact
-    // visual-line guard on layout remains as the backstop for edits no
-    // synchronous check can judge (pastes, IME batch commits) — so the
-    // note holds as many characters as visibly fit, whatever their width.
-    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText.take(maxLength))) }
-    // Last value known to fit the line budget: overflowing edits revert here.
+    // visual-line guard on layout remains as the backstop for user edits no
+    // synchronous check can judge (pastes, IME batch commits).
+    // Stored content is never truncated here: a note saved under a smaller
+    // font holds more than a larger font allows, and must survive relaunch
+    // and font-size changes unchanged.
+    var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
+    // Last value known before the current user edit: overflowing user edits
+    // revert here.
     var lastFitting by remember { mutableStateOf(fieldValue) }
     // True while the content came from typing rather than an external sync:
     // only then is a guard revert propagated back to the store.
@@ -546,10 +549,12 @@ private fun NoteEditorField(
     // renders. Only trusted while it still describes the current value.
     var lastLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
     var lastLayoutText by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(externalText, maxLength, maxLines) {
-        val capped = externalText.take(maxLength)
-        if (capped != fieldValue.text) {
-            val fresh = TextFieldValue(text = capped, selection = TextRange(capped.length))
+    // Sync external truth (database load, restore, archive clear) whole —
+    // never capped. Deliberately keyed on externalText only so a font-size
+    // change never resets the field or moves the cursor.
+    LaunchedEffect(externalText) {
+        if (externalText != fieldValue.text) {
+            val fresh = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
             fieldValue = fresh
             lastFitting = fresh
         }
@@ -593,6 +598,16 @@ private fun NoteEditorField(
             // Anything uncertain is accepted tentatively and the line guard
             // in onTextLayout refines it — that path stays rare.
             if (new.text.length > maxLength) {
+                // Net deletions toward the budget are always accepted as-is,
+                // even while still over it: after a font-size increase the
+                // stored note can start over maxLength, and a backspace must
+                // delete one character — never truncate to the cap.
+                if (new.text.length < fieldValue.text.length) {
+                    fieldValue = new
+                    userEdit = true
+                    onTextChange(new.text)
+                    return@BasicTextField
+                }
                 val truncated = new.text.take(maxLength)
                 if (truncated == fieldValue.text) {
                     // Pure overtype at the cap: keep the previous value
@@ -648,10 +663,17 @@ private fun NoteEditorField(
                 lastFitting = fieldValue
                 userEdit = false
             } else if (userEdit) {
-                // Backstop for edits no synchronous check could judge
-                // (pastes, IME batch commits). Single keystrokes revert
-                // exactly; bulk input keeps its fitting prefix. Either way
-                // the limit was hit, so hint it.
+                // Backstop for user edits no synchronous check could judge
+                // (pastes, IME batch commits). Net deletions and same-length
+                // replacements are always accepted as the new baseline —
+                // after a font increase the stored note can start over
+                // budget, and editing toward fit must never truncate.
+                // Only genuine growth past the budget reverts with a hint.
+                if (fieldValue.text.length <= lastFitting.text.length) {
+                    lastFitting = fieldValue
+                    userEdit = false
+                    return@BasicTextField
+                }
                 userEdit = false
                 val overBy = fieldValue.text.length - lastFitting.text.length
                 val reverted = if (overBy in 1..2) {
@@ -663,11 +685,12 @@ private fun NoteEditorField(
                 onTextChange(reverted)
                 onLimitReached()
             } else {
-                val shrunk = shrinkToFit(fieldValue.text, layout.lineCount)
-                if (shrunk != fieldValue.text) {
-                    fieldValue = TextFieldValue(text = shrunk, selection = TextRange(shrunk.length))
-                    onTextChange(shrunk)
-                }
+                // Stored content over the current line budget (relaunch
+                // before prefs resolve, or a font-size increase): keep it
+                // whole and never propagate a shrink — data outranks fit.
+                // The fixed card simply clips the overflow until a smaller
+                // font shows it all again.
+                lastFitting = fieldValue
             }
         },
         interactionSource = interactionSource,
