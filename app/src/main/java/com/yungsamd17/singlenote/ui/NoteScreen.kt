@@ -14,6 +14,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -415,7 +417,18 @@ fun NoteScreen(
                     targetState = showDone,
                     label = "bottomBar",
                     transitionSpec = {
-                        fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
+                        // Morph-style swap: position-neutral fade + scale so
+                        // it never fights the keyboard glide, in the same
+                        // accent-tinted container family both ways.
+                        (fadeIn(tween(200)) + scaleIn(
+                            initialScale = 0.94f,
+                            animationSpec = tween(200)
+                        )).togetherWith(
+                            fadeOut(tween(160)) + scaleOut(
+                                targetScale = 0.96f,
+                                animationSpec = tween(160)
+                            )
+                        )
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
                     // padding = 88dp, so the crossfade dissolves in place with
