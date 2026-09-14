@@ -289,4 +289,16 @@ class NoteViewModelTest {
 
         assertEquals(longNote, vm.text.value)
     }
+
+    @Test
+    fun init_setsReadyWithNoteAdopted() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.activeNote.value = Note(id = 9, content = "ready", createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        assertTrue(vm.ready.value)
+        assertEquals("ready", vm.text.value)
+    }
 }

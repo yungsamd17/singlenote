@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -23,6 +24,13 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text.asStateFlow()
+
+    // False until the stored note plus the display prefs have all emitted
+    // their disk truth. The editor waits for it so its first frame already
+    // uses the real text size, font and content — the card never resizes
+    // or restyles past the launch background.
+    private val _ready = MutableStateFlow(false)
+    val ready: StateFlow<Boolean> = _ready.asStateFlow()
 
     val pinned: StateFlow<Boolean> = store.pinned
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -51,6 +59,10 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     init {
         viewModelScope.launch {
             adopt(store.activeNote.first())
+            // DataStore/Room first emissions are the stored truth (the
+            // StateFlow defaults above are only a pre-load stand-in).
+            combine(store.textSize, store.fontFamily) { _, _ -> Unit }.first()
+            _ready.value = true
         }
     }
 
