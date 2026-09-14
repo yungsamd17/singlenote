@@ -215,16 +215,6 @@ fun NoteScreen(
         viewModel.flushSave()
     }
 
-    // Done tap mirrors the system-hide/back path: hide first, clear focus
-    // only after the keyboard fully lands (see the LaunchedEffect above).
-    // Hiding and unfocusing in the same frame snaps the animated IME inset
-    // — that snap was the shift seen only on Done tap.
-    fun requestFinishEditing() {
-        viewModel.flushSave()
-        if (isKeyboardOpen) keyboard?.hide()
-        else finishEditing()
-    }
-
     // Called by the editor when input hits the note limit. Over-limit
     // keystrokes are swallowed silently; this hint fires at most once per
     // cooldown so holding a key doesn't spam snackbars.
@@ -261,6 +251,17 @@ fun NoteScreen(
     // mid-glide is what read as a shift/stick at the end of the slide.
     // Opening still reacts to focus instantly, so Done pops in without lag.
     val showDone = isEditing || isKeyboardOpen
+
+    // Done tap mirrors the system-hide/back path: hide first, clear focus
+    // only after the keyboard fully lands (see the LaunchedEffect above).
+    // Hiding and unfocusing in the same frame snaps the animated IME inset
+    // — that snap was the shift seen only on Done tap. Declared here,
+    // after isKeyboardOpen, because locals must precede their use.
+    fun requestFinishEditing() {
+        viewModel.flushSave()
+        if (isKeyboardOpen) keyboard?.hide()
+        else finishEditing()
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
