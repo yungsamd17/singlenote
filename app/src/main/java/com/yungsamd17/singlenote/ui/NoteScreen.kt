@@ -124,6 +124,7 @@ fun NoteScreen(
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val fontFamilyKey by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSizeKey by viewModel.textSize.collectAsStateWithLifecycle()
+    val ready by viewModel.ready.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -359,125 +360,130 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
+        // First frame waits for stored truth (see viewModel.ready): card,
+        // text and bar all appear with final dims — nothing resizes or pops.
+        if (ready) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(noteCardHeight)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .fillMaxSize()
+                    .padding(innerPadding)
             ) {
-                NoteEditorField(
-                    externalText = text,
-                    onTextChange = viewModel::onTextChange,
-                    onLimitReached = ::notifyLimitReached,
-                    interactionSource = fieldInteraction,
-                    fontFamily = noteFontFamily,
-                    fontSize = noteFontSize,
-                    lineHeight = noteLineHeight,
-                    maxLength = noteMaxLength,
-                    maxLines = noteMaxLines,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            // Takes the slack so the bar sits at the bottom when the keyboard
-            // is closed, and collapses to zero when it opens — the card above
-            // never changes size, only the bar glides up.
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Sole glider of this bar: the window is adjustNothing, so the
-            // animated IME inset moves this stable container above the
-            // keyboard with no snap. The content switch inside never changes
-            // size and never touches the insets, so the fade can't shift or
-            // stick at the end of the keyboard slide.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .imePadding()
-            ) {
-                AnimatedContent(
-                    targetState = showDone,
-                    label = "bottomBar",
-                    transitionSpec = {
-                        fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
-                    },
-                    // Fixed box: both bars are 56dp content + 16dp vertical
-                    // padding = 88dp, so the crossfade dissolves in place with
-                    // no size morph while the keyboard glides.
-                    contentAlignment = Alignment.Center,
+                Card(
+                    shape = RoundedCornerShape(24.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(88.dp)
-                ) { done ->
-                    if (done) {
-                        Button(
-                            onClick = ::finishEditing,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp)
-                                .height(56.dp)
-                        ) {
-                            Text(
-                                stringResource(R.string.action_done),
-                                fontSize = buttonFontSize
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 16.dp)
-                        ) {
-                            FloatingActionButton(
-                                onClick = { if (hasContent) viewModel.archiveCurrent() },
+                        .height(noteCardHeight)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    NoteEditorField(
+                        externalText = text,
+                        onTextChange = viewModel::onTextChange,
+                        onLimitReached = ::notifyLimitReached,
+                        interactionSource = fieldInteraction,
+                        fontFamily = noteFontFamily,
+                        fontSize = noteFontSize,
+                        lineHeight = noteLineHeight,
+                        maxLength = noteMaxLength,
+                        maxLines = noteMaxLines,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // Takes the slack so the bar sits at the bottom when the keyboard
+                // is closed, and collapses to zero when it opens — the card above
+                // never changes size, only the bar glides up.
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Sole glider of this bar: the window is adjustNothing, so the
+                // animated IME inset moves this stable container above the
+                // keyboard with no snap. The content switch inside never changes
+                // size and never touches the insets, so the fade can't shift or
+                // stick at the end of the keyboard slide.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .imePadding()
+                ) {
+                    AnimatedContent(
+                        targetState = showDone,
+                        label = "bottomBar",
+                        transitionSpec = {
+                            fadeIn(tween(150)).togetherWith(fadeOut(tween(150)))
+                        },
+                        // Fixed box: both bars are 56dp content + 16dp vertical
+                        // padding = 88dp, so the crossfade dissolves in place with
+                        // no size morph while the keyboard glides.
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(88.dp)
+                    ) { done ->
+                        if (done) {
+                            Button(
+                                onClick = ::finishEditing,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
                                 modifier = Modifier
-                                    .align(Alignment.CenterStart)
-                                    .alpha(if (hasContent) 1f else 0.38f),
-                                shape = CircleShape,
-                                elevation = noShadowElevation()
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                                    .height(56.dp)
                             ) {
-                                Icon(
-                                    Icons.Outlined.Archive,
-                                    contentDescription = stringResource(R.string.cd_archive)
+                                Text(
+                                    stringResource(R.string.action_done),
+                                    fontSize = buttonFontSize
                                 )
                             }
-
-                            if (notificationsEnabled) {
-                                FixedWidthPinButton(
-                                    pinned = pinned,
-                                    onClick = ::requestPinToggle,
-                                    fontSize = buttonFontSize,
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
-
-                            FloatingActionButton(
-                                onClick = { if (hasContent) showDeleteDialog = true },
+                        } else {
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .alpha(if (hasContent) 1f else 0.38f),
-                                shape = CircleShape,
-                                elevation = noShadowElevation()
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 16.dp)
                             ) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    contentDescription = stringResource(R.string.cd_delete)
-                                )
+                                FloatingActionButton(
+                                    onClick = { if (hasContent) viewModel.archiveCurrent() },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                        .alpha(if (hasContent) 1f else 0.38f),
+                                    shape = CircleShape,
+                                    elevation = noShadowElevation()
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Archive,
+                                        contentDescription = stringResource(R.string.cd_archive)
+                                    )
+                                }
+
+                                if (notificationsEnabled) {
+                                    FixedWidthPinButton(
+                                        pinned = pinned,
+                                        onClick = ::requestPinToggle,
+                                        fontSize = buttonFontSize,
+                                        modifier = Modifier.align(Alignment.Center)
+                                    )
+                                }
+
+                                FloatingActionButton(
+                                    onClick = { if (hasContent) showDeleteDialog = true },
+                                    modifier = Modifier
+                                        .align(Alignment.CenterEnd)
+                                        .alpha(if (hasContent) 1f else 0.38f),
+                                    shape = CircleShape,
+                                    elevation = noShadowElevation()
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        contentDescription = stringResource(R.string.cd_delete)
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
+        } else {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
         }
     }
 
