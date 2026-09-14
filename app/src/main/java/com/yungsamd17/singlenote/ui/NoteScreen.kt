@@ -212,6 +212,16 @@ fun NoteScreen(
         viewModel.flushSave()
     }
 
+    // Done tap mirrors the system-hide/back path: hide first, clear focus
+    // only after the keyboard fully lands (see the LaunchedEffect above).
+    // Hiding and unfocusing in the same frame snaps the animated IME inset
+    // — that snap was the shift seen only on Done tap.
+    fun requestFinishEditing() {
+        viewModel.flushSave()
+        if (isKeyboardOpen) keyboard?.hide()
+        else finishEditing()
+    }
+
     // Called by the editor when input hits the note limit. Over-limit
     // keystrokes are swallowed silently; this hint fires at most once per
     // cooldown so holding a key doesn't spam snackbars.
@@ -273,7 +283,7 @@ fun NoteScreen(
                                 // Close editing first so the keyboard glides
                                 // down and the bar fades before the menu pops
                                 // in, instead of everything snapping at once.
-                                if (isEditing) finishEditing()
+                                if (isEditing) requestFinishEditing()
                                 menuOpen = true
                             }
                         ) {
@@ -417,7 +427,7 @@ fun NoteScreen(
                 ) { done ->
                     if (done) {
                         Button(
-                            onClick = ::finishEditing,
+                            onClick = ::requestFinishEditing,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
