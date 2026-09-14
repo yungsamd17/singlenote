@@ -104,6 +104,11 @@ import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 
+// Remaining keyboard slide that starts the Done-to-actions morph: the bar
+// flips in the final stretch so the FAB row settles right as the keyboard
+// lands, instead of lagging a full morph behind it.
+private val KeyboardSwapThreshold = 64.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun noShadowElevation() = FloatingActionButtonDefaults.elevation(
@@ -209,7 +214,13 @@ fun NoteScreen(
     // puts the cursor exactly where it landed and the capped content
     // always fits, so no follow-scroll is needed.
 
+    // True from a Done tap's hide() until focus actually clears: marks a
+    // close-glide the bar should anticipate (see the bar scope below).
+    // Declared up here because finishEditing below resets it.
+    var hideRequested by remember { mutableStateOf(false) }
+
     fun finishEditing() {
+        hideRequested = false
         keyboard?.hide()
         focusManager.clearFocus(force = true)
         viewModel.flushSave()
@@ -247,20 +258,17 @@ fun NoteScreen(
         finishEditing()
     }
 
-    // Done stays put until the keyboard has fully closed: flipping the bar
-    // mid-glide is what read as a shift/stick at the end of the slide.
-    // Opening still reacts to focus instantly, so Done pops in without lag.
-    val showDone = isEditing || isKeyboardOpen
-
     // Done tap mirrors the system-hide/back path: hide first, clear focus
     // only after the keyboard fully lands (see the LaunchedEffect above).
     // Hiding and unfocusing in the same frame snaps the animated IME inset
-    // — that snap was the shift seen only on Done tap. Declared here,
-    // after isKeyboardOpen, because locals must precede their use.
+    // — that snap was the shift seen only on Done tap. The bar itself
+    // starts morphing back just before the landing (see its scope below).
     fun requestFinishEditing() {
         viewModel.flushSave()
-        if (isKeyboardOpen) keyboard?.hide()
-        else finishEditing()
+        if (isKeyboardOpen) {
+            hideRequested = true
+            keyboard?.hide()
+        } else finishEditing()
     }
 
     Scaffold(
@@ -414,7 +422,7 @@ fun NoteScreen(
             // Sole glider of this bar: the window is adjustNothing, so the
             // animated IME inset moves this stable container above the
             // keyboard with no snap. The content switch inside never changes
-            // size and never touches the insets, so the fade can't shift or
+            // size and never touches the insets, so the morph can't shift or
             // stick at the end of the keyboard slide.
             Box(
                 modifier = Modifier
@@ -422,8 +430,22 @@ fun NoteScreen(
                     .navigationBarsPadding()
                     .imePadding()
             ) {
+                // Head start on the landing: once only a sliver of keyboard
+                // remains, start morphing back so the FAB row settles right
+                // as the slide ends instead of lagging a full morph behind.
+                // Focused-but-settled (system-hide/back, no tap) still shows
+                // Done — only a tap-requested close anticipates.
+                // Read low in the tree: this scope already recomposes every
+                // inset frame via imePadding, so nothing above pays for it.
+                val density = LocalDensity.current
+                val imeRemainingPx = WindowInsets.ime.getBottom(density)
+                val keyboardSubstantiallyOpen =
+                    imeRemainingPx.toFloat() >= with(density) {
+                        KeyboardSwapThreshold.toPx()
+                    }
+                val barDone = isEditing && (!hideRequested || keyboardSubstantiallyOpen)
                 AnimatedContent(
-                    targetState = showDone,
+                    targetState = barDone,
                     label = "bottomBar",
                     transitionSpec = {
                         // Morph-style swap: position-neutral fade + scale so
