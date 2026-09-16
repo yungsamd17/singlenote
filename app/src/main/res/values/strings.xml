@@ -31,6 +31,9 @@
     <string name="pinned">Pinned</string>
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
+    <string name="notification_pinned_title">Pinned Singlenote</string>
+    <string name="notification_action_unpin">Unpin</string>
+    <string name="notification_action_archive">Archive</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Write a note first</string>
     <string name="settings_title">Settings</string>
@@ -71,7 +74,5 @@
     <string name="about_privacy_blurb">Singlenote is fully offline. Your note never leaves your device — no accounts, no analytics, no tracking. Licensed under the MIT license.</string>
     <string name="about_github">GitHub</string>
     <string name="about_license">License</string>
-    <string name="about_source_code">Source code</string>
-    <string name="about_inspired">Inspired by Mononote</string>
     <string name="about_author">Author</string>
 </resources>

@@ -291,6 +291,53 @@ class NoteViewModelTest {
     }
 
     @Test
+    fun externalArchive_clearsResumedEditor() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.activeNote.value = Note(id = 11, content = "pinned note", createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+        assertEquals("pinned note", vm.text.value)
+
+        // Simulates the notification Archive button: the database changes
+        // without the ViewModel involved, while the screen stays resumed.
+        store.activeNote.value = null
+        advanceUntilIdle()
+
+        assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun externalRestore_replacesResumedEditor() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.activeNote.value = Note(id = 12, content = "old", createdAt = 0, updatedAt = 0)
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        store.activeNote.value = Note(id = 13, content = "restored", createdAt = 0, updatedAt = 0)
+        advanceUntilIdle()
+
+        assertEquals("restored", vm.text.value)
+    }
+
+    @Test
+    fun ownSaveEmission_keepsEditorUntouched() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        // The save re-emits the same note id: adopt() must ignore it so
+        // typing state (and any pending save) is never disturbed.
+        vm.onTextChange("hello")
+        advanceUntilIdle()
+
+        assertEquals("hello", vm.text.value)
+        assertEquals("hello", store.savedContent)
+    }
+
+    @Test
     fun init_setsReadyWithNoteAdopted() = runTest {
         installMain()
         val store = FakeNoteStore()

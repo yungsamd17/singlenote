@@ -43,6 +43,10 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".notify.PinActionReceiver"
+            android:exported="false" />
+
         <service
             android:name=".tile.NoteTileService"
             android:exported="true"
