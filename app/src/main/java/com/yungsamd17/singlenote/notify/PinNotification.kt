@@ -65,6 +65,11 @@ object PinNotification {
             .setShowWhen(false)
             .setContentIntent(openIntent)
             .addAction(
+                R.drawable.ic_action_copy,
+                context.getString(R.string.notification_action_copy),
+                PinActionReceiver.copyIntent(context)
+            )
+            .addAction(
                 R.drawable.ic_action_unpin,
                 context.getString(R.string.notification_action_unpin),
                 PinActionReceiver.unpinIntent(context)
