@@ -32,6 +32,7 @@
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
     <string name="notification_pinned_title">Pinned Singlenote</string>
+    <string name="notification_action_copy">Copy</string>
     <string name="notification_action_unpin">Unpin</string>
     <string name="notification_action_archive">Archive</string>
     <string name="tile_label">Singlenote</string>
