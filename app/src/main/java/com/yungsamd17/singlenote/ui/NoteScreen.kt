@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.view.ViewTreeObserver
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -86,6 +87,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -137,6 +139,7 @@ fun NoteScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val view = LocalView.current
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -157,7 +160,7 @@ fun NoteScreen(
         }
     }
 
-    DisposableEffect(lifecycleOwner) {
+    DisposableEffect(lifecycleOwner, view) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> viewModel.refreshFromDatabase()
@@ -166,7 +169,20 @@ fun NoteScreen(
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        // Persist before the foreground is lost (e.g. the notification shade
+        // opens): a shade action like Archive must operate on the saved text,
+        // not on a note whose last keystrokes are still debouncing.
+        val focusListener = ViewTreeObserver.OnWindowFocusChangeListener { hasFocus ->
+            if (!hasFocus) viewModel.flushSave()
+        }
+        val treeObserver = view.viewTreeObserver
+        treeObserver.addOnWindowFocusChangeListener(focusListener)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            if (treeObserver.isAlive) {
+                treeObserver.removeOnWindowFocusChangeListener(focusListener)
+            }
+        }
     }
 
     var menuOpen by remember { mutableStateOf(false) }
