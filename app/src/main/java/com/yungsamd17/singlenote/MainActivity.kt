@@ -1,5 +1,7 @@
 package com.yungsamd17.singlenote
 
+import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,11 +21,14 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -37,12 +42,31 @@ import com.yungsamd17.singlenote.ui.NoteViewModel
 import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.accentScheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Match the launch window to the stored theme before the first
+        // frame: otherwise a dark-theme user cold-starts through the light
+        // launch background (and vice versa).
+        val startDark = resolveDarkTheme()
+        window.setBackgroundDrawable(
+            ColorDrawable(
+                ContextCompat.getColor(
+                    this,
+                    if (startDark) R.color.launch_background_dark else R.color.launch_background
+                )
+            )
+        )
         enableEdgeToEdge()
+        // Status/navigation icon colors must follow the app theme, not the
+        // system: enableEdgeToEdge() defaults to the system, leaving
+        // invisible icons whenever the two disagree (or after re-entry
+        // from recents, which re-applies the system styling).
+        applyBarAppearance(startDark)
         val repository = (application as SinglenoteApplication).repository
 
         setContent {
@@ -63,6 +87,9 @@ class MainActivity : ComponentActivity() {
                 NotePreferences.THEME_LIGHT -> false
                 else -> isSystemInDarkTheme()
             }
+            // Re-apply on every in-app theme change (e.g. the Settings
+            // switch): the style set in onCreate/onResume would go stale.
+            SideEffect { applyBarAppearance(darkTheme) }
             MaterialTheme(
                 colorScheme = accentScheme(accent, darkTheme)
             ) {
@@ -122,6 +149,36 @@ class MainActivity : ComponentActivity() {
                     FirstRunTip()
                 }
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-apply on return (e.g. from recents): the system styling, not
+        // the app theme, may have driven the bars while away.
+        applyBarAppearance(resolveDarkTheme())
+    }
+
+    private fun applyBarAppearance(darkTheme: Boolean) {
+        WindowCompat.getInsetsController(window, window.decorView).let {
+            it.isAppearanceLightStatusBars = !darkTheme
+            it.isAppearanceLightNavigationBars = !darkTheme
+        }
+    }
+
+    // Synchronous stored-theme read for launch/resume, before any compose
+    // state exists. Falls back to the system theme if prefs can't be read.
+    private fun resolveDarkTheme(): Boolean {
+        val themeMode = try {
+            runBlocking { NotePreferences(this).themeMode.first() }
+        } catch (_: Exception) {
+            NotePreferences.THEME_SYSTEM
+        }
+        return when (themeMode) {
+            NotePreferences.THEME_DARK -> true
+            NotePreferences.THEME_LIGHT -> false
+            else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                Configuration.UI_MODE_NIGHT_YES
         }
     }
 
