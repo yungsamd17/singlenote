@@ -58,7 +58,12 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            adopt(store.activeNote.first())
+            // Continuous truth: notification actions and the archive screen
+            // change the database without this ViewModel involved. Adopting
+            // every emission keeps a resumed editor in sync (an archived or
+            // deleted note clears it at once). Own saves re-emit the same
+            // note id, which adopt() ignores, so typing is never disturbed.
+            launch { store.activeNote.collect { adopt(it) } }
             // DataStore/Room first emissions are the stored truth (the
             // StateFlow defaults above are only a pre-load stand-in).
             combine(store.textSize, store.fontFamily) { _, _ -> Unit }.first()
