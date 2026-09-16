@@ -2,6 +2,9 @@
 build/
 !gradle/wrapper/gradle-wrapper.jar
 local.properties
+# Release signing keystore (CI provides it via secrets; never commit).
+release.keystore
+*.jks
 .idea/
 *.iml
 .DS_Store

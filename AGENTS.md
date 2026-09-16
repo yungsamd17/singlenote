@@ -137,4 +137,4 @@ PR rules:
 
 - Do not commit secrets, keystores, or local-only files (e.g. `.and-code/`).
 - `BuildConfig.VERSION_NAME` is used in the About dialog — keep `buildConfig = true`.
-- Release APKs are signed with the debug keystore for now (see `build.gradle.kts`); don't "fix" this silently.
+- Release builds sign with `signingConfigs.release`, backed by the `RELEASE_KEYSTORE_*` repo secrets (key backup lives outside git); the debug keystore must never sign releases.

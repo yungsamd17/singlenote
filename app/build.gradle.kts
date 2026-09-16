@@ -21,6 +21,23 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Dedicated upload key. CI provides it via the
+            // RELEASE_KEYSTORE_* secrets (see build.yml); for a local signed
+            // build, drop the keystore at the repo root as release.keystore
+            // (gitignored, never commit it). No keystore means the release
+            // build fails at signing time — by design, never silently
+            // unsigned.
+            val keystorePath = System.getenv("RELEASE_KEYSTORE_FILE")
+            storeFile = if (keystorePath != null) file(keystorePath)
+            else rootProject.file("release.keystore")
+            storePassword = System.getenv("RELEASE_KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("RELEASE_KEY_ALIAS") ?: "singlenote"
+            keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -29,6 +46,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
