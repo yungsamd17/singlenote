@@ -133,6 +133,29 @@ PR rules:
 2. Tag on `main`: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 3. The workflow builds APKs and creates the GitHub Release (`generate_release_notes: true`); curate the notes afterwards with `gh release edit vX.Y.Z` (keep the attached APKs).
 
+### Release notes format
+
+Replace the auto-generated PR list with grouped, user-facing bullets:
+
+```markdown
+## vX.Y.Z
+
+### Area one
+- Bolded feature, plain one-line explanation.
+
+### Area two
+- Another change, same style.
+
+**Full Changelog**: https://github.com/yungsamd17/singlenote/compare/vA.B.C...vX.Y.Z
+```
+
+Rules:
+
+- User-facing changes only. Skip internal refactors and CI chores unless
+  they affect installs (e.g. signing changes).
+- No PR numbers/links, no AI attribution — releases stay clean.
+- Never remove the attached APKs.
+
 ## Gotchas
 
 - Do not commit secrets, keystores, or local-only files (e.g. `.and-code/`).
