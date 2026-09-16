@@ -57,7 +57,7 @@ object PinNotification {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.app_name))
+            .setContentTitle(context.getString(R.string.notification_pinned_title))
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
             .setPriority(NotificationCompat.PRIORITY_LOW)
