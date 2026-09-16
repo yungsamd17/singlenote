@@ -57,13 +57,23 @@ object PinNotification {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.app_name))
+            .setContentTitle(context.getString(R.string.notification_pinned_title))
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setShowWhen(false)
             .setContentIntent(openIntent)
+            .addAction(
+                R.drawable.ic_action_unpin,
+                context.getString(R.string.notification_action_unpin),
+                PinActionReceiver.unpinIntent(context)
+            )
+            .addAction(
+                R.drawable.ic_action_archive,
+                context.getString(R.string.notification_action_archive),
+                PinActionReceiver.archiveIntent(context)
+            )
             .build()
 
         try {

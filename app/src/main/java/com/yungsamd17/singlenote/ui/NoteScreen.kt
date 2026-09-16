@@ -69,6 +69,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -378,7 +379,14 @@ fun NoteScreen(
                             )
                         }
                     }
-                }
+                },
+                // M3 defaults tint navigation (onSurface) and actions
+                // (onSurfaceVariant) differently — force both to onSurface
+                // so archive and overflow match.
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
     ) { innerPadding ->
