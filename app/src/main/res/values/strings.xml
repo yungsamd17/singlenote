@@ -31,6 +31,7 @@
     <string name="pinned">Pinned</string>
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
+    <string name="notification_pinned_title">Pinned Singlenote</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Write a note first</string>
     <string name="settings_title">Settings</string>
