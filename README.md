@@ -32,7 +32,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 ## Roadmap
 
-`v0.2.6` is the current release. Track the checklist for the first stable release in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md) — features, improvements, fixes and release steps for `v1.0.0`.
+`v0.3.2` is the current release. Track the checklist for the first stable release in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md) — features, improvements, fixes and release steps for `v1.0.0`.
 
 ## Download
 
