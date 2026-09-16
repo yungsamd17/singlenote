@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.yungsamd17.singlenote.SinglenoteApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,11 @@ class PinActionReceiver : BroadcastReceiver() {
                     ACTION_ARCHIVE -> repository.archiveActive()
                 }
                 PinNotification.refresh(app)
+            } catch (e: Exception) {
+                // Never swallow silently: a dead action with no trace is
+                // undebuggable, and logcat is the only witness when the app
+                // itself was closed.
+                Log.w(TAG, "notification action failed: " + intent.action, e)
             } finally {
                 pendingResult.finish()
             }
@@ -36,6 +42,7 @@ class PinActionReceiver : BroadcastReceiver() {
     }
 
     companion object {
+        private const val TAG = "PinActionReceiver"
         const val ACTION_UNPIN = "com.yungsamd17.singlenote.UNPIN_NOTE"
         const val ACTION_ARCHIVE = "com.yungsamd17.singlenote.ARCHIVE_NOTE"
 
