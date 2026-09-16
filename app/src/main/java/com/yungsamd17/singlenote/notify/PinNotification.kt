@@ -64,6 +64,16 @@ object PinNotification {
             .setOngoing(true)
             .setShowWhen(false)
             .setContentIntent(openIntent)
+            .addAction(
+                R.drawable.ic_action_unpin,
+                context.getString(R.string.notification_action_unpin),
+                PinActionReceiver.unpinIntent(context)
+            )
+            .addAction(
+                R.drawable.ic_action_archive,
+                context.getString(R.string.notification_action_archive),
+                PinActionReceiver.archiveIntent(context)
+            )
             .build()
 
         try {
