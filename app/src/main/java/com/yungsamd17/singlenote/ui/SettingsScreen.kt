@@ -24,7 +24,6 @@ import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
@@ -51,7 +50,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -66,7 +64,6 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
 private const val AUTHOR_URL = "https://github.com/yungsamd17"
 private const val LICENSE_URL = "https://github.com/yungsamd17/singlenote/blob/main/LICENSE"
-private const val MONONOTE_URL = "https://www.digitalminimalist.com/apps/mononote"
 
 private const val DIALOG_NONE = "none"
 private const val DIALOG_THEME = "theme"
@@ -81,7 +78,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val accentColor by viewModel.accentColor.collectAsStateWithLifecycle()
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
@@ -169,14 +165,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.about_title),
                         value = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
                         onClick = { openDialog = DIALOG_ABOUT }
-                    )
-                }
-                SettingCard {
-                    ValueRow(
-                        icon = painterResource(R.drawable.ic_github),
-                        title = stringResource(R.string.about_github),
-                        value = stringResource(R.string.about_source_code),
-                        onClick = { openUrl(context, GITHUB_URL) }
                     )
                 }
             }
@@ -382,10 +370,6 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         text = {
             Column {
                 Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
                     text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -407,13 +391,6 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                     TextButton(onClick = { openUrl(context, AUTHOR_URL) }) {
                         Text(stringResource(R.string.about_author))
                     }
-                }
-                TextButton(onClick = { openUrl(context, MONONOTE_URL) }) {
-                    Icon(Icons.Outlined.Lightbulb, contentDescription = null)
-                    Text(
-                        text = stringResource(R.string.about_inspired),
-                        modifier = Modifier.padding(start = 6.dp)
-                    )
                 }
             }
         },
