@@ -34,12 +34,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.ui.AboutScreen
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.LicenseScreen
 import com.yungsamd17.singlenote.ui.NoteScreen
 import com.yungsamd17.singlenote.ui.NoteViewModel
+import com.yungsamd17.singlenote.ui.PrivacyScreen
 import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
+import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -150,8 +154,26 @@ class MainActivity : ComponentActivity() {
                         composable("settings") {
                             SettingsScreen(
                                 viewModel = viewModel(factory = SettingsViewModel.factory(repository)),
-                                onBack = { navController.popBackStack() }
+                                onBack = { navController.popBackStack() },
+                                onOpenAbout = { navController.navigate("about") }
                             )
+                        }
+                        composable("about") {
+                            AboutScreen(
+                                onBack = { navController.popBackStack() },
+                                onOpenTerms = { navController.navigate("terms") },
+                                onOpenPrivacy = { navController.navigate("privacy") },
+                                onOpenLicense = { navController.navigate("license") }
+                            )
+                        }
+                        composable("terms") {
+                            TermsScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable("privacy") {
+                            PrivacyScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable("license") {
+                            LicenseScreen(onBack = { navController.popBackStack() })
                         }
                     }
                     FirstRunTip()
