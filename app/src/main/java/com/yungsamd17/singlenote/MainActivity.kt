@@ -170,7 +170,7 @@ class MainActivity : ComponentActivity() {
     // state exists. Falls back to the system theme if prefs can't be read.
     private fun resolveDarkTheme(): Boolean {
         val themeMode = try {
-            runBlocking { NotePreferences(this).themeMode.first() }
+            runBlocking { NotePreferences(this@MainActivity).themeMode.first() }
         } catch (_: Exception) {
             NotePreferences.THEME_SYSTEM
         }
