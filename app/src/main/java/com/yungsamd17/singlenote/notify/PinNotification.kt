@@ -73,6 +73,9 @@ object PinNotification {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
+            // Re-post if the user dismisses the pin anyway (some skins let
+            // ongoing notifications be swiped away).
+            .setDeleteIntent(PinActionReceiver.respawnIntent(context))
             .setShowWhen(false)
             .setContentIntent(openIntent)
             .addAction(
