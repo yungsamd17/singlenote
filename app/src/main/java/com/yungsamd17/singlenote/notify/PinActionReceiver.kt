@@ -14,11 +14,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Handles pinned-notification buttons without opening the app. Unpin just
- * drops the pin; archive files the note away and unpins with it (repository
- * logic mirrors the editor: the next note starts unpinned). Work runs on IO
- * with goAsync held so the process survives until the database write and
- * the notification refresh finish.
+ * Handles pinned-notification buttons without opening the app. Copy grabs
+ * the text; unpin just drops the pin; archive files the note away and
+ * unpins with it (repository logic mirrors the editor: the next note starts
+ * unpinned). A user dismissal re-posts the pin via the delete intent below
+ * (programmatic cancels never fire it, so unpin/archive can't loop). Work
+ * runs on IO with goAsync held so the process survives until the database
+ * write and the notification refresh finish.
  */
 class PinActionReceiver : BroadcastReceiver() {
 
@@ -37,15 +39,15 @@ class PinActionReceiver : BroadcastReceiver() {
                         }
                         return@launch
                     }
-                    else -> {
-                        val repository = (app as SinglenoteApplication).repository
-                        when (intent.action) {
-                            ACTION_UNPIN -> repository.setPinned(false)
-                            ACTION_ARCHIVE -> repository.archiveActive()
-                        }
-                        PinNotification.refresh(app)
-                    }
+                    ACTION_UNPIN ->
+                        (app as SinglenoteApplication).repository.setPinned(false)
+                    ACTION_ARCHIVE ->
+                        (app as SinglenoteApplication).repository.archiveActive()
+                    // Dismissal respawn: no state change, just re-post below.
+                    // refresh() no-ops unless the note is still pinned.
+                    else -> Unit
                 }
+                PinNotification.refresh(app)
             } catch (e: Exception) {
                 // Never swallow silently: a dead action with no trace is
                 // undebuggable, and logcat is the only witness when the app
@@ -62,16 +64,28 @@ class PinActionReceiver : BroadcastReceiver() {
         const val ACTION_COPY = "com.yungsamd17.singlenote.COPY_NOTE"
         const val ACTION_UNPIN = "com.yungsamd17.singlenote.UNPIN_NOTE"
         const val ACTION_ARCHIVE = "com.yungsamd17.singlenote.ARCHIVE_NOTE"
+        const val ACTION_RESPAWN = "com.yungsamd17.singlenote.RESPAWN_NOTE"
 
         private const val REQUEST_COPY = 1000
         private const val REQUEST_UNPIN = 1001
         private const val REQUEST_ARCHIVE = 1002
+        private const val REQUEST_RESPAWN = 1003
 
         fun copyIntent(context: Context): PendingIntent =
             PendingIntent.getBroadcast(
                 context,
                 REQUEST_COPY,
                 Intent(context, PinActionReceiver::class.java).setAction(ACTION_COPY),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+        // Fires only on user dismissal (swipe / clear-all); programmatic
+        // cancels from unpin/archive/refresh never trigger it, so no loop.
+        fun respawnIntent(context: Context): PendingIntent =
+            PendingIntent.getBroadcast(
+                context,
+                REQUEST_RESPAWN,
+                Intent(context, PinActionReceiver::class.java).setAction(ACTION_RESPAWN),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
