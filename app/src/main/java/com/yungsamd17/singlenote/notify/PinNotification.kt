@@ -18,6 +18,7 @@ object PinNotification {
     private const val CHANNEL_ID = "pinned_note_v2"
     private const val LEGACY_CHANNEL_ID = "pinned_note"
     private const val NOTIFICATION_ID = 1
+    private const val REQUEST_OPEN_APP = 2
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -60,6 +61,12 @@ object PinNotification {
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val openAction = PendingIntent.getActivity(
+            context,
+            REQUEST_OPEN_APP,
+            Intent(context, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -78,20 +85,13 @@ object PinNotification {
             .setDeleteIntent(PinActionReceiver.respawnIntent(context))
             .setShowWhen(false)
             .setContentIntent(openIntent)
+            // Single action on purpose: buttons that need background work
+            // go dead on restrictive ROMs once the app is closed, but an
+            // explicit open always works (user-initiated activity start).
             .addAction(
-                R.drawable.ic_action_unpin,
-                context.getString(R.string.notification_action_unpin),
-                PinActionReceiver.unpinIntent(context)
-            )
-            .addAction(
-                R.drawable.ic_action_copy,
-                context.getString(R.string.notification_action_copy),
-                PinActionReceiver.copyIntent(context)
-            )
-            .addAction(
-                R.drawable.ic_action_archive,
-                context.getString(R.string.notification_action_archive),
-                PinActionReceiver.archiveIntent(context)
+                R.drawable.ic_notification,
+                context.getString(R.string.notification_action_open),
+                openAction
             )
             .build()
 
