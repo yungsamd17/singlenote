@@ -401,7 +401,7 @@ private fun AboutDialog(onDismiss: () -> Unit) {
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
-    }
+    )
 
     if (showLicenses) {
         AlertDialog(
