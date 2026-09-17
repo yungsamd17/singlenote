@@ -86,9 +86,10 @@ class MainActivity : ComponentActivity() {
             // frame over the matched launch window (see onCreate) on every
             // cold start where the two disagree.
             if (themeMode == null || accent == null) return@setContent
-            // Locals: delegated properties can't be smart-cast below.
-            val theme = themeMode
-            val accentKey = accent
+            // Locals: delegated properties keep their nullable type (and
+            // can't be smart-cast), so re-assert non-null here.
+            val theme: String = themeMode ?: return@setContent
+            val accentKey: String = accent ?: return@setContent
             val darkTheme = when (theme) {
                 NotePreferences.THEME_DARK -> true
                 NotePreferences.THEME_LIGHT -> false
