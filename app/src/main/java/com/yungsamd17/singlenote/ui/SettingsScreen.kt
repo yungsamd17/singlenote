@@ -364,6 +364,7 @@ private fun SelectionDialog(
 @Composable
 private fun AboutDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    var showLicenses by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.about_title)) },
@@ -392,11 +393,46 @@ private fun AboutDialog(onDismiss: () -> Unit) {
                         Text(stringResource(R.string.about_author))
                     }
                 }
+                TextButton(onClick = { showLicenses = true }) {
+                    Text(stringResource(R.string.about_licenses))
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
+    )
+
+    if (showLicenses) {
+        AlertDialog(
+            onDismissRequest = { showLicenses = false },
+            title = { Text(stringResource(R.string.about_licenses)) },
+            text = {
+                Column {
+                    LicenseRow(R.string.license_kotlin)
+                    LicenseRow(R.string.license_compose)
+                    LicenseRow(R.string.license_room)
+                    LicenseRow(R.string.license_datastore)
+                    LicenseRow(R.string.license_glance)
+                    LicenseRow(R.string.license_navigation)
+                    LicenseRow(R.string.license_coroutines)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLicenses = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun LicenseRow(textRes: Int) {
+    Text(
+        text = stringResource(textRes),
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.padding(vertical = 4.dp)
     )
 }
 
