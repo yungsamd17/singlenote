@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PrivacyTip
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -38,6 +39,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -72,6 +76,8 @@ fun AboutScreen(
     val context = LocalContext.current
     val email = stringResource(R.string.email_address)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var checkingUpdate by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
     var changelog by remember { mutableStateOf<List<GithubReleases.Release>?>(null) }
     var changelogFailed by remember { mutableStateOf(false) }
@@ -87,7 +93,34 @@ fun AboutScreen(
             }
         }
     }
+    fun checkForUpdates() {
+        if (checkingUpdate) return
+        checkingUpdate = true
+        scope.launch {
+            try {
+                val latest = GithubReleases.fetch(limit = 5).firstOrNull()
+                if (latest == null) {
+                    snackbarHostState.showSnackbar(context.getString(R.string.update_check_failed))
+                } else if (GithubReleases.isNewerTag(latest.tag, BuildConfig.VERSION_NAME)) {
+                    val result = snackbarHostState.showSnackbar(
+                        message = context.getString(R.string.update_available, latest.tag),
+                        actionLabel = context.getString(R.string.action_download)
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        openUrl(context, latest.apkUrl ?: latest.htmlUrl)
+                    }
+                } else {
+                    snackbarHostState.showSnackbar(context.getString(R.string.update_uptodate))
+                }
+            } catch (_: Exception) {
+                snackbarHostState.showSnackbar(context.getString(R.string.update_check_failed))
+            } finally {
+                checkingUpdate = false
+            }
+        }
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.about_title)) },
@@ -129,7 +162,11 @@ fun AboutScreen(
                             .size(56.dp)
                             .clip(RoundedCornerShape(14.dp))
                     )
-                    Column(modifier = Modifier.padding(start = 16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleLarge
@@ -142,6 +179,21 @@ fun AboutScreen(
                             ),
                             style = MaterialTheme.typography.bodyMedium
                         )
+                    }
+                    IconButton(
+                        onClick = ::checkForUpdates,
+                        enabled = !checkingUpdate
+                    ) {
+                        if (checkingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.Refresh,
+                                contentDescription = stringResource(R.string.cd_check_updates)
+                            )
+                        }
                     }
                 }
             }
