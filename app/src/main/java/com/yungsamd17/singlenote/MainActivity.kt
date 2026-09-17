@@ -86,7 +86,10 @@ class MainActivity : ComponentActivity() {
             // frame over the matched launch window (see onCreate) on every
             // cold start where the two disagree.
             if (themeMode == null || accent == null) return@setContent
-            val darkTheme = when (themeMode) {
+            // Locals: delegated properties can't be smart-cast below.
+            val theme = themeMode
+            val accentKey = accent
+            val darkTheme = when (theme) {
                 NotePreferences.THEME_DARK -> true
                 NotePreferences.THEME_LIGHT -> false
                 else -> isSystemInDarkTheme()
@@ -95,7 +98,7 @@ class MainActivity : ComponentActivity() {
             // switch): the style set in onCreate/onResume would go stale.
             SideEffect { applyBarAppearance(darkTheme) }
             MaterialTheme(
-                colorScheme = accentScheme(accent, darkTheme)
+                colorScheme = accentScheme(accentKey, darkTheme)
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
