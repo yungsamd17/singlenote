@@ -15,16 +15,22 @@ import com.yungsamd17.singlenote.data.NotePreferences
 
 object PinNotification {
 
-    private const val CHANNEL_ID = "pinned_note"
+    private const val CHANNEL_ID = "pinned_note_v2"
+    private const val LEGACY_CHANNEL_ID = "pinned_note"
     private const val NOTIFICATION_ID = 1
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
+        // Channels are immutable once created: the old LOW-importance
+        // channel is silent-filtered off the lock screen by some skins, so
+        // the DEFAULT-importance channel below gets a new id and the legacy
+        // one is removed (its settings would otherwise stick forever).
+        manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.channel_pinned_name),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = context.getString(R.string.channel_pinned_description)
                 setShowBadge(false)
