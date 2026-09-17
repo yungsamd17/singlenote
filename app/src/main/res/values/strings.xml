@@ -76,12 +76,4 @@
     <string name="about_github">GitHub</string>
     <string name="about_license">License</string>
     <string name="about_author">Author</string>
-    <string name="about_licenses">Open-source licenses</string>
-    <string name="license_kotlin">Kotlin — Apache License 2.0</string>
-    <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
-    <string name="license_room">Room — Apache License 2.0</string>
-    <string name="license_datastore">DataStore Preferences — Apache License 2.0</string>
-    <string name="license_glance">Glance — Apache License 2.0</string>
-    <string name="license_navigation">Navigation Compose — Apache License 2.0</string>
-    <string name="license_coroutines">Kotlin Coroutines — Apache License 2.0</string>
 </resources>
