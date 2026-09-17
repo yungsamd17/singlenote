@@ -5,12 +5,16 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,17 +26,25 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +55,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
+import com.yungsamd17.singlenote.util.GithubReleases
+import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
 private const val ISSUES_URL = "https://github.com/yungsamd17/singlenote/issues/new/choose"
@@ -57,6 +71,22 @@ fun AboutScreen(
 ) {
     val context = LocalContext.current
     val email = stringResource(R.string.email_address)
+    val scope = rememberCoroutineScope()
+    var showChangelog by remember { mutableStateOf(false) }
+    var changelog by remember { mutableStateOf<List<GithubReleases.Release>?>(null) }
+    var changelogFailed by remember { mutableStateOf(false) }
+    fun openChangelog() {
+        showChangelog = true
+        changelog = null
+        changelogFailed = false
+        scope.launch {
+            try {
+                changelog = GithubReleases.fetch()
+            } catch (_: Exception) {
+                changelogFailed = true
+            }
+        }
+    }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -148,11 +178,64 @@ fun AboutScreen(
                 onClick = { openUrl(context, ISSUES_URL) }
             )
             AboutRow(
+                icon = Icons.Outlined.History,
+                title = stringResource(R.string.changelog_title),
+                onClick = ::openChangelog
+            )
+            AboutRow(
                 icon = Icons.Outlined.Email,
                 title = stringResource(R.string.email_title),
                 subtitle = email,
                 onClick = { openUrl(context, "mailto:$email") }
             )
+        }
+    }
+
+    if (showChangelog) {
+        ModalBottomSheet(onDismissRequest = { showChangelog = false }) {
+            Text(
+                text = stringResource(R.string.changelog_title),
+                style = MaterialTheme.typography.headlineSmall,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+            when {
+                changelogFailed || changelog?.isEmpty() == true -> Text(
+                    text = stringResource(R.string.changelog_error),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+                changelog == null -> Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp)
+                ) {
+                    CircularProgressIndicator()
+                }
+                else -> LazyColumn(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 32.dp)
+                ) {
+                    items(changelog!!, key = { it.tag }) { release ->
+                        Column {
+                            Text(
+                                text = release.name.ifBlank { release.tag },
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = release.body.ifBlank {
+                                    stringResource(R.string.changelog_empty_notes)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
