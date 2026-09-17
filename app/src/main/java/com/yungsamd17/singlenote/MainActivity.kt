@@ -34,7 +34,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
-import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
 import com.yungsamd17.singlenote.ui.NoteScreen
@@ -70,19 +69,28 @@ class MainActivity : ComponentActivity() {
         val repository = (application as SinglenoteApplication).repository
 
         setContent {
-            val themeMode by produceState(
-                initialValue = NotePreferences.THEME_SYSTEM,
+            val themeMode by produceState<String?>(
+                initialValue = null,
                 producer = {
                     NotePreferences(applicationContext).themeMode.collect { value = it }
                 }
             )
-            val accent by produceState(
-                initialValue = ACCENT_DEFAULT,
+            val accent by produceState<String?>(
+                initialValue = null,
                 producer = {
                     NotePreferences(applicationContext).accentColor.collect { value = it }
                 }
             )
-            val darkTheme = when (themeMode) {
+            // Paint nothing until the stored theme arrives: falling back to
+            // the system theme/default accent first would flash a wrong-theme
+            // frame over the matched launch window (see onCreate) on every
+            // cold start where the two disagree.
+            if (themeMode == null || accent == null) return@setContent
+            // Locals: delegated properties keep their nullable type (and
+            // can't be smart-cast), so re-assert non-null here.
+            val theme: String = themeMode ?: return@setContent
+            val accentKey: String = accent ?: return@setContent
+            val darkTheme = when (theme) {
                 NotePreferences.THEME_DARK -> true
                 NotePreferences.THEME_LIGHT -> false
                 else -> isSystemInDarkTheme()
@@ -91,7 +99,7 @@ class MainActivity : ComponentActivity() {
             // switch): the style set in onCreate/onResume would go stale.
             SideEffect { applyBarAppearance(darkTheme) }
             MaterialTheme(
-                colorScheme = accentScheme(accent, darkTheme)
+                colorScheme = accentScheme(accentKey, darkTheme)
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
