@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -83,6 +84,7 @@ fun SettingsScreen(
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSize by viewModel.textSize.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val ready by viewModel.ready.collectAsStateWithLifecycle()
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
 
@@ -101,6 +103,13 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
+        // First frame waits for stored truth (same as the note screen):
+        // rows appear with the saved values — nothing flashes defaults.
+        // Early return keeps the diff (and the layout) untouched otherwise.
+        if (!ready) {
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
