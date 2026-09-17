@@ -39,6 +39,23 @@ object GithubReleases {
         }
     }
 
+        /**
+     * True when [latestTag] (e.g. "v0.3.3") is newer than [current] (e.g.
+     * BuildConfig.VERSION_NAME). Compares numeric dot-separated parts so
+     * "v0.3.10" beats "v0.3.9"; unparseable parts count as 0.
+     */
+    fun isNewerTag(latestTag: String, current: String): Boolean {
+        fun parts(version: String) = version.trim().trimStart('v', 'V')
+            .split('.').map { it.toIntOrNull() ?: 0 }
+        val latest = parts(latestTag)
+        val installed = parts(current)
+        for (i in 0 until maxOf(latest.size, installed.size)) {
+            val difference = latest.getOrElse(i) { 0 } - installed.getOrElse(i) { 0 }
+            if (difference != 0) return difference > 0
+        }
+        return false
+    }
+
     internal fun parse(json: String): List<Release> {
         val releases = mutableListOf<Release>()
         val array = JSONArray(json)
