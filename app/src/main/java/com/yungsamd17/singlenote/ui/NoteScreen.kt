@@ -66,7 +66,6 @@ import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
@@ -105,12 +104,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
-import com.yungsamd17.singlenote.util.AutostartSettings
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
-private const val TIPS_PREFS = "tips"
-private const val KEY_AUTOSTART_TIP_SHOWN = "autostart_tip_shown"
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -272,23 +268,6 @@ fun NoteScreen(
             keyboardWasOpen = false
             if (isEditing) finishEditing()
         }
-    }
-
-    // Restrictive ROMs (Xiaomi & co.) silently drop notification-action
-    // broadcasts unless the app may start in the background, so a pinned
-    // note goes dead once swiped away. Point at the Autostart toggle once,
-    // the first time a note is pinned there — the toggle itself needs one
-    // manual tap and no permission can do it for them.
-    LaunchedEffect(pinned) {
-        if (!pinned || !AutostartSettings.isRestrictiveRom()) return@LaunchedEffect
-        val tips = context.getSharedPreferences(TIPS_PREFS, Context.MODE_PRIVATE)
-        if (tips.getBoolean(KEY_AUTOSTART_TIP_SHOWN, false)) return@LaunchedEffect
-        tips.edit().putBoolean(KEY_AUTOSTART_TIP_SHOWN, true).apply()
-        val result = snackbarHostState.showSnackbar(
-            message = context.getString(R.string.notification_autostart_tip),
-            actionLabel = context.getString(R.string.menu_settings)
-        )
-        if (result == SnackbarResult.ActionPerformed) AutostartSettings.open(context)
     }
 
     // Guaranteed way out: with the keyboard already hidden, back ends
