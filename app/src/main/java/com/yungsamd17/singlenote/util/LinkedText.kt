@@ -24,14 +24,15 @@ import androidx.compose.ui.unit.dp
 private const val ISSUE_BASE_URL = "https://github.com/yungsamd17/singlenote/issues"
 private const val PROFILE_BASE_URL = "https://github.com"
 
-// [label](url) | bare https://… | email | #1234 | @user — in this order so
-// emails and URLs win over the looser @-mention match.
+// [label](url) | bare https://… | email | #1234 | @user | **bold** — in
+// this order so emails and URLs win over the looser @-mention match.
 private val LINK_PATTERN = Regex(
     """\[([^]]+)]\((https?://[^)\s]+|mailto:[^)\s]+)\)""" +
         """|(https?://[^\s)<\]]+)""" +
         """|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})""" +
         """|(?<!\S)#(\d{2,6})\b""" +
-        """|(?<!\S)@([A-Za-z0-9][A-Za-z0-9-]*)"""
+        """|(?<!\S)@([A-Za-z0-9][A-Za-z0-9-]*)""" +
+        """|\*\*([^*]+?)\*\*"""
 )
 
 /**
@@ -52,9 +53,9 @@ fun LinkedText(
 }
 
 /**
- * Minimal block markdown for release notes and legal text: "# " / "## "
- * headings, "- " bullets, blank-line spacing — everything else is a
- * [LinkedText] paragraph so inline links keep working inside blocks.
+ * Minimal block markdown for release notes and legal text: "# " / "## " /
+ * "### " headings, "- " bullets, **bold**, blank-line spacing — everything
+ * else is a [LinkedText] paragraph so inline links keep working in blocks.
  */
 @Composable
 fun MarkdownText(
@@ -67,14 +68,22 @@ fun MarkdownText(
         markdown.lines().forEach { raw ->
             val line = raw.trimEnd()
             when {
-                line.startsWith("## ") -> Text(
-                    text = line.removePrefix("## ").trim(),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-                line.startsWith("# ") -> Text(
-                    text = line.removePrefix("# ").trim(),
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                )
+                line.startsWith("#") -> {
+                    val level = line.takeWhile { it == '#' }.length
+                    val rest = line.drop(level)
+                    // "#1062 …" is an issue ref, not a heading: only a space
+                    // after the #'s makes it one.
+                    if (rest.startsWith(" ") && rest.trim().isNotEmpty()) {
+                        val style = when {
+                            level <= 1 -> MaterialTheme.typography.titleLarge
+                            level == 2 -> MaterialTheme.typography.titleMedium
+                            else -> MaterialTheme.typography.titleSmall
+                        }.copy(fontWeight = FontWeight.Bold)
+                        Text(text = rest.trim(), style = style)
+                    } else {
+                        LinkedText(text = line.trim(), style = bodyStyle, color = bodyColor)
+                    }
+                }
                 line.startsWith("- ") || line.startsWith("* ") -> Row {
                     Text(text = "•  ", style = bodyStyle, color = bodyColor)
                     LinkedText(
@@ -92,6 +101,7 @@ fun MarkdownText(
 }
 
 private fun linkified(source: String, linkColor: Color): AnnotatedString {
+
     val link = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)
     return AnnotatedString.Builder().apply {
         var pos = 0
@@ -103,6 +113,7 @@ private fun linkified(source: String, linkColor: Color): AnnotatedString {
             val email = match.groups[4]?.value
             val issue = match.groups[5]?.value
             val mention = match.groups[6]?.value
+            val bold = match.groups[7]?.value
             when {
                 mdLabel != null -> withLink(LinkAnnotation.Url(mdUrl!!)) {
                     withStyle(link) { append(mdLabel) }
@@ -125,9 +136,31 @@ private fun linkified(source: String, linkColor: Color): AnnotatedString {
                 mention != null -> withLink(LinkAnnotation.Url("$PROFILE_BASE_URL/$mention")) {
                     withStyle(link) { append("@$mention") }
                 }
+                bold != null -> {
+                    // Bold first, links inside stay clickable: the inner
+                    // parse keeps its spans, the push adds weight over all.
+                    pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
+                    append(linkified(bold, linkColor))
+                    pop()
+                }
             }
             pos = match.range.last + 1
         }
         if (pos < source.length) append(source.substring(pos))
     }.toAnnotatedString()
+}
+
+/**
+ * Drops a leading version line ("v0.3.3", "# v0.3.3") from release notes —
+ * the sheet title already shows the version, so repeating it is noise.
+ */
+fun stripLeadingVersionHeading(markdown: String, names: List<String>): String {
+    val lines = markdown.lines().toMutableList()
+    while (lines.isNotEmpty() && lines.first().isBlank()) lines.removeAt(0)
+    val first = lines.firstOrNull()?.trim()?.trimStart('#')?.trim()
+    if (first != null && names.any { it.isNotBlank() && it.equals(first, ignoreCase = true) }) {
+        lines.removeAt(0)
+        while (lines.isNotEmpty() && lines.first().isBlank()) lines.removeAt(0)
+    }
+    return lines.joinToString("\n")
 }

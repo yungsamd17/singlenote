@@ -61,6 +61,7 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.GithubReleases
 import com.yungsamd17.singlenote.util.LinkedText
 import com.yungsamd17.singlenote.util.MarkdownText
+import com.yungsamd17.singlenote.util.stripLeadingVersionHeading
 import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
@@ -92,10 +93,19 @@ fun AboutScreen(
                 val installed = BuildConfig.VERSION_NAME
                 // Only this install's notes: match v0.3.3 or plain 0.3.3,
                 // fall back to the newest release on dev builds.
-                changelogRelease = releases.firstOrNull {
+                val picked = releases.firstOrNull {
                     it.tag.equals("v$installed", ignoreCase = true) ||
                         it.tag.equals(installed, ignoreCase = true)
                 } ?: releases.firstOrNull()
+                // The sheet title already carries the version: drop the
+                // duplicate leading line from the notes themselves.
+                val core = (picked?.tag ?: installed).trimStart('v', 'V')
+                changelogRelease = picked?.copy(
+                    body = stripLeadingVersionHeading(
+                        picked.body,
+                        listOf(picked.tag, core, "v$core")
+                    )
+                )
                 if (changelogRelease == null) changelogFailed = true
             } catch (_: Exception) {
                 changelogFailed = true
