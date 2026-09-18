@@ -21,13 +21,14 @@ Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widge
 ```
 
 - CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest lintDebug` on every push/PR, and publishes APKs to a GitHub Release on `v*` tags.
+- Every non-tag build also uploads the `singlenote-debug-apk` artifact — fetch it with `gh run download <run-id> -n singlenote-debug-apk` to verify on-device when no ADB connection exists.
 - Local sandboxes often lack the Android SDK/JDK — if Gradle can't run, rely on careful code review and let CI verify. Never skip updating tests when changing shared interfaces.
 
 ## Architecture
 
 ```
 app/src/main/java/com/yungsamd17/singlenote/
-  MainActivity.kt      # Compose NavHost: note / archive / settings, theme from DataStore
+  MainActivity.kt      # Compose NavHost: note / archive / settings / about / terms / privacy / license, theme from DataStore
   data/
     Note.kt            # Room entity
     NoteDao.kt         # queries (active note + archive)
@@ -37,6 +38,12 @@ app/src/main/java/com/yungsamd17/singlenote/
     NoteScreen.kt / NoteViewModel.kt       # editor + top bar (archive, pin, menu)
     ArchiveScreen.kt / ArchiveViewModel.kt # restore/delete archived notes
     SettingsScreen.kt / SettingsViewModel.kt
+    AboutScreen.kt     # about card, changelog sheet, terms/privacy/license screens
+    BrandText.kt       # bold-Single brand mark
+  util/
+    GithubReleases.kt  # on-demand release-notes fetch + update check (no tracking)
+    LinkedText.kt      # linkified text + minimal markdown renderer
+    Texts.kt           # note text helpers
   widget/              # Glance home-screen widget + NoteChangedReceiver
   tile/                # quick-settings tile service
   notify/              # pinned-note notification
@@ -46,6 +53,7 @@ Key patterns:
 
 - `NoteStore` / `ArchiveStore` are interfaces; ViewModels depend on them, `NoteRepository` implements both. Any interface change must be applied to the repository AND to test fakes (see `NoteViewModelTest.FakeNoteStore`).
 - All user-visible text lives in `app/src/main/res/values/strings.xml` — never hardcode strings in composables.
+- Links and light markdown live in those strings as `[label](url)` and render via `LinkedText` / `MarkdownText` (`util/LinkedText.kt`): accent-colored, shown without the `https://` prefix. Bare URLs, emails, `#1234` issue refs, `@mentions` and `**bold**` linkify/style automatically; `#` / `##` / `###` become headings.
 - Settings persist via `NotePreferences` (DataStore). Expose flows as `StateFlow` with `SharingStarted.WhileSubscribed(5000)` in ViewModels.
 - Note edits debounce-save (500ms) and flush on ON_STOP; repository broadcasts `ACTION_NOTE_UPDATED` so widget/tile/notification refresh.
 
@@ -53,7 +61,7 @@ Key patterns:
 
 - Material 3 only. Settings follow the card-per-row style: one rounded `Card` (16dp corners) per row, 8dp gaps between cards, section labels in `colorScheme.primary`, switches use `thumbContent` check/close icons.
 - Top bar: icon `IconButton`s wrapped in `TooltipIconButton` (tooltip helper in `NoteScreen.kt`).
-- Overflow menu: plain text `DropdownMenuItem`s (no leading icons), 56dp min row height, 200dp min menu width.
+- Overflow menu: text `DropdownMenuItem`s with trailing icons (`onSurfaceVariant`), 28dp sheet shape, 56dp min row height, 220dp min menu width.
 - Dialogs always provide a Cancel/close `TextButton` in `confirmButton`.
 
 ## Commit Messages
@@ -73,6 +81,7 @@ Keep commits atomic — one logical change per commit.
 | `release` | version bump / release tagging |
 
 Scope is a short area name for this repo: `app`, `widget`, `tile`, `notify`, `data`, `ci`, `docs`.
+Finer area scopes (`editor`, `about`, `settings`, `legal`, `readme`, …) are fine for small, focused changes.
 Use plain `type:` only when a change genuinely spans everything (rare).
 
 Examples:
@@ -138,8 +147,6 @@ PR rules:
 Replace the auto-generated PR list with grouped, user-facing bullets:
 
 ```markdown
-## vX.Y.Z
-
 ### Area one
 - Bolded feature, plain one-line explanation.
 
@@ -159,5 +166,5 @@ Rules:
 ## Gotchas
 
 - Do not commit secrets, keystores, or local-only files (e.g. `.and-code/`).
-- `BuildConfig.VERSION_NAME` is used in the About dialog — keep `buildConfig = true`.
+- `BuildConfig.VERSION_NAME` is used in the About screen (header + changelog matching) — keep `buildConfig = true`.
 - Release builds sign with `signingConfigs.release`, backed by the `RELEASE_KEYSTORE_*` repo secrets (key backup lives outside git); the debug keystore must never sign releases.
