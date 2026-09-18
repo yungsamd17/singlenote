@@ -147,8 +147,6 @@ PR rules:
 Replace the auto-generated PR list with grouped, user-facing bullets:
 
 ```markdown
-## vX.Y.Z
-
 ### Area one
 - Bolded feature, plain one-line explanation.
 
