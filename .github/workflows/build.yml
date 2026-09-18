@@ -102,11 +102,19 @@ jobs:
           name: singlenote-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+      - name: Name APKs for release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk "singlenote-${{ github.ref_name }}-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "singlenote-${{ github.ref_name }}-release.apk"
+
       - name: Release APKs on tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
+          # Versioned names (e.g. singlenote-v0.3.3-release.apk) so assets
+          # are identifiable without opening the release.
           files: |
-            app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/release/app-release.apk
+            singlenote-${{ github.ref_name }}-debug.apk
+            singlenote-${{ github.ref_name }}-release.apk
           generate_release_notes: true

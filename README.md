@@ -42,7 +42,7 @@ Grab the latest APK from [Releases](https://github.com/yungsamd17/singlenote/rel
 | Requirement | Detail |
 |---|---|
 | **OS** | Android 10 (API 29) or newer |
-| **APK** | `app-release.apk` recommended — `app-debug.apk` also available |
+| **APK** | `singlenote-vX.Y.Z-release.apk` recommended — debug build also available |
 
 ## Build
 
