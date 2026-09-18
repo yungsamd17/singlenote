@@ -7,11 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -19,13 +16,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -176,7 +169,6 @@ class MainActivity : ComponentActivity() {
                             LicenseScreen(onBack = { navController.popBackStack() })
                         }
                     }
-                    FirstRunTip()
                 }
             }
         }
@@ -210,28 +202,5 @@ class MainActivity : ComponentActivity() {
             else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
                 Configuration.UI_MODE_NIGHT_YES
         }
-    }
-
-    @Composable
-    private fun FirstRunTip() {
-        val snackbarHostState = remember { SnackbarHostState() }
-        val prefs = getSharedPreferences(PREFS_TIPS, MODE_PRIVATE)
-        LaunchedEffect(Unit) {
-            if (!prefs.getBoolean(KEY_TIP_SHOWN, false)) {
-                prefs.edit().putBoolean(KEY_TIP_SHOWN, true).apply()
-                snackbarHostState.showSnackbar(getString(R.string.tip_first_run))
-            }
-        }
-        Box(modifier = Modifier.fillMaxSize()) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
-    }
-
-    companion object {
-        private const val PREFS_TIPS = "tips"
-        private const val KEY_TIP_SHOWN = "first_run_tip_shown"
     }
 }
