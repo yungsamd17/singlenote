@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.GithubReleases
+import com.yungsamd17.singlenote.util.LinkedText
 import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
@@ -355,6 +356,11 @@ fun LicenseScreen(onBack: () -> Unit) {
             LicenseRow(R.string.license_glance)
             LicenseRow(R.string.license_navigation)
             LicenseRow(R.string.license_coroutines)
+            LinkedText(
+                text = stringResource(R.string.license_full),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
         }
     }
 }
@@ -381,7 +387,7 @@ private fun LegalScreen(
             )
         }
     ) { innerPadding ->
-        Text(
+        LinkedText(
             text = body,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
