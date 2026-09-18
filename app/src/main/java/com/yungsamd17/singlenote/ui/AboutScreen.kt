@@ -156,7 +156,10 @@ fun AboutScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(R.mipmap.ic_launcher),
+                        // Note: the launcher adaptive icon (mipmap XML) can't
+                        // load via painterResource — only vectors and rasters
+                        // can — so the note vector doubles as the header art.
+                        painter = painterResource(R.drawable.ic_notification),
                         contentDescription = null,
                         modifier = Modifier
                             .size(56.dp)
