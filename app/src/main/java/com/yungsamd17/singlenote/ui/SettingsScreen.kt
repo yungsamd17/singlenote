@@ -225,8 +225,10 @@ private fun SectionLabel(text: String) {
 
 @Composable
 private fun SettingCard(content: @Composable () -> Unit) {
+    // No inner padding: the row below fills the card edge to edge, so the
+    // touch ripple covers the full card exactly like About rows do.
     Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) { content() }
+        Column { content() }
     }
 }
 
@@ -256,7 +258,7 @@ private fun ValueRow(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = false, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -287,7 +289,7 @@ private fun ToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = checked, onClick = { onCheckedChange(!checked) })
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
