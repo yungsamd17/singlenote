@@ -21,3 +21,7 @@ Fetching public release notes and checking for updates contacts GitHub, and only
 ## Contact
 
 Questions: yungsamd@proton.me.
+
+## Full privacy policy
+
+Full Privacy Policy: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)

@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.ColorLens
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
@@ -45,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -118,7 +118,7 @@ fun SettingsScreen(
                 }
                 SettingCard {
                     ValueRow(
-                        icon = Icons.Outlined.ColorLens,
+                        icon = painterResource(R.drawable.ic_format_paint),
                         title = stringResource(R.string.settings_accent),
                         value = accentLabel(accentColor),
                         onClick = { openDialog = DIALOG_ACCENT }
@@ -225,8 +225,10 @@ private fun SectionLabel(text: String) {
 
 @Composable
 private fun SettingCard(content: @Composable () -> Unit) {
+    // No inner padding: the row below fills the card edge to edge, so the
+    // touch ripple covers the full card exactly like About rows do.
     Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(vertical = 4.dp)) { content() }
+        Column { content() }
     }
 }
 
@@ -256,7 +258,7 @@ private fun ValueRow(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = false, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -287,7 +289,7 @@ private fun ToggleRow(
         modifier = Modifier
             .fillMaxWidth()
             .selectable(selected = checked, onClick = { onCheckedChange(!checked) })
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

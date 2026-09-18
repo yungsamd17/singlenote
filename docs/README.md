@@ -1,4 +1,4 @@
-# Singlenote Docs
+# **Single**note Docs
 
 Documentation for the Singlenote repo: what each file covers and where to
 look first.

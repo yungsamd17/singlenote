@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#11131A</color>
-    <color name="ic_launcher_foreground">#F5F2EA</color>
-    <color name="ic_launcher_accent">#8A93A6</color>
     <!-- Launch window: covers the cold-start gap before first draw so the
         app opens onto its own surface instead of a gray void. -->
     <color name="launch_background">#FFFBFE</color>

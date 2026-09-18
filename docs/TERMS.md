@@ -13,3 +13,7 @@ Your note never leaves your device. There are no accounts, no analytics and no t
 ## Liability
 
 The app is provided as-is, without warranty of any kind. The author is not liable for any loss or damage arising from its use.
+
+## Full terms
+
+Full Terms: [github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md](https://github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md)
