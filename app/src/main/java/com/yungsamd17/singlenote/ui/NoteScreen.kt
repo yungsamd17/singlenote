@@ -244,6 +244,16 @@ fun NoteScreen(
         viewModel.flushSave()
     }
 
+    // Copy always confirms: same snackbar position as the limit hint,
+    // so it floats above Done/actions whether the keyboard is open or not.
+    fun copyNoteWithFeedback() {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
+        scope.launch {
+            snackbarHostState.showSnackbar(context.getString(R.string.note_copied))
+        }
+    }
+
     // Called by the editor when input hits the note limit. Over-limit
     // keystrokes are swallowed silently; this hint fires at most once per
     // cooldown so holding a key doesn't spam snackbars.
@@ -380,7 +390,7 @@ fun NoteScreen(
                                 enabled = hasContent,
                                 onClick = {
                                     menuOpen = false
-                                    copyNote(context, text)
+                                    copyNoteWithFeedback()
                                 }
                             )
                             DropdownMenuItem(
@@ -858,11 +868,6 @@ private fun shareNote(context: Context, text: String) {
         putExtra(Intent.EXTRA_TEXT, text)
     }
     context.startActivity(Intent.createChooser(sendIntent, null))
-}
-
-private fun copyNote(context: Context, text: String) {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
