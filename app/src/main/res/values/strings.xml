@@ -2,8 +2,6 @@
 <resources>
     <string name="app_name">Singlenote</string>
     <string name="hint_write_one_thing">Write one thing to remember…</string>
-    <string name="cd_share">Share note</string>
-    <string name="cd_copy">Copy note</string>
     <string name="cd_archive">Archive note</string>
     <string name="cd_delete">Delete permanently</string>
     <string name="action_restore">Restore</string>
