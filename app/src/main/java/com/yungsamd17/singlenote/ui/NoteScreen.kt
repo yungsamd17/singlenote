@@ -313,7 +313,7 @@ fun NoteScreen(
         },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
+                title = { BrandText() },
                 navigationIcon = {
                     TooltipIconButton(
                         tooltip = stringResource(R.string.cd_open_archive),

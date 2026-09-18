@@ -187,10 +187,7 @@ fun AboutScreen(
                             .weight(1f)
                             .padding(start = 16.dp)
                     ) {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.titleLarge
-                        )
+                        BrandText(style = MaterialTheme.typography.titleLarge)
                         Text(
                             text = stringResource(
                                 R.string.about_version_line,
