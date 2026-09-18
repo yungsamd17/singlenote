@@ -79,6 +79,8 @@
     <string name="source_title">Source code</string>
     <string name="issue_title">Create an issue</string>
     <string name="changelog_title">Changelog</string>
+    <string name="changelog_version_title">Changelog v%1$s</string>
+    <string name="action_ok">OK</string>
     <string name="changelog_error">Couldn’t load the changelog. Check your connection and try again.</string>
     <string name="changelog_empty_notes">No notes for this release.</string>
     <string name="cd_check_updates">Check for updates</string>

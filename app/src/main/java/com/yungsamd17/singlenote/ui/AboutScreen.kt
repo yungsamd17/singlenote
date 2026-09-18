@@ -6,14 +6,12 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +25,8 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -60,6 +60,7 @@ import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.GithubReleases
 import com.yungsamd17.singlenote.util.LinkedText
+import com.yungsamd17.singlenote.util.MarkdownText
 import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
@@ -79,15 +80,23 @@ fun AboutScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var checkingUpdate by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
-    var changelog by remember { mutableStateOf<List<GithubReleases.Release>?>(null) }
+    var changelogRelease by remember { mutableStateOf<GithubReleases.Release?>(null) }
     var changelogFailed by remember { mutableStateOf(false) }
     fun openChangelog() {
         showChangelog = true
-        changelog = null
+        changelogRelease = null
         changelogFailed = false
         scope.launch {
             try {
-                changelog = GithubReleases.fetch()
+                val releases = GithubReleases.fetch()
+                val installed = BuildConfig.VERSION_NAME
+                // Only this install's notes: match v0.3.3 or plain 0.3.3,
+                // fall back to the newest release on dev builds.
+                changelogRelease = releases.firstOrNull {
+                    it.tag.equals("v$installed", ignoreCase = true) ||
+                        it.tag.equals(installed, ignoreCase = true)
+                } ?: releases.firstOrNull()
+                if (changelogRelease == null) changelogFailed = true
             } catch (_: Exception) {
                 changelogFailed = true
             }
@@ -246,47 +255,55 @@ fun AboutScreen(
 
     if (showChangelog) {
         ModalBottomSheet(onDismissRequest = { showChangelog = false }) {
-            Text(
-                text = stringResource(R.string.changelog_title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-            )
-            when {
-                changelogFailed || changelog?.isEmpty() == true -> Text(
-                    text = stringResource(R.string.changelog_error),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+            val release = changelogRelease
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(
+                        R.string.changelog_version_title,
+                        release?.tag?.trimStart('v', 'V') ?: BuildConfig.VERSION_NAME
+                    ),
+                    style = MaterialTheme.typography.headlineSmall
                 )
-                changelog == null -> Box(
-                    contentAlignment = Alignment.Center,
+                when {
+                    changelogFailed -> Text(
+                        text = stringResource(R.string.changelog_error),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    release == null -> Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp)
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                    else -> MarkdownText(
+                        markdown = release.body.ifBlank {
+                            context.getString(R.string.changelog_empty_notes)
+                        },
+                        bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.verticalScroll(rememberScrollState())
+                    )
+                }
+                Button(
+                    onClick = { showChangelog = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 32.dp)
+                        .padding(top = 8.dp)
+                        .height(56.dp)
                 ) {
-                    CircularProgressIndicator()
-                }
-                else -> LazyColumn(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 32.dp)
-                ) {
-                    items(changelog!!, key = { it.tag }) { release ->
-                        Column {
-                            Text(
-                                text = release.name.ifBlank { release.tag },
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Text(
-                                text = release.body.ifBlank {
-                                    stringResource(R.string.changelog_empty_notes)
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
+                    Text(stringResource(R.string.action_ok))
                 }
             }
         }
