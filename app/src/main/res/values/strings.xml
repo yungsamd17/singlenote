@@ -102,4 +102,7 @@
     <string name="license_glance">Glance — Apache License 2.0</string>
     <string name="license_navigation">Navigation Compose — Apache License 2.0</string>
     <string name="license_coroutines">Kotlin Coroutines — Apache License 2.0</string>
+    <string name="license_symbols">Material Symbols (license, format_paint) — Apache License 2.0</string>
+    <string name="license_bootstrap">Bootstrap Icons (sticky-fill) — MIT License</string>
+    <string name="license_third_party">Full third-party notices: [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
 </resources>

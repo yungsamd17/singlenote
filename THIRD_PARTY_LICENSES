@@ -1,0 +1,22 @@
+Third-party licenses used by Singlenote.
+
+The app's own license is in LICENSE (MIT, copyright Sam (yungsamd17)).
+Everything below ships inside the app or its icon set.
+
+1. Material Symbols — "license" and "format_paint" glyphs (About and
+   Settings screens).
+
+   Copyright Google LLC.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/google/material-design-icons
+   Browse: https://fonts.google.com/icons
+
+2. Bootstrap Icons — "sticky-fill" glyph used for the launcher icon and the
+   About header mark (recolored, composed with s17 Labs Icon Maker,
+   https://s17labs.github.io/tools/icon-maker/).
+
+   Copyright (c) 2011-2026 The Bootstrap Authors.
+   Licensed under the MIT License. See https://icons.getbootstrap.com
+   for the full license text.

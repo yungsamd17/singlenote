@@ -371,7 +371,7 @@ fun LicenseScreen(onBack: () -> Unit) {
                 text = stringResource(R.string.license_components_title),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 4.dp)
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
             )
             LicenseRow(R.string.license_kotlin)
             LicenseRow(R.string.license_compose)
@@ -380,6 +380,13 @@ fun LicenseScreen(onBack: () -> Unit) {
             LicenseRow(R.string.license_glance)
             LicenseRow(R.string.license_navigation)
             LicenseRow(R.string.license_coroutines)
+            LicenseRow(R.string.license_symbols)
+            LicenseRow(R.string.license_bootstrap)
+            LinkedText(
+                text = stringResource(R.string.license_third_party),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
             LinkedText(
                 text = stringResource(R.string.license_full),
                 style = MaterialTheme.typography.bodyMedium,

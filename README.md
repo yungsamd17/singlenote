@@ -9,13 +9,13 @@
 A minimalist, fully offline Android note app: write a single active note and keep it
 visible everywhere — home screen widget, pinned notification, and quick settings tile.
 
-[![Build](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml/badge.svg)](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/yungsamd17/singlenote?logo=github)](https://github.com/yungsamd17/singlenote/releases/latest)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)](https://www.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Build](https://img.shields.io/github/actions/workflow/status/yungsamd17/singlenote/build.yml?style=for-the-badge&label=Build&color=11131A)](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/yungsamd17/singlenote?style=for-the-badge&logo=github&color=11131A)](https://github.com/yungsamd17/singlenote/releases/latest)
+[![License](https://img.shields.io/badge/License-MIT-11131A?style=for-the-badge)](LICENSE)
+[![Android](https://img.shields.io/badge/Android-10+-11131A?style=for-the-badge&logo=android&logoColor=3DDC84)](https://www.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1-11131A?style=for-the-badge&logo=kotlin&logoColor=7F52FF)](https://kotlinlang.org)
 
-[Download](https://github.com/yungsamd17/singlenote/releases/latest) · [Report a bug](https://github.com/yungsamd17/singlenote/issues) · [Request a feature](https://github.com/yungsamd17/singlenote/issues)
+[Download](https://github.com/yungsamd17/singlenote/releases/latest) · [Docs](docs/README.md) · [Report a bug](https://github.com/yungsamd17/singlenote/issues) · [Request a feature](https://github.com/yungsamd17/singlenote/issues)
 
 </div>
 
@@ -83,4 +83,4 @@ scratch for Android by [yungsamd17](https://github.com/yungsamd17).
 
 ## License
 
-[MIT](LICENSE)
+[MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_LICENSES)
