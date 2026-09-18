@@ -3,7 +3,6 @@ package com.yungsamd17.singlenote.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
@@ -51,8 +49,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -155,15 +154,13 @@ fun AboutScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(
-                        // Note: the launcher adaptive icon (mipmap XML) can't
-                        // load via painterResource — only vectors and rasters
-                        // can — so the note vector doubles as the header art.
-                        painter = painterResource(R.drawable.ic_notification),
+                    Icon(
+                        // Dedicated header mark (sticky-fill, same glyph as
+                        // the launcher): tinted to match the app-name text.
+                        painter = painterResource(R.drawable.ic_about_logo),
                         contentDescription = null,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(RoundedCornerShape(14.dp))
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(56.dp)
                     )
                     Column(
                         modifier = Modifier
@@ -217,7 +214,7 @@ fun AboutScreen(
                 onClick = onOpenPrivacy
             )
             AboutRow(
-                icon = Icons.Outlined.Article,
+                icon = painterResource(R.drawable.ic_license),
                 title = stringResource(R.string.about_license),
                 subtitle = stringResource(R.string.license_short),
                 onClick = onOpenLicense
@@ -403,6 +400,21 @@ private fun AboutRow(
     subtitle: String? = null,
     onClick: () -> Unit,
 ) {
+    AboutRow(
+        icon = rememberVectorPainter(icon),
+        title = title,
+        subtitle = subtitle,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun AboutRow(
+    icon: Painter,
+    title: String,
+    subtitle: String? = null,
+    onClick: () -> Unit,
+) {
     Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -412,7 +424,7 @@ private fun AboutRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = icon,
+                painter = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
