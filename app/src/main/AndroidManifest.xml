@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- On-demand only: public release notes (changelog) and update checks.
+        No analytics, no tracking; see the Privacy Policy in the app. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".SinglenoteApplication"
@@ -46,6 +50,14 @@
         <receiver
             android:name=".notify.PinActionReceiver"
             android:exported="false" />
+
+        <receiver
+            android:name=".notify.PinBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name=".tile.NoteTileService"

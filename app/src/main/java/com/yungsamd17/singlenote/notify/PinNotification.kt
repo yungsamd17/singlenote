@@ -15,16 +15,23 @@ import com.yungsamd17.singlenote.data.NotePreferences
 
 object PinNotification {
 
-    private const val CHANNEL_ID = "pinned_note"
+    private const val CHANNEL_ID = "pinned_note_v2"
+    private const val LEGACY_CHANNEL_ID = "pinned_note"
     private const val NOTIFICATION_ID = 1
+    private const val REQUEST_OPEN_APP = 2
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
+        // Channels are immutable once created: the old LOW-importance
+        // channel is silent-filtered off the lock screen by some skins, so
+        // the DEFAULT-importance channel below gets a new id and the legacy
+        // one is removed (its settings would otherwise stick forever).
+        manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.channel_pinned_name),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = context.getString(R.string.channel_pinned_description)
                 setShowBadge(false)
@@ -54,30 +61,37 @@ object PinNotification {
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val openAction = PendingIntent.getActivity(
+            context,
+            REQUEST_OPEN_APP,
+            Intent(context, MainActivity::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(context.getString(R.string.notification_pinned_title))
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            // Media/weather-style persistence: full content on the lock
+            // screen, ongoing, and silent on every refresh (it re-posts
+            // on each save while pinned).
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            // Re-post if the user dismisses the pin anyway (some skins let
+            // ongoing notifications be swiped away).
+            .setDeleteIntent(PinActionReceiver.respawnIntent(context))
             .setShowWhen(false)
             .setContentIntent(openIntent)
+            // Single action on purpose: buttons that need background work
+            // go dead on restrictive ROMs once the app is closed, but an
+            // explicit open always works (user-initiated activity start).
             .addAction(
-                R.drawable.ic_action_unpin,
-                context.getString(R.string.notification_action_unpin),
-                PinActionReceiver.unpinIntent(context)
-            )
-            .addAction(
-                R.drawable.ic_action_copy,
-                context.getString(R.string.notification_action_copy),
-                PinActionReceiver.copyIntent(context)
-            )
-            .addAction(
-                R.drawable.ic_action_archive,
-                context.getString(R.string.notification_action_archive),
-                PinActionReceiver.archiveIntent(context)
+                R.drawable.ic_notification,
+                context.getString(R.string.notification_action_open),
+                openAction
             )
             .build()
 

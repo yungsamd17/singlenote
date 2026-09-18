@@ -28,7 +28,8 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 - **Theming** — light / dark / system, Material 3 design
 - **Typography** — default / monospace / serif fonts, three text sizes
 - **Privacy first** — fully offline; no accounts, no analytics, no tracking.
-  The only permission requested is notifications (for the pinned note)
+  Permissions: notifications (pinned note), and internet solely for release
+  notes and update checks, only when you open them
 
 ## Roadmap
 
