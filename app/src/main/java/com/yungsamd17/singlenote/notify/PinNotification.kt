@@ -73,10 +73,10 @@ object PinNotification {
             .setContentTitle(context.getString(R.string.notification_pinned_title))
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Media/weather-style persistence: full content on the lock
-            // screen, ongoing so it can't be swiped away, and silent on
-            // every refresh (it re-posts on each save while pinned).
+            // screen, ongoing, and silent on every refresh (it re-posts
+            // on each save while pinned).
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

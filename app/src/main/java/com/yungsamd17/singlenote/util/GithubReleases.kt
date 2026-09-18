@@ -61,6 +61,9 @@ object GithubReleases {
         val array = JSONArray(json)
         for (i in 0 until array.length()) {
             val item = array.getJSONObject(i)
+            // Prereleases are not updates: keep them out of the changelog
+            // top spot and the update check.
+            if (item.optBoolean("prerelease")) continue
             val assets = item.optJSONArray("assets")
             var apkUrl: String? = null
             if (assets != null) {
