@@ -419,6 +419,7 @@ private fun accentLabel(key: String): String = when (key) {
     NotePreferences.ACCENT_GREEN -> stringResource(R.string.accent_green)
     NotePreferences.ACCENT_ORANGE -> stringResource(R.string.accent_orange)
     NotePreferences.ACCENT_PINK -> stringResource(R.string.accent_pink)
+    NotePreferences.ACCENT_SYSTEM -> stringResource(R.string.accent_system)
     else -> stringResource(R.string.accent_default)
 }
 
