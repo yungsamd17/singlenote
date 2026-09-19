@@ -385,6 +385,11 @@ fun LicenseScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
+            LinkedText(
+                text = stringResource(R.string.license_full),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
             Text(
                 text = stringResource(R.string.license_components_title),
                 style = MaterialTheme.typography.titleSmall,
@@ -404,11 +409,6 @@ fun LicenseScreen(onBack: () -> Unit) {
                 text = stringResource(R.string.license_third_party),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(vertical = 4.dp)
-            )
-            LinkedText(
-                text = stringResource(R.string.license_full),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(vertical = 12.dp)
             )
         }
     }
