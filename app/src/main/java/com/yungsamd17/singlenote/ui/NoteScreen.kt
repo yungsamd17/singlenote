@@ -35,7 +35,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -322,19 +321,13 @@ fun NoteScreen(
         }
     }
 
-    // IME visibility straight from the Compose insets: no window relayout
-    // happens under adjustNothing, so there is no layout pass to observe —
-    // a global-layout listener would go silent and miss the close.
-    val isKeyboardOpen = WindowInsets.isImeVisible
-    var keyboardWasOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(isKeyboardOpen) {
-        if (isKeyboardOpen) {
-            keyboardWasOpen = true
-        } else if (keyboardWasOpen) {
-            keyboardWasOpen = false
-            if (isEditing) finishEditing()
-        }
-    }
+    // Editing is focus, nothing else: Done clears it up front (see
+    // requestFinishEditing), back clears it via the BackHandler below.
+    // Deliberately no observer on IME visibility — isImeVisible flickers
+    // mid-animation under adjustNothing, so any open->closed edge (a real
+    // landing included) can nuke a just-regained focus and kill a reopen
+    // the user just tapped for. A system-hide therefore keeps focus with
+    // Done shown; Done or a second back exits editing.
 
     // Guaranteed way out: with the keyboard already hidden, back ends
     // editing (with it open, the IME consumes the press instead).
@@ -345,9 +338,9 @@ fun NoteScreen(
     // Done tap is the only place that ever tells the IME to hide: clear
     // focus first so there is no hide-while-focused race (a Done tap
     // during the open animation settles closed instead of flashing back
-    // with focus held), then hide once. The LaunchedEffect above no-ops
-    // on landing. Taps that land mid-close regain focus normally and
-    // reopen — intentional reopens win.
+    // with focus held), then hide once. Taps that land mid-close regain
+    // focus normally and reopen — intentional reopens win and nothing
+    // observes the landing, so the reopen can't be killed by it.
     fun requestFinishEditing() {
         viewModel.flushSave()
         focusManager.clearFocus(force = true)
