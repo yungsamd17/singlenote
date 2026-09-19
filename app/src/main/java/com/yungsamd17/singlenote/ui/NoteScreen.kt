@@ -14,12 +14,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -536,25 +533,19 @@ fun NoteScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Sole glider of this bar: the window is adjustNothing, so the
-            // IME inset carries this stable container above the keyboard.
-            // The inset value is eased (~90ms) because Gboard's first open
-            // frame jumps discontinuously — following it raw teleports the
-            // bar. The content switch inside never changes size, so the
-            // morph can't shift or stick at the end of the slide.
+            // animated IME inset moves this stable container above the
+            // keyboard with no lag. The content switch inside never changes
+            // size and never touches the insets, so the morph can't shift or
+            // stick at the end of the keyboard slide.
             // Read low in the tree: this scope already recomposes every
-            // inset frame, so nothing above pays for it.
+            // inset frame via imePadding, so nothing above pays for it.
             val density = LocalDensity.current
             val imeRemainingPx = WindowInsets.ime.getBottom(density)
-            val smoothGlide by animateDpAsState(
-                targetValue = with(density) { imeRemainingPx.toDp() },
-                animationSpec = tween(90),
-                label = "barGlide"
-            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = smoothGlide)
+                    .imePadding()
             ) {
                 // Head start on the landing: once only a sliver of keyboard
                 // remains, start morphing back so the FAB row settles right
@@ -571,18 +562,11 @@ fun NoteScreen(
                     targetState = barDone,
                     label = "bottomBar",
                     transitionSpec = {
-                        // Morph-style swap: position-neutral fade + scale so
-                        // it never fights the keyboard glide, in the same
+                        // Fade-only swap: no scale, so the button itself
+                        // never grows or shifts while the glide carries it
+                        // — the swap dissolves in place, in the same
                         // accent-tinted container family both ways.
-                        (fadeIn(tween(200)) + scaleIn(
-                            initialScale = 0.94f,
-                            animationSpec = tween(200)
-                        )).togetherWith(
-                            fadeOut(tween(160)) + scaleOut(
-                                targetScale = 0.96f,
-                                animationSpec = tween(160)
-                            )
-                        )
+                        fadeIn(tween(200)) togetherWith fadeOut(tween(160))
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
                     // padding = 88dp, so the crossfade dissolves in place with
