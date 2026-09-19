@@ -91,9 +91,11 @@ jobs:
             echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
+      # Release ships minified+shrunk code, so lint the release variant
+      # too — the v1.0.0 plan demands lintRelease clean.
       - name: Build, test, lint
         if: steps.filter.outputs.app == 'true'
-        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest lintDebug
+        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease
 
       - name: Upload debug APK artifact
         if: steps.filter.outputs.app == 'true' && github.ref_type != 'tag'
