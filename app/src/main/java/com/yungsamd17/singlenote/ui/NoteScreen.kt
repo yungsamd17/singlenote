@@ -14,9 +14,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -126,6 +128,9 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // isImeVisible edges last a frame or two, a real landing settles for
 // good, so this margin keeps reopens alive without a visible lag.
 private const val LANDING_SETTLE_MS = 75L
+
+// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
+private const val APPEAR_MS = 150
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -502,11 +507,18 @@ fun NoteScreen(
             }
             return@Scaffold
         }
-        Column(
+        // Subtle entrance after the blank gate: a fast fade with a small
+        // rise so the card and bar arrive together instead of popping in.
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
+                tween(APPEAR_MS)
+            ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -644,6 +656,7 @@ fun NoteScreen(
                     }
                 }
             }
+        }
         }
     }
 

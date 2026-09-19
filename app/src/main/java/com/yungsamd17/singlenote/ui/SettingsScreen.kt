@@ -1,6 +1,10 @@
 package com.yungsamd17.singlenote.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +73,9 @@ private const val DIALOG_ACCENT = "accent"
 private const val DIALOG_FONT = "font"
 private const val DIALOG_SIZE = "size"
 
+// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
+private const val APPEAR_MS = 150
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -118,10 +125,20 @@ fun SettingsScreen(
             }
             return@Scaffold
         }
-        Column(
+        // Subtle entrance after the blank gate: a fast fade with a small
+        // rise so the rows arrive together instead of popping in.
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
+                tween(APPEAR_MS)
+            ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
@@ -194,6 +211,7 @@ fun SettingsScreen(
                     )
                 }
             }
+        }
         }
     }
 
