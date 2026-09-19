@@ -232,7 +232,9 @@ fun NoteScreen(
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = undoActionLabel,
-            duration = SnackbarDuration.Long
+            // Short on purpose: the bar is a 4s Undo window, and a swipe
+            // settles exactly like the timeout (the pending op commits).
+            duration = SnackbarDuration.Short
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoPending()
@@ -880,6 +882,12 @@ internal fun SwipeableSnackbarHost(
                 }
                 SwipeToDismissBox(
                     state = dismissState,
+                    // Explicit directions plus a 25% threshold: full-width
+                    // bars feel stuck under the 50% default, and short
+                    // swipes must still clear the bar.
+                    enableDismissFromStartToEnd = true,
+                    enableDismissFromEndToStart = true,
+                    positionalThreshold = { it * 0.25f },
                     backgroundContent = {},
                     content = { Snackbar(snackbarData = data) }
                 )
