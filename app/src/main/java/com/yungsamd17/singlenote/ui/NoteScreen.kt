@@ -115,6 +115,10 @@ import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 
+// Settled frames before a close glide counts as over: bridges repeated
+// inset values from frame hitches without any timer.
+private const val SETTLED_FRAMES = 3
+
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
 // lands, instead of lagging a full morph behind it.
@@ -285,14 +289,24 @@ fun NoteScreen(
     // Close glide detection without timers or view callbacks (installing our
     // own animation callback replaced Compose's and killed the animation):
     // the animated IME bottom shrinks every frame of a close glide, so a
-    // frame where it shrank-but-isn't-zero means a close is running. Any
-    // steady state — settled open, landed, or a swallowed hide with no
-    // movement — reads false, so the gate below can never wedge shut.
+    // shrinking frame means a close is running. The glide only counts as
+    // over after a few settled frames — debug hitches can repeat a value
+    // mid-glide, and clearing on the first repeat drops the gate early.
+    // Any truly steady state settles the counter, so the gate below can
+    // never wedge shut.
     var imeClosing by remember { mutableStateOf(false) }
     val lastImePx = remember { mutableIntStateOf(-1) }
+    val settledFrames = remember { mutableIntStateOf(SETTLED_FRAMES) }
     val imeNowPx = WindowInsets.ime.getBottom(LocalDensity.current)
     SideEffect {
-        imeClosing = imeNowPx < lastImePx.intValue && imeNowPx > 0
+        if (imeNowPx < lastImePx.intValue && imeNowPx > 0) {
+            imeClosing = true
+            settledFrames.intValue = 0
+        } else if (settledFrames.intValue >= SETTLED_FRAMES) {
+            imeClosing = false
+        } else {
+            settledFrames.intValue++
+        }
         lastImePx.intValue = imeNowPx
     }
     // A tap outside any close glide clears a stale close request (e.g. a
