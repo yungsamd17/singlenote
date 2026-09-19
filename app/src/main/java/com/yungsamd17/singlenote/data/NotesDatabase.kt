@@ -7,7 +7,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -82,10 +88,45 @@ interface ArchiveStore {
     suspend fun clearArchived()
 }
 
-class NoteRepository(private val dao: NoteDao, private val context: Context) :
-    NoteStore, ArchiveStore {
+/**
+ * Single source of truth for the active note, the archive and the display
+ * prefs. The app wires it via the secondary `NoteRepository(dao, context)`
+ * constructor; unit tests use the primary constructor with a fake [NoteDao], a fake
+ * [PreferencesStore] and a recording broadcast — no Android framework.
+ *
+ * Writes serialize on [writeMutex] so a debounced flush racing an archive,
+ * swap or replace can't interleave read-modify-write sequences into a
+ * duplicated ACTIVE row. Each compound op additionally runs in a DAO
+ * @Transaction, and the unique activeSlot index is the cross-process
+ * backstop against a duplicated ACTIVE row. Content saves broadcast throttled
+ * (leading + trailing, [BROADCAST_THROTTLE_MS]) so every keystroke-save
+ * doesn't force a full Glance rebuild; explicit user actions (pin, archive,
+ * restore, swap, replace, clear) broadcast immediately.
+ */
+class NoteRepository(
+    private val dao: NoteDao,
+    private val preferences: PreferencesStore,
+    private val broadcast: suspend () -> Unit = {},
+    private val clock: () -> Long = System::currentTimeMillis,
+    private val notifyScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val broadcastThrottleMs: Long = BROADCAST_THROTTLE_MS,
+) : NoteStore, ArchiveStore {
 
-    private val preferences = NotePreferences(context)
+    constructor(dao: NoteDao, context: Context) : this(
+        dao = dao,
+        preferences = NotePreferences.get(context),
+        broadcast = {
+            val app = context.applicationContext
+            app.sendBroadcast(Intent(ACTION_NOTE_UPDATED).setPackage(app.packageName))
+        }
+    )
+
+    private val notifyLock = Any()
+
+    // Null until the first broadcast: the first save always notifies at
+    // once instead of waiting out a throttle window anchored at zero.
+    private var lastBroadcastMs: Long? = null
+    private var trailingBroadcast: Job? = null
 
     // Serializes every active-note mutation in this process: debounced
     // saves, ON_STOP flushes, shade actions and archive restores all funnel
@@ -106,10 +147,10 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun getActive(): Note? = dao.getActive()
 
     override suspend fun saveActive(content: String) {
-        val now = System.currentTimeMillis()
+        val now = clock()
         val wrote = writeMutex.withLock { dao.saveActiveContent(content, now) }
         if (wrote) {
-            notifyNoteChanged()
+            notifyThrottled()
         }
     }
 
@@ -136,7 +177,7 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun restore(noteId: Long): Boolean {
         val restored = writeMutex.withLock { dao.restoreIfNoActive(noteId) }
         if (restored) {
-            notifyNoteChanged()
+            notifyNow()
         }
         return restored
     }
@@ -149,31 +190,31 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun swapWithActive(noteId: Long) {
         val swapped = writeMutex.withLock { dao.swapActiveWith(noteId) }
         if (swapped) {
-            notifyNoteChanged()
+            notifyNow()
         }
     }
 
     override suspend fun replaceActive(noteId: Long) {
         val replaced = writeMutex.withLock { dao.replaceActiveWith(noteId) }
         if (replaced) {
-            notifyNoteChanged()
+            notifyNow()
         }
     }
 
     override suspend fun clearArchived() {
         writeMutex.withLock { dao.deleteArchived() }
-        notifyNoteChanged()
+        notifyNow()
     }
 
     override suspend fun setPinned(value: Boolean) {
         preferences.setPinned(value)
-        notifyNoteChanged()
+        notifyNow()
     }
 
     override suspend fun setNotificationsEnabled(value: Boolean) {
         preferences.setNotificationsEnabled(value)
         if (!value) preferences.setPinned(false)
-        notifyNoteChanged()
+        notifyNow()
     }
 
     override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
@@ -184,7 +225,49 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
 
     override suspend fun setAccentColor(value: String) = preferences.setAccentColor(value)
 
-    private suspend fun notifyNoteChanged() {
-        context.sendBroadcast(Intent(ACTION_NOTE_UPDATED).setPackage(context.packageName))
+    /**
+     * Immediate broadcast: cancels any coalesced trailing save broadcast,
+     * which it supersedes (pin/archive/restore describe the newest state).
+     */
+    private fun notifyNow() {
+        synchronized(notifyLock) {
+            lastBroadcastMs = clock()
+            trailingBroadcast?.cancel()
+            trailingBroadcast = notifyScope.launch { broadcast() }
+        }
+    }
+
+    /**
+     * Coalesced broadcast for content saves: first save in a quiet window
+     * notifies at once (leading), saves inside the window collapse into one
+     * trailing broadcast [BROADCAST_THROTTLE_MS] after the leading one.
+     */
+    private fun notifyThrottled() {
+        synchronized(notifyLock) {
+            val now = clock()
+            val last = lastBroadcastMs
+            if (last == null || now - last >= broadcastThrottleMs) {
+                lastBroadcastMs = now
+                trailingBroadcast?.cancel()
+                trailingBroadcast = notifyScope.launch { broadcast() }
+                return
+            }
+            trailingBroadcast?.cancel()
+            val remaining = broadcastThrottleMs - (now - last)
+            trailingBroadcast = notifyScope.launch {
+                delay(remaining)
+                synchronized(notifyLock) { lastBroadcastMs = clock() }
+                broadcast()
+            }
+        }
+    }
+
+    companion object {
+        /**
+         * Widget/notification coalescing window: debounced keystroke-saves
+         * arrive ~500ms apart, so 3s collapses a burst into leading +
+         * trailing broadcasts instead of a rebuild per keystroke.
+         */
+        const val BROADCAST_THROTTLE_MS = 3000L
     }
 }

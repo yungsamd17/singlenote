@@ -45,7 +45,8 @@ abstract class NoteDao {
     // Atomic read-modify-write: the SELECT and the write run in one
     // transaction, so a concurrent flush can never interleave and duplicate
     // the ACTIVE row. Returns false when there is nothing to persist (blank
-    // input with no active note).
+    // input with no active note, or content identical to the stored note so
+    // a post-debounce flush doesn't rewrite the row or annoy the widget).
     @Transaction
     open suspend fun saveActiveContent(content: String, now: Long): Boolean {
         val existing = getActive()
@@ -55,6 +56,7 @@ abstract class NoteDao {
                 insert(Note(content = content, createdAt = now, updatedAt = now))
             existing.content != content ->
                 update(existing.copy(content = content, updatedAt = now))
+            else -> return false
         }
         return true
     }

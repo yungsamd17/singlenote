@@ -73,13 +73,13 @@ class MainActivity : ComponentActivity() {
             val themeMode by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).themeMode.collect { value = it }
+                    NotePreferences.get(applicationContext).themeMode.collect { value = it }
                 }
             )
             val accent by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).accentColor.collect { value = it }
+                    NotePreferences.get(applicationContext).accentColor.collect { value = it }
                 }
             )
             // Paint nothing until the stored theme arrives: falling back to
@@ -196,7 +196,7 @@ class MainActivity : ComponentActivity() {
         // changed while away.
         lifecycleScope.launch {
             val themeMode = try {
-                NotePreferences(applicationContext).themeMode.first()
+                NotePreferences.get(applicationContext).themeMode.first()
             } catch (_: Exception) {
                 NotePreferences.THEME_SYSTEM
             }
