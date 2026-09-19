@@ -1,6 +1,6 @@
 # Terms & Conditions
 
-Singlenote is a minimal, fully offline note app by yungsamd17, provided free of charge.
+Singlenote is a minimal, offline-first note app by yungsamd17, provided free of charge.
 
 ## Use
 

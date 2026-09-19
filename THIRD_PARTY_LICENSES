@@ -1,22 +1,111 @@
 Third-party licenses used by Singlenote.
 
 The app's own license is in LICENSE (MIT, copyright Sam (yungsamd17)).
-Everything below ships inside the app or its icon set.
+Everything below ships inside the app or its icon set. Versions come from
+gradle/libs.versions.toml; see app/build.gradle.kts for the full list.
+Test-only and debug-only artifacts (JUnit, kotlinx-coroutines-test,
+androidx.test.ext:junit, compose ui-tooling) are not shipped and are
+not listed here.
 
-1. Material Symbols — "license" and "format_paint" glyphs (About and
-   Settings screens).
+1. Kotlin Standard Library (org.jetbrains.kotlin:kotlin-stdlib, via the
+   Kotlin Gradle plugin 2.1.0).
 
-   Copyright Google LLC.
+   Copyright JetBrains s.r.o. and Kotlin Programming Language contributors.
    Licensed under the Apache License, Version 2.0. You may obtain a copy
    of the License at https://www.apache.org/licenses/LICENSE-2.0
 
-   Source: https://github.com/google/material-design-icons
-   Browse: https://fonts.google.com/icons
+   Source: https://github.com/JetBrains/kotlin
 
-2. Bootstrap Icons — "sticky-fill" glyph used for the launcher icon and the
-   About header mark (recolored, composed with s17 Labs Icon Maker,
-   https://s17labs.github.io/tools/icon-maker/).
+2. AndroidX Core KTX (androidx.core:core-ktx 1.15.0).
 
-   Copyright (c) 2011-2026 The Bootstrap Authors.
-   Licensed under the MIT License. See https://icons.getbootstrap.com
-   for the full license text.
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/core
+
+3. AndroidX Lifecycle (androidx.lifecycle:lifecycle-runtime-ktx,
+   lifecycle-runtime-compose, lifecycle-viewmodel-compose 2.8.7).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/lifecycle
+
+4. AndroidX Activity Compose (androidx.activity:activity-compose 1.9.3).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/activity
+
+5. Jetpack Compose (Bill of Materials 2024.12.01: androidx.compose.ui:ui,
+   ui-graphics, ui-tooling-preview, androidx.compose.material3:material3,
+   androidx.compose.material:material-icons-extended).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/compose
+
+6. Navigation Compose (androidx.navigation:navigation-compose 2.8.5).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/navigation
+
+7. Room (androidx.room:room-runtime, room-ktx 2.6.1).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/room
+
+8. Glance AppWidget (androidx.glance:glance-appwidget 1.1.1).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/glance
+
+9. DataStore Preferences (androidx.datastore:datastore-preferences 1.1.1).
+
+   Copyright The Android Open Source Project.
+   Licensed under the Apache License, Version 2.0. You may obtain a copy
+   of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+   Source: https://github.com/androidx/androidx/tree/androidx-main/datastore
+
+10. Kotlin Coroutines for Android
+    (org.jetbrains.kotlinx:kotlinx-coroutines-android 1.9.0).
+
+    Copyright JetBrains s.r.o.
+    Licensed under the Apache License, Version 2.0. You may obtain a copy
+    of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+    Source: https://github.com/Kotlin/kotlinx.coroutines
+
+11. Material Symbols — "license" and "format_paint" glyphs (About and
+    Settings screens).
+
+    Copyright Google LLC.
+    Licensed under the Apache License, Version 2.0. You may obtain a copy
+    of the License at https://www.apache.org/licenses/LICENSE-2.0
+
+    Source: https://github.com/google/material-design-icons
+    Browse: https://fonts.google.com/icons
+
+12. Bootstrap Icons — "sticky-fill" glyph used for the launcher icon and the
+    About header mark (recolored, composed with s17 Labs Icon Maker,
+    https://s17labs.github.io/tools/icon-maker/).
+
+    Copyright (c) 2011-2026 The Bootstrap Authors.
+    Licensed under the MIT License. See https://icons.getbootstrap.com
+    for the full license text.

@@ -7,9 +7,12 @@
         No analytics, no tracking; see the Privacy Policy in the app. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- No cloud backup: the Room DB and DataStore prefs are plaintext,
+        so nothing is copied to Drive. Uninstalling deletes everything;
+        see the Privacy Policy in the app. -->
     <application
         android:name=".SinglenoteApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"

@@ -127,7 +127,9 @@ fun AboutScreen(
                         actionLabel = context.getString(R.string.action_download)
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        openUrl(context, latest.apkUrl ?: latest.htmlUrl)
+                        // Release page, never a raw APK: no SHA-256 pinning,
+                        // so the user verifies the asset in the browser.
+                        openUrl(context, latest.htmlUrl)
                     }
                 } else {
                     snackbarHostState.showSnackbar(context.getString(R.string.update_uptodate))

@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
@@ -69,6 +71,10 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private var currentNoteId: Long? = null
     private var saveJob: Job? = null
+    // Serializes persist against archive/delete: a flush racing an archive
+    // must not interleave, and archive/delete join (rather than orphan) the
+    // pending write by holding the same mutex.
+    private val persistMutex = Mutex()
 
     init {
         viewModelScope.launch {
@@ -104,9 +110,23 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         }
     }
 
-    fun flushSave() {
+    /**
+     * Persist the editor text now. Returns the persist job so callers that
+     * must operate on the saved text (archive, shade actions) can [Job.join]
+     * it — or use [flushSaveAndAwait] — instead of assuming it landed.
+     * Fire-and-forget callers (ON_STOP, focus loss) just ignore the job.
+     */
+    fun flushSave(): Job {
         saveJob?.cancel()
-        viewModelScope.launch { persist() }
+        val job = viewModelScope.launch {
+            persistMutex.withLock { persist() }
+        }
+        saveJob = job
+        return job
+    }
+
+    suspend fun flushSaveAndAwait() {
+        flushSave().join()
     }
 
     fun archiveCurrent() {
@@ -115,8 +135,13 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             val snapshot = _text.value
             val snapshotId = currentNoteId
             val wasPinned = try { pinned.first() } catch (_: Exception) { false }
-            persist()
-            store.archiveActive()
+            // Persist-then-archive under one lock: the shade-Archive path
+            // and this FAB share the store, so the archive must see the
+            // flushed text, never the still-debouncing keystrokes.
+            persistMutex.withLock {
+                persist()
+                store.archiveActive()
+            }
             currentNoteId = null
             _text.value = ""
             if (snapshot.isNotBlank()) {
@@ -130,7 +155,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         viewModelScope.launch {
             val snapshot = _text.value
             val wasPinned = try { pinned.first() } catch (_: Exception) { false }
-            store.deleteActive()
+            // Hold the mutex (without re-saving) so an in-flight flush
+            // can't resurrect the note after the delete lands.
+            persistMutex.withLock { store.deleteActive() }
             currentNoteId = null
             _text.value = ""
             if (snapshot.isNotBlank()) {
@@ -188,7 +215,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(SAVE_DEBOUNCE_MS)
-            persist()
+            persistMutex.withLock { persist() }
         }
     }
 
