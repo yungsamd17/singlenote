@@ -17,6 +17,7 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 interface PreferencesStore {
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
+    val lockscreenVisible: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -24,6 +25,7 @@ interface PreferencesStore {
 
     suspend fun setPinned(value: Boolean)
     suspend fun setNotificationsEnabled(value: Boolean)
+    suspend fun setLockscreenVisible(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
@@ -41,6 +43,8 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
+    override val lockscreenVisible: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: false }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
@@ -56,6 +60,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setNotificationsEnabled(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_NOTIFICATIONS] = value }
+    }
+
+    override suspend fun setLockscreenVisible(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_LOCKSCREEN_VISIBLE] = value }
     }
 
     override suspend fun setThemeMode(value: String) {
@@ -91,6 +99,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
+        val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")

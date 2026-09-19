@@ -73,6 +73,7 @@ fun SettingsScreen(
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
     val textSize by viewModel.textSize.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val lockscreenVisible by viewModel.lockscreenVisible.collectAsStateWithLifecycle()
     val ready by viewModel.ready.collectAsStateWithLifecycle()
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
@@ -151,6 +152,15 @@ fun SettingsScreen(
                         subtitle = stringResource(R.string.setting_show_notifications_desc),
                         checked = notificationsEnabled,
                         onCheckedChange = { viewModel.setNotificationsEnabled(it) }
+                    )
+                }
+                SettingCard {
+                    ToggleRow(
+                        icon = Icons.Outlined.Notifications,
+                        title = stringResource(R.string.setting_lockscreen_visible),
+                        subtitle = stringResource(R.string.setting_lockscreen_visible_desc),
+                        checked = lockscreenVisible,
+                        onCheckedChange = { viewModel.setLockscreenVisible(it) }
                     )
                 }
             }
