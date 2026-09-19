@@ -32,6 +32,7 @@ interface NoteStore {
     val activeNote: Flow<Note?>
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
+    val lockscreenVisible: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -43,6 +44,7 @@ interface NoteStore {
     suspend fun deleteActive()
     suspend fun setPinned(value: Boolean)
     suspend fun setNotificationsEnabled(value: Boolean)
+    suspend fun setLockscreenVisible(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
@@ -67,6 +69,7 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override val activeNote: Flow<Note?> = dao.observeActive()
     override val pinned: Flow<Boolean> = preferences.pinned
     override val notificationsEnabled: Flow<Boolean> = preferences.notificationsEnabled
+    override val lockscreenVisible: Flow<Boolean> = preferences.lockscreenVisible
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
@@ -152,6 +155,11 @@ class NoteRepository(private val dao: NoteDao, private val context: Context) :
     override suspend fun setNotificationsEnabled(value: Boolean) {
         preferences.setNotificationsEnabled(value)
         if (!value) preferences.setPinned(false)
+        notifyNoteChanged()
+    }
+
+    override suspend fun setLockscreenVisible(value: Boolean) {
+        preferences.setLockscreenVisible(value)
         notifyNoteChanged()
     }
 

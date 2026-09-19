@@ -15,6 +15,8 @@ class NotePreferences(private val context: Context) {
     val pinned: Flow<Boolean> = context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
+    val lockscreenVisible: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: false }
     val themeMode: Flow<String> = context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     val fontFamily: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_FONT_FAMILY] ?: FONT_DEFAULT }
@@ -29,6 +31,10 @@ class NotePreferences(private val context: Context) {
 
     suspend fun setNotificationsEnabled(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_NOTIFICATIONS] = value }
+    }
+
+    suspend fun setLockscreenVisible(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_LOCKSCREEN_VISIBLE] = value }
     }
 
     suspend fun setThemeMode(value: String) {
@@ -52,6 +58,7 @@ class NotePreferences(private val context: Context) {
 
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
+        val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")
