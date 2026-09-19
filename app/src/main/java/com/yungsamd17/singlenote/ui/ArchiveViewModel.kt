@@ -125,8 +125,8 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     }
 
     companion object {
-        // Matches SnackbarDuration.Long so the bar and the commit stay aligned.
-        const val UNDO_WINDOW_MS = 10_000L
+        // Matches SnackbarDuration.Short so the bar and the commit stay aligned.
+        const val UNDO_WINDOW_MS = 4_000L
         fun factory(archiveStore: ArchiveStore) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
