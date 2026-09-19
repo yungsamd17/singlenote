@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -173,12 +174,15 @@ fun SettingsScreen(
                     )
                 }
                 SettingCard {
+                    // Meaningless without the notification itself: dim it
+                    // instead of letting the toggle lie.
                     ToggleRow(
                         icon = Icons.Outlined.Notifications,
                         title = stringResource(R.string.setting_lockscreen_visible),
                         subtitle = stringResource(R.string.setting_lockscreen_visible_desc),
                         checked = lockscreenVisible,
-                        onCheckedChange = { viewModel.setLockscreenVisible(it) }
+                        onCheckedChange = { viewModel.setLockscreenVisible(it) },
+                        enabled = notificationsEnabled
                     )
                 }
             }
@@ -312,11 +316,18 @@ private fun ToggleRow(
     subtitle: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .toggleable(
+                value = checked,
+                role = Role.Switch,
+                enabled = enabled,
+                onValueChange = onCheckedChange
+            )
+            .alpha(if (enabled) 1f else 0.38f)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -340,6 +351,7 @@ private fun ToggleRow(
         Switch(
             checked = checked,
             onCheckedChange = null,
+            enabled = enabled,
             thumbContent = {
                 Icon(
                     imageVector = if (checked) Icons.Filled.Check else Icons.Outlined.Close,
@@ -407,6 +419,7 @@ private fun accentLabel(key: String): String = when (key) {
     NotePreferences.ACCENT_GREEN -> stringResource(R.string.accent_green)
     NotePreferences.ACCENT_ORANGE -> stringResource(R.string.accent_orange)
     NotePreferences.ACCENT_PINK -> stringResource(R.string.accent_pink)
+    NotePreferences.ACCENT_SYSTEM -> stringResource(R.string.accent_system)
     else -> stringResource(R.string.accent_default)
 }
 
