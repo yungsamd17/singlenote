@@ -93,7 +93,7 @@ fun AboutScreen(
             try {
                 val releases = GithubReleases.fetch()
                 val installed = BuildConfig.VERSION_NAME
-                // Only this install's notes: match v0.3.3 or plain 0.3.3,
+                // Only this install's notes: match vX.Y.Z or plain X.Y.Z,
                 // fall back to the newest release on dev builds.
                 val picked = releases.firstOrNull {
                     it.tag.equals("v$installed", ignoreCase = true) ||
