@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -127,7 +128,7 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // Closed-state settle before a system-hide exits editing: transient
 // isImeVisible edges last a frame or two, a real landing settles for
 // good, so this margin keeps reopens alive without a visible lag.
-private const val LANDING_SETTLE_MS = 200L
+private const val LANDING_SETTLE_MS = 100L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -535,15 +536,25 @@ fun NoteScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Sole glider of this bar: the window is adjustNothing, so the
-            // animated IME inset moves this stable container above the
-            // keyboard with no snap. The content switch inside never changes
-            // size and never touches the insets, so the morph can't shift or
-            // stick at the end of the keyboard slide.
+            // IME inset carries this stable container above the keyboard.
+            // The inset value is eased (~90ms) because Gboard's first open
+            // frame jumps discontinuously — following it raw teleports the
+            // bar. The content switch inside never changes size, so the
+            // morph can't shift or stick at the end of the slide.
+            // Read low in the tree: this scope already recomposes every
+            // inset frame, so nothing above pays for it.
+            val density = LocalDensity.current
+            val imeRemainingPx = WindowInsets.ime.getBottom(density)
+            val smoothGlide by animateDpAsState(
+                targetValue = with(density) { imeRemainingPx.toDp() },
+                animationSpec = tween(90),
+                label = "barGlide"
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .imePadding()
+                    .padding(bottom = smoothGlide)
             ) {
                 // Head start on the landing: once only a sliver of keyboard
                 // remains, start morphing back so the FAB row settles right
@@ -551,10 +562,6 @@ fun NoteScreen(
                 // Done stays visible through the close glide (focus is
                 // already gone, the open keyboard holds it) and while
                 // focused-but-settled (system-hide/back with no tap yet).
-                // Read low in the tree: this scope already recomposes every
-                // inset frame via imePadding, so nothing above pays for it.
-                val density = LocalDensity.current
-                val imeRemainingPx = WindowInsets.ime.getBottom(density)
                 val keyboardSubstantiallyOpen =
                     imeRemainingPx.toFloat() >= with(density) {
                         KeyboardSwapThreshold.toPx()
