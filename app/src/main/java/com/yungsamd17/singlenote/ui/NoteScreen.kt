@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -118,9 +119,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
+
+// Closed-state settle before a system-hide exits editing: transient
+// isImeVisible edges last a frame or two, a real landing settles for
+// good, so this margin keeps reopens alive without a visible lag.
+private const val LANDING_SETTLE_MS = 200L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -321,13 +328,19 @@ fun NoteScreen(
         }
     }
 
-    // Editing is focus, nothing else: Done clears it up front (see
-    // requestFinishEditing), back clears it via the BackHandler below.
-    // Deliberately no observer on IME visibility — isImeVisible flickers
-    // mid-animation under adjustNothing, so any open->closed edge (a real
-    // landing included) can nuke a just-regained focus and kill a reopen
-    // the user just tapped for. A system-hide therefore keeps focus with
-    // Done shown; Done or a second back exits editing.
+    // A system-hide (back/gesture) keeps focus with Done shown, then
+    // exits editing once the closed state settles: isImeVisible flickers
+    // mid-animation under adjustNothing, so the settle delay lets any
+    // transient edge self-cancel instead of nuking a just-regained focus
+    // and killing a reopen. Any real open restarts the effect and cancels
+    // the pending clear. Done needs none of this — it clears up front.
+    val isKeyboardOpen = WindowInsets.isImeVisible
+    LaunchedEffect(isKeyboardOpen) {
+        if (!isKeyboardOpen) {
+            delay(LANDING_SETTLE_MS)
+            if (isEditing) finishEditing()
+        }
+    }
 
     // Guaranteed way out: with the keyboard already hidden, back ends
     // editing (with it open, the IME consumes the press instead).
