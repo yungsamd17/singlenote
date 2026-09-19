@@ -31,6 +31,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 - **Typography** — default / monospace / serif fonts, three text sizes
 - **Changelog & updates** — per-version release notes and update checks in About
 - **Privacy first** — fully offline; no accounts, no analytics, no tracking.
+  Notes and settings are stored unencrypted in the app's private storage.
   Permissions: notifications (pinned note), and internet solely for release
   notes and update checks, only when you open them
 
