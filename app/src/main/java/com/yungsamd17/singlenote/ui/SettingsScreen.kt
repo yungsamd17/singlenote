@@ -1,5 +1,9 @@
 package com.yungsamd17.singlenote.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
@@ -44,11 +49,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
+import com.yungsamd17.singlenote.util.DebugLog
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
@@ -77,6 +85,7 @@ fun SettingsScreen(
     val ready by viewModel.ready.collectAsStateWithLifecycle()
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -174,6 +183,31 @@ fun SettingsScreen(
                         value = stringResource(R.string.about_subtitle),
                         onClick = onOpenAbout
                     )
+                }
+            }
+
+            // Debug builds only: never visible in release.
+            if (BuildConfig.DEBUG) {
+                SectionLabel(text = stringResource(R.string.settings_section_debug))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SettingCard {
+                        ValueRow(
+                            icon = Icons.Outlined.BugReport,
+                            title = stringResource(R.string.settings_copy_log),
+                            value = stringResource(R.string.settings_copy_log_desc),
+                            onClick = {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(
+                                    ClipData.newPlainText("debug-log", DebugLog.dump())
+                                )
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.settings_log_copied),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        )
+                    }
                 }
             }
         }

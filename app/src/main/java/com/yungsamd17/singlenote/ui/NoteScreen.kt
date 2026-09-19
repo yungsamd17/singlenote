@@ -108,6 +108,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import com.yungsamd17.singlenote.util.DebugLog
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
@@ -245,7 +246,8 @@ fun NoteScreen(
     // Declared up here because finishEditing below resets it.
     var hideRequested by remember { mutableStateOf(false) }
 
-    fun finishEditing() {
+    fun finishEditing(source: String = "?") {
+        DebugLog.log("finishEditing src=$source editing=$isEditing")
         hideRequested = false
         keyboard?.hide()
         focusManager.clearFocus(force = true)
@@ -286,6 +288,7 @@ fun NoteScreen(
     // in finishEditing when the close lands. Both are guaranteed to run, so
     // it can never wedge.
     LaunchedEffect(isKeyboardOpen, hideRequested) {
+        DebugLog.log("ime open=$isKeyboardOpen hideReq=$hideRequested editing=$isEditing")
         if (isKeyboardOpen) {
             keyboardWasOpen = true
             // Done tapped while the open animation was still running: hide()
@@ -295,14 +298,20 @@ fun NoteScreen(
             if (hideRequested) keyboard?.hide()
         } else if (keyboardWasOpen) {
             keyboardWasOpen = false
-            if (isEditing) finishEditing()
+            if (isEditing) finishEditing("ime-effect")
         }
+    }
+
+    // Overlay visibility for the log: transitions only, so a stuck ON is
+    // visible next to the video timestamps.
+    LaunchedEffect(hideRequested) {
+        DebugLog.log("overlay ${if (hideRequested) "ON" else "OFF"}")
     }
 
     // Guaranteed way out: with the keyboard already hidden, back ends
     // editing (with it open, the IME consumes the press instead).
     BackHandler(enabled = isEditing) {
-        finishEditing()
+        finishEditing("back")
     }
 
     // Done tap mirrors the system-hide/back path: hide first, clear focus
@@ -311,11 +320,12 @@ fun NoteScreen(
     // — that snap was the shift seen only on Done tap. The bar itself
     // starts morphing back just before the landing (see its scope below).
     fun requestFinishEditing() {
+        DebugLog.log("done tap open=$isKeyboardOpen editing=$isEditing controller=${keyboard != null}")
         viewModel.flushSave()
         if (isKeyboardOpen) {
             hideRequested = true
             keyboard?.hide()
-        } else finishEditing()
+        } else finishEditing("done-direct")
     }
 
     Scaffold(

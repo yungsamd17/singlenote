@@ -63,6 +63,10 @@
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_notifications">Notifications</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_section_debug">Debug</string>
+    <string name="settings_copy_log">Copy debug log</string>
+    <string name="settings_copy_log_desc">Copy editing diagnostics to clipboard</string>
+    <string name="settings_log_copied">Debug log copied</string>
     <string name="setting_show_notifications">Pinned notification</string>
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
     <string name="setting_lockscreen_visible">Show note on lock screen</string>
