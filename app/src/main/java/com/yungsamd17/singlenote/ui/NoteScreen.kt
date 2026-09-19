@@ -107,6 +107,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.DebugLog
 import kotlinx.coroutines.launch
