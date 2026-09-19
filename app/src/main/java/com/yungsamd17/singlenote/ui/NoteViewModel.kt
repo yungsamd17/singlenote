@@ -1,6 +1,5 @@
 package com.yungsamd17.singlenote.ui
 
-import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -152,7 +151,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             if (snapshot.isNotBlank()) {
                 _pendingUndo.value = PendingUndo(
                     UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned,
-                    SystemClock.elapsedRealtime()
+                    System.currentTimeMillis()
                 )
             }
         }
@@ -171,7 +170,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             if (snapshot.isNotBlank()) {
                 _pendingUndo.value = PendingUndo(
                     UndoKind.DELETE, null, snapshot, wasPinned,
-                    SystemClock.elapsedRealtime()
+                    System.currentTimeMillis()
                 )
             }
         }
