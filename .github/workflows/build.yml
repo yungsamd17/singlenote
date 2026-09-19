@@ -32,7 +32,7 @@ jobs:
             exit 0
           fi
           changed=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" HEAD -- \
-            | grep -v -e '\.md$' -e '^docs/' -e '^LICENSE$' || true)
+            | grep -v -e '\.md$' -e '^docs/' -e '^LICENSE$' -e '^THIRD_PARTY_LICENSES$' || true)
           if [ -z "$changed" ]; then
             echo "Docs-only change; skipping app build."
             echo "app=false" >> "$GITHUB_OUTPUT"
