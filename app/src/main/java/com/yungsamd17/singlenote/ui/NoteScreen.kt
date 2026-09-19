@@ -19,10 +19,11 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -92,6 +93,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
@@ -282,16 +284,6 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    // Taps landing mid-close are swallowed: reopening here would reverse the
-    // glide into a flash, so the close wins — tap again after it settles to
-    // reopen. Releasing focus keeps the held focus from re-showing the IME.
-    LaunchedEffect(fieldInteraction) {
-        fieldInteraction.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press && hideRequested) {
-                focusManager.clearFocus(force = true)
-            }
-        }
-    }
     LaunchedEffect(isKeyboardOpen, hideRequested) {
         if (isKeyboardOpen) {
             keyboardWasOpen = true
@@ -480,17 +472,36 @@ fun NoteScreen(
                     .height(noteCardHeight)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                NoteEditorField(
-                    externalText = text,
-                    onTextChange = viewModel::onTextChange,
-                    onLimitReached = ::notifyLimitReached,
-                    interactionSource = fieldInteraction,
-                    fontFamily = noteFontFamily,
-                    fontSize = noteFontSize,
-                    lineHeight = noteLineHeight,
-                    maxLength = noteMaxLength,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    NoteEditorField(
+                        externalText = text,
+                        onTextChange = viewModel::onTextChange,
+                        onLimitReached = ::notifyLimitReached,
+                        interactionSource = fieldInteraction,
+                        fontFamily = noteFontFamily,
+                        fontSize = noteFontSize,
+                        lineHeight = noteLineHeight,
+                        maxLength = noteMaxLength,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // While a Done close is in flight, swallow taps before
+                    // they reach the field: racing the tap's show request
+                    // with a focus release lets the keyboard pop for a few
+                    // frames first. Consuming down at an overlay above the
+                    // field prevents the show entirely — no ripple, no
+                    // semantics node, gone when the close lands.
+                    if (hideRequested) {
+                        Box(
+                            Modifier
+                                .matchParentSize()
+                                .pointerInput(Unit) {
+                                    awaitEachGesture {
+                                        awaitFirstDown().consume()
+                                    }
+                                }
+                        )
+                    }
+                }
             }
 
             // Takes the slack so the bar sits at the bottom when the keyboard
