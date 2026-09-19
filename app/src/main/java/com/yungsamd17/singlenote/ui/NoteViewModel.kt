@@ -8,6 +8,7 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_SMALL
+import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.NoteStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,11 +20,26 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text.asStateFlow()
+
+    // Pending destructive action awaiting its Undo window: held here (not in
+    // the composable) so the snackbar can be re-shown after rotation and the
+    // restore still fires. Cleared on Undo, timeout, or dismissal.
+    enum class UndoKind { ARCHIVE, DELETE }
+    data class PendingUndo(
+        val kind: UndoKind,
+        val noteId: Long?,
+        val content: String,
+        val wasPinned: Boolean,
+    )
+    private val _pendingUndo = MutableStateFlow<PendingUndo?>(null)
+    val pendingUndo: StateFlow<PendingUndo?> = _pendingUndo.asStateFlow()
 
     // False until the stored note plus the display prefs have all emitted
     // their disk truth. The editor waits for it so its first frame already
@@ -55,6 +71,10 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private var currentNoteId: Long? = null
     private var saveJob: Job? = null
+    // Serializes persist against archive/delete: a flush racing an archive
+    // must not interleave, and archive/delete join (rather than orphan) the
+    // pending write by holding the same mutex.
+    private val persistMutex = Mutex()
 
     init {
         viewModelScope.launch {
@@ -90,35 +110,112 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         }
     }
 
-    fun flushSave() {
+    /**
+     * Persist the editor text now. Returns the persist job so callers that
+     * must operate on the saved text (archive, shade actions) can [Job.join]
+     * it — or use [flushSaveAndAwait] — instead of assuming it landed.
+     * Fire-and-forget callers (ON_STOP, focus loss) just ignore the job.
+     */
+    fun flushSave(): Job {
         saveJob?.cancel()
-        viewModelScope.launch { persist() }
+        val job = viewModelScope.launch {
+            persistMutex.withLock { persist() }
+        }
+        saveJob = job
+        return job
+    }
+
+    suspend fun flushSaveAndAwait() {
+        flushSave().join()
     }
 
     fun archiveCurrent() {
         saveJob?.cancel()
         viewModelScope.launch {
-            persist()
-            store.archiveActive()
+            val snapshot = _text.value
+            val snapshotId = currentNoteId
+            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
+            // Persist-then-archive under one lock: the shade-Archive path
+            // and this FAB share the store, so the archive must see the
+            // flushed text, never the still-debouncing keystrokes.
+            persistMutex.withLock {
+                persist()
+                store.archiveActive()
+            }
             currentNoteId = null
             _text.value = ""
+            if (snapshot.isNotBlank()) {
+                _pendingUndo.value = PendingUndo(UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned)
+            }
         }
     }
 
     fun deleteCurrent() {
         saveJob?.cancel()
         viewModelScope.launch {
-            store.deleteActive()
+            val snapshot = _text.value
+            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
+            // Hold the mutex (without re-saving) so an in-flight flush
+            // can't resurrect the note after the delete lands.
+            persistMutex.withLock { store.deleteActive() }
             currentNoteId = null
             _text.value = ""
+            if (snapshot.isNotBlank()) {
+                _pendingUndo.value = PendingUndo(UndoKind.DELETE, null, snapshot, wasPinned)
+            }
         }
+    }
+
+    fun undoPending() {
+        val pending = _pendingUndo.value ?: return
+        _pendingUndo.value = null
+        saveJob?.cancel()
+        viewModelScope.launch {
+            when (pending.kind) {
+                UndoKind.ARCHIVE -> {
+                    // Production store implements both: move the archived row
+                    // back instead of duplicating it. Fakes/tests fall back
+                    // to re-saving the cached text.
+                    val archiveStore = store as? ArchiveStore
+                    val restored = if (archiveStore != null && pending.noteId != null) {
+                        try { archiveStore.restore(pending.noteId) } catch (_: Exception) { false }
+                    } else false
+                    if (!restored) {
+                        store.saveActive(pending.content)
+                        currentNoteId = store.getActive()?.id
+                        _text.value = pending.content
+                    } else {
+                        // Optimistic: show the text at once; the DB flow
+                        // re-adopts the same content a moment later.
+                        currentNoteId = pending.noteId
+                        _text.value = pending.content
+                        refreshFromDatabase()
+                    }
+                    if (pending.wasPinned) {
+                        try { store.setPinned(true) } catch (_: Exception) { }
+                    }
+                }
+                UndoKind.DELETE -> {
+                    store.saveActive(pending.content)
+                    currentNoteId = store.getActive()?.id
+                    _text.value = pending.content
+                    if (pending.wasPinned) {
+                        try { store.setPinned(true) } catch (_: Exception) { }
+                    }
+                }
+            }
+        }
+    }
+
+    fun consumePendingUndo() {
+        _pendingUndo.value = null
     }
 
     private fun scheduleSave() {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(SAVE_DEBOUNCE_MS)
-            persist()
+            persistMutex.withLock { persist() }
         }
     }
 

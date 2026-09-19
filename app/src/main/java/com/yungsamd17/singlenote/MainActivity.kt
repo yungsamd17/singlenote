@@ -39,17 +39,21 @@ import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Match the launch window to the stored theme before the first
-        // frame: otherwise a dark-theme user cold-starts through the light
-        // launch background (and vice versa).
-        val startDark = resolveDarkTheme()
+        // Match the launch window to the system theme before the first
+        // frame. The stored theme needs a DataStore read, which must never
+        // block the UI thread — so the launch background uses the system
+        // value, and the async theme gate in setContent applies the stored
+        // theme (and corrects the bars) as soon as it emits.
+        val startDark = isSystemDark()
+        lastDarkTheme = startDark
         window.setBackgroundDrawable(
             ColorDrawable(
                 ContextCompat.getColor(
@@ -70,13 +74,13 @@ class MainActivity : ComponentActivity() {
             val themeMode by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).themeMode.collect { value = it }
+                    NotePreferences.get(applicationContext).themeMode.collect { value = it }
                 }
             )
             val accent by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).accentColor.collect { value = it }
+                    NotePreferences.get(applicationContext).accentColor.collect { value = it }
                 }
             )
             // Paint nothing until the stored theme arrives: falling back to
@@ -95,7 +99,11 @@ class MainActivity : ComponentActivity() {
             }
             // Re-apply on every in-app theme change (e.g. the Settings
             // switch): the style set in onCreate/onResume would go stale.
-            SideEffect { applyBarAppearance(darkTheme) }
+            // Cached so onResume can re-apply synchronously without disk I/O.
+            SideEffect {
+                lastDarkTheme = darkTheme
+                applyBarAppearance(darkTheme)
+            }
             MaterialTheme(
                 colorScheme = accentScheme(accentKey, darkTheme)
             ) {
@@ -175,11 +183,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Last theme applied from stored prefs (or the system fallback before
+    // prefs emit). Lets onResume re-apply the bars without disk I/O.
+    private var lastDarkTheme: Boolean? = null
+
     override fun onResume() {
         super.onResume()
         // Re-apply on return (e.g. from recents): the system styling, not
-        // the app theme, may have driven the bars while away.
-        applyBarAppearance(resolveDarkTheme())
+        // the app theme, may have driven the bars while away. Synchronous
+        // from the cache — never a blocking store read on the main thread.
+        lastDarkTheme?.let { applyBarAppearance(it) }
+        // Then converge on stored truth off the main thread, in case prefs
+        // changed while away.
+        lifecycleScope.launch {
+            val themeMode = try {
+                NotePreferences.get(applicationContext).themeMode.first()
+            } catch (_: Exception) {
+                NotePreferences.THEME_SYSTEM
+            }
+            val dark = when (themeMode) {
+                NotePreferences.THEME_DARK -> true
+                NotePreferences.THEME_LIGHT -> false
+                else -> isSystemDark()
+            }
+            lastDarkTheme = dark
+            applyBarAppearance(dark)
+        }
     }
 
     // singleTask relaunches (launcher icon, notification Open action)
@@ -197,19 +226,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Synchronous stored-theme read for launch/resume, before any compose
-    // state exists. Falls back to the system theme if prefs can't be read.
-    private fun resolveDarkTheme(): Boolean {
-        val themeMode = try {
-            runBlocking { NotePreferences(this@MainActivity).themeMode.first() }
-        } catch (_: Exception) {
-            NotePreferences.THEME_SYSTEM
-        }
-        return when (themeMode) {
-            NotePreferences.THEME_DARK -> true
-            NotePreferences.THEME_LIGHT -> false
-            else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                Configuration.UI_MODE_NIGHT_YES
-        }
-    }
+    // Synchronous system-theme read for launch/resume, before any compose
+    // state exists. Stored prefs resolve asynchronously in setContent and
+    // onResume instead — never via a blocking read on the main thread.
+    private fun isSystemDark(): Boolean =
+        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
 }

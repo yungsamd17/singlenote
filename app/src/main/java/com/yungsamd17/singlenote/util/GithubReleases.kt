@@ -11,6 +11,11 @@ import java.net.URI
  * Public GitHub release info, fetched on demand only (changelog sheet,
  * update check). No auth, no tracking — plain unauthenticated reads of a
  * public repo. Callers must catch [IOException] and show an offline state.
+ *
+ * Updates never pipe a raw APK from here: there is no SHA-256 pinning, so
+ * callers must open [Release.htmlUrl] (the release page) and let the user
+ * verify the asset in the browser instead of downloading [Release.apkUrl]
+ * directly.
  */
 object GithubReleases {
 
@@ -71,7 +76,14 @@ object GithubReleases {
             if (assets != null) {
                 for (j in 0 until assets.length()) {
                     val asset = assets.getJSONObject(j)
-                    if (asset.optString("name") == "app-release.apk") {
+                    // CI publishes versioned names like
+                    // singlenote-v0.3.4-release.apk, never a bare
+                    // app-release.apk: match the -release.apk suffix and
+                    // skip debug builds.
+                    val name = asset.optString("name")
+                    if (name.endsWith("-release.apk") &&
+                        !name.contains("debug", ignoreCase = true)
+                    ) {
                         apkUrl = asset.optString("browser_download_url").ifBlank { null }
                         break
                     }

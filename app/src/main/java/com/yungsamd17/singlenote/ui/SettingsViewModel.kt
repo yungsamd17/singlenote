@@ -41,6 +41,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     init {
         viewModelScope.launch {
             // Raw store flows, not the stateIn'd ones above (those start
@@ -52,6 +55,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
                 store.accentColor,
                 store.notificationsEnabled
             ) { _, _, _, _, _ -> Unit }.first()
+            // Separate first: the typed combine overloads stop at five
+            // flows, so the new pref is awaited on its own.
+            store.lockscreenVisible.first()
             _ready.value = true
         }
     }
@@ -74,6 +80,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setNotificationsEnabled(value: Boolean) {
         viewModelScope.launch { store.setNotificationsEnabled(value) }
+    }
+
+    fun setLockscreenVisible(value: Boolean) {
+        viewModelScope.launch { store.setLockscreenVisible(value) }
     }
 
     companion object {

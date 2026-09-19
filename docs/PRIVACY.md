@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Singlenote is fully offline and collects nothing.
+Singlenote is offline-first and collects nothing.
 
 ## Data collected
 
@@ -8,7 +8,7 @@ None. No accounts, no analytics, no ads, no tracking identifiers.
 
 ## On your device
 
-Your note and settings stay in the app's private storage on your device. They are stored unencrypted (plaintext database and preferences): anyone with access to your unlocked device or its backups can read them. Uninstalling the app deletes everything.
+Your note and settings stay in the app's private storage on your device. They are stored unencrypted (plaintext database and preferences): anyone with access to your unlocked device can read them. Auto-backup is disabled, so nothing is copied to your Google account — uninstalling the app deletes everything.
 
 ## Copy and share
 

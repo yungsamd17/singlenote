@@ -8,9 +8,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -72,7 +76,57 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
         }
     }
 
+    // Undo-aware variants: the destructive write is delayed by the Undo
+    // window (10s, exceeding the 5s minimum to give TalkBack users extra
+    // time). State lives here so rotation re-shows the bar instead of
+    // losing the chance. Deleting only the captured ids avoids removing
+    // notes archived during the window.
+    private val _pendingDelete = MutableStateFlow<Note?>(null)
+    val pendingDelete: StateFlow<Note?> = _pendingDelete.asStateFlow()
+    private var deleteJob: Job? = null
+
+    private val _pendingClear = MutableStateFlow<List<Note>?>(null)
+    val pendingClear: StateFlow<List<Note>?> = _pendingClear.asStateFlow()
+    private var clearJob: Job? = null
+
+    fun deleteWithUndo(note: Note) {
+        deleteJob?.cancel()
+        _pendingDelete.value = note
+        deleteJob = viewModelScope.launch {
+            delay(UNDO_WINDOW_MS)
+            try { archiveStore.deleteArchived(note.id) } catch (_: Exception) { }
+            _pendingDelete.value = null
+        }
+    }
+
+    fun undoDelete() {
+        deleteJob?.cancel()
+        deleteJob = null
+        _pendingDelete.value = null
+    }
+
+    fun clearWithUndo(snapshot: List<Note>) {
+        if (snapshot.isEmpty()) return
+        clearJob?.cancel()
+        _pendingClear.value = snapshot.toList()
+        clearJob = viewModelScope.launch {
+            delay(UNDO_WINDOW_MS)
+            snapshot.forEach { note ->
+                try { archiveStore.deleteArchived(note.id) } catch (_: Exception) { }
+            }
+            _pendingClear.value = null
+        }
+    }
+
+    fun undoClear() {
+        clearJob?.cancel()
+        clearJob = null
+        _pendingClear.value = null
+    }
+
     companion object {
+        // Matches SnackbarDuration.Long so the bar and the commit stay aligned.
+        const val UNDO_WINDOW_MS = 10_000L
         fun factory(archiveStore: ArchiveStore) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =

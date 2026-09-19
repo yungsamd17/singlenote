@@ -6,7 +6,7 @@
 
 **Focus on one note at a time.**
 
-A minimalist, fully offline Android note app: write a single active note and keep it
+A minimalist, offline-first Android note app: write a single active note and keep it
 visible everywhere — home screen widget, pinned notification, and quick settings tile.
 
 [![Build](https://img.shields.io/github/actions/workflow/status/yungsamd17/singlenote/build.yml?style=for-the-badge&label=Build&color=11131A)](https://github.com/yungsamd17/singlenote/actions/workflows/build.yml)
@@ -30,7 +30,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 - **Theming** — light / dark / system, Material 3 design with per-accent palettes
 - **Typography** — default / monospace / serif fonts, three text sizes
 - **Changelog & updates** — per-version release notes and update checks in About
-- **Privacy first** — fully offline; no accounts, no analytics, no tracking.
+- **Privacy first** — offline-first; no accounts, no analytics, no tracking.
   Notes and settings are stored unencrypted in the app's private storage.
   Permissions: notifications (pinned note), and internet solely for release
   notes and update checks, only when you open them
