@@ -75,6 +75,7 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -140,6 +141,12 @@ fun NoteScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val view = LocalView.current
+
+    // Tapjacking defense: drop touches that land while another visible
+    // window obscures the app, so one-tap Archive/Delete/Pin can't fire
+    // through an overlay. One flag on the Compose host view covers every
+    // clickable in this hierarchy.
+    SideEffect { view.filterTouchesWhenObscured = true }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
