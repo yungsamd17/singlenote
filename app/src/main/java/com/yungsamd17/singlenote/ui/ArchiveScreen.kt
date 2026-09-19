@@ -30,7 +30,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -89,8 +88,7 @@ fun ArchiveScreen(
         val result = snackbarHostState.showSnackbar(
             message = deletedLabel,
             actionLabel = undoLabel,
-            duration = SnackbarDuration.Long,
-            withDismissAction = true
+            duration = SnackbarDuration.Long
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoDelete()
@@ -104,8 +102,7 @@ fun ArchiveScreen(
         val result = snackbarHostState.showSnackbar(
             message = clearedLabel,
             actionLabel = undoLabel,
-            duration = SnackbarDuration.Long,
-            withDismissAction = true
+            duration = SnackbarDuration.Long
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoClear()
@@ -155,7 +152,7 @@ fun ArchiveScreen(
         // Lifted above the gesture bar like the note screen's host so the
         // Undo bar never sits under it.
         snackbarHost = {
-            SnackbarHost(
+            SwipeableSnackbarHost(
                 snackbarHostState,
                 modifier = Modifier
                     .navigationBarsPadding()

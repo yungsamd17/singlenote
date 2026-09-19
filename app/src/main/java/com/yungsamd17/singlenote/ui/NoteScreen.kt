@@ -69,21 +69,26 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -223,8 +228,7 @@ fun NoteScreen(
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = undoActionLabel,
-            duration = SnackbarDuration.Long,
-            withDismissAction = true
+            duration = SnackbarDuration.Long
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoPending()
@@ -358,7 +362,7 @@ fun NoteScreen(
         // Lifted above the 88dp bottom bar (and the keyboard via
         // imePadding) so limit hints never cover Done or the actions.
         snackbarHost = {
-            SnackbarHost(
+            SwipeableSnackbarHost(
                 snackbarHostState,
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -856,4 +860,36 @@ private fun TooltipIconButton(
             content()
         }
     }
+}
+
+/**
+ * Undo/feedback bars dismiss by swiping left or right instead of a
+ * dedicated close button. A swipe settles exactly like the timeout does
+ * (the pending op commits), while Undo stays tappable the whole time.
+ */
+@Composable
+internal fun SwipeableSnackbarHost(
+    hostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(
+        hostState = hostState,
+        modifier = modifier,
+        snackbar = { data ->
+            // Fresh swipe state per message: without the key a swiped-away
+            // bar would leave the next message pre-dismissed.
+            key(data) {
+                val dismissState = rememberSwipeToDismissBoxState()
+                val swipedAway = dismissState.currentValue != SwipeToDismissBoxValue.Settled
+                LaunchedEffect(swipedAway) {
+                    if (swipedAway) hostState.currentSnackbarData?.dismiss()
+                }
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {},
+                    content = { Snackbar(snackbarData = data) }
+                )
+            }
+        }
+    )
 }
