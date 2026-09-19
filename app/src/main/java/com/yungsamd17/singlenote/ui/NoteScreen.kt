@@ -882,12 +882,10 @@ internal fun SwipeableSnackbarHost(
                 }
                 SwipeToDismissBox(
                     state = dismissState,
-                    // Explicit directions plus a 25% threshold: full-width
-                    // bars feel stuck under the 50% default, and short
-                    // swipes must still clear the bar.
+                    // Explicit directions so short swipes always clear
+                    // the bar instead of snapping it back.
                     enableDismissFromStartToEnd = true,
                     enableDismissFromEndToStart = true,
-                    positionalThreshold = { it * 0.25f },
                     backgroundContent = {},
                     content = { Snackbar(snackbarData = data) }
                 )
