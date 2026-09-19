@@ -11,44 +11,66 @@ import kotlinx.coroutines.flow.map
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 /**
+ * Preferences surface the repository depends on. The app wires the real
+ * [NotePreferences] singleton; unit tests wire a fake with no DataStore.
+ */
+interface PreferencesStore {
+    val pinned: Flow<Boolean>
+    val notificationsEnabled: Flow<Boolean>
+    val themeMode: Flow<String>
+    val fontFamily: Flow<String>
+    val textSize: Flow<String>
+    val accentColor: Flow<String>
+
+    suspend fun setPinned(value: Boolean)
+    suspend fun setNotificationsEnabled(value: Boolean)
+    suspend fun setThemeMode(value: String)
+    suspend fun setFontFamily(value: String)
+    suspend fun setTextSize(value: String)
+    suspend fun setAccentColor(value: String)
+}
+
+/**
  * App-scoped preferences holder. Use [get] everywhere instead of
  * constructing instances per call site: N wrappers on one DataStore file
  * contend on the same file and obscure the single source of truth.
  */
-class NotePreferences private constructor(private val context: Context) {
+class NotePreferences private constructor(private val context: Context) : PreferencesStore {
 
-    val pinned: Flow<Boolean> = context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
-    val notificationsEnabled: Flow<Boolean> =
+    override val pinned: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
+    override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
-    val themeMode: Flow<String> = context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
-    val fontFamily: Flow<String> =
+    override val themeMode: Flow<String> =
+        context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
+    override val fontFamily: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_FONT_FAMILY] ?: FONT_DEFAULT }
-    val textSize: Flow<String> =
+    override val textSize: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_TEXT_SIZE] ?: SIZE_MEDIUM }
-    val accentColor: Flow<String> =
+    override val accentColor: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_ACCENT] ?: ACCENT_DEFAULT }
 
-    suspend fun setPinned(value: Boolean) {
+    override suspend fun setPinned(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_PINNED] = value }
     }
 
-    suspend fun setNotificationsEnabled(value: Boolean) {
+    override suspend fun setNotificationsEnabled(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_NOTIFICATIONS] = value }
     }
 
-    suspend fun setThemeMode(value: String) {
+    override suspend fun setThemeMode(value: String) {
         context.settingsDataStore.edit { it[KEY_THEME] = value }
     }
 
-    suspend fun setFontFamily(value: String) {
+    override suspend fun setFontFamily(value: String) {
         context.settingsDataStore.edit { it[KEY_FONT_FAMILY] = value }
     }
 
-    suspend fun setTextSize(value: String) {
+    override suspend fun setTextSize(value: String) {
         context.settingsDataStore.edit { it[KEY_TEXT_SIZE] = value }
     }
 
-    suspend fun setAccentColor(value: String) {
+    override suspend fun setAccentColor(value: String) {
         context.settingsDataStore.edit { it[KEY_ACCENT] = value }
     }
 
