@@ -43,7 +43,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
-<    override val lockscreenVisible: Flow<Boolean> =
+    override val lockscreenVisible: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: false }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
@@ -62,7 +62,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.edit { it[KEY_NOTIFICATIONS] = value }
     }
 
-<    override suspend fun setLockscreenVisible(value: Boolean) {
+    override suspend fun setLockscreenVisible(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_LOCKSCREEN_VISIBLE] = value }
     }
 
