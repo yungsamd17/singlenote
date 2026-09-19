@@ -43,8 +43,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
+    // On by default: showing on the lock screen is the point of pinning,
+    // and the toggle stays one tap away in Settings for opting out.
     override val lockscreenVisible: Flow<Boolean> =
-        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: false }
+        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: true }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
