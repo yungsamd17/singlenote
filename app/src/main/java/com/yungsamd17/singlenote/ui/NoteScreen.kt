@@ -153,6 +153,7 @@ fun NoteScreen(
     }
 
     fun requestPinToggle() {
+        DebugLog.log("tap pin pinned=$pinned")
         val needsPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
                 context,
@@ -300,6 +301,20 @@ fun NoteScreen(
             keyboardWasOpen = false
             if (isEditing) finishEditing("ime-effect")
         }
+    }
+
+    // Session marker: proves which build produced a pasted log.
+    LaunchedEffect(Unit) {
+        DebugLog.log(
+            "session v${BuildConfig.VERSION_NAME}+${BuildConfig.VERSION_CODE} " +
+                "debug=${BuildConfig.DEBUG}"
+        )
+    }
+
+    // Focus transitions: the log above only samples focus on IME flips, so
+    // tap-driven focus without inset changes was invisible until now.
+    LaunchedEffect(isEditing) {
+        DebugLog.log("focus editing=$isEditing")
     }
 
     // Overlay visibility for the log: transitions only, so a stuck ON is
@@ -586,7 +601,10 @@ fun NoteScreen(
                                 .padding(horizontal = 16.dp, vertical = 16.dp)
                         ) {
                             FloatingActionButton(
-                                onClick = { if (hasContent) viewModel.archiveCurrent() },
+                                onClick = {
+                                    DebugLog.log("tap archive hasContent=$hasContent")
+                                    if (hasContent) viewModel.archiveCurrent()
+                                },
                                 modifier = Modifier
                                     .align(Alignment.CenterStart)
                                     .alpha(if (hasContent) 1f else 0.38f),
@@ -609,7 +627,10 @@ fun NoteScreen(
                             }
 
                             FloatingActionButton(
-                                onClick = { if (hasContent) showDeleteDialog = true },
+                                onClick = {
+                                    DebugLog.log("tap delete hasContent=$hasContent")
+                                    if (hasContent) showDeleteDialog = true
+                                },
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
                                     .alpha(if (hasContent) 1f else 0.38f),
