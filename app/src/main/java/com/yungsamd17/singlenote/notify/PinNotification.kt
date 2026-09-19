@@ -15,26 +15,28 @@ import com.yungsamd17.singlenote.data.NotePreferences
 
 object PinNotification {
 
-    private const val CHANNEL_ID = "pinned_note_v3"
+    private const val CHANNEL_ID = "pinned_note_v4"
     private const val LEGACY_CHANNEL_ID = "pinned_note"
     private const val LEGACY_CHANNEL_ID_V2 = "pinned_note_v2"
+    private const val LEGACY_CHANNEL_ID_V3 = "pinned_note_v3"
     private const val NOTIFICATION_ID = 1
     private const val REQUEST_OPEN_APP = 2
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
-        // Channels are immutable once created: the old DEFAULT-importance
-        // channels exposed full note text on the lock screen, so the
-        // LOW-importance PRIVATE-by-default channel below gets a new id and
-        // the legacy ones are removed (their settings would otherwise stick
-        // forever).
+        // Channels are immutable once created: the old LOW-importance
+        // channels never surfaced on the lock screen (and the first two
+        // exposed full note text), so the DEFAULT-importance channel below
+        // gets a new id and the legacy ones are removed (their settings
+        // would otherwise stick forever).
         manager.deleteNotificationChannel(LEGACY_CHANNEL_ID)
         manager.deleteNotificationChannel(LEGACY_CHANNEL_ID_V2)
+        manager.deleteNotificationChannel(LEGACY_CHANNEL_ID_V3)
         if (manager.getNotificationChannel(CHANNEL_ID) == null) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.channel_pinned_name),
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = context.getString(R.string.channel_pinned_description)
                 setShowBadge(false)
@@ -81,7 +83,7 @@ object PinNotification {
             .setContentTitle(context.getString(R.string.notification_pinned_title))
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Private by default: full content only on the lock screen when
             // the user opts in via Settings. Ongoing and silent on every
             // refresh (it re-posts on each save while pinned).
