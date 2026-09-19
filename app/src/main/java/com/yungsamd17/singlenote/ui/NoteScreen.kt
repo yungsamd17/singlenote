@@ -11,9 +11,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsAnimationCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -83,7 +80,9 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -283,40 +282,18 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    // True while an IME close glide is actually running, driven by the real
-    // animation callback — fast and slow devices alike, no timers. Taps that
-    // land in this window would reopen onto a moving keyboard and read as a
-    // flash, so the overlay below eats them until onEnd.
+    // Close glide detection without timers or view callbacks (installing our
+    // own animation callback replaced Compose's and killed the animation):
+    // the animated IME bottom shrinks every frame of a close glide, so a
+    // frame where it shrank-but-isn't-zero means a close is running. Any
+    // steady state — settled open, landed, or a swallowed hide with no
+    // movement — reads false, so the gate below can never wedge shut.
     var imeClosing by remember { mutableStateOf(false) }
-    DisposableEffect(view) {
-        val animations = object : WindowInsetsAnimationCompat.Callback(
-            DISPATCH_MODE_CONTINUE_ON_SUBTREE
-        ) {
-            override fun onStart(
-                animation: WindowInsetsAnimationCompat,
-                bounds: WindowInsetsAnimationCompat.BoundsCompat,
-            ): WindowInsetsAnimationCompat.BoundsCompat {
-                if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
-                    // Combined bottoms: an IME glide dominates them, so
-                    // shrinking means closing on any device speed.
-                    imeClosing = bounds.lowerBound.bottom > bounds.upperBound.bottom
-                }
-                return bounds
-            }
-
-            override fun onProgress(
-                insets: WindowInsetsCompat,
-                runningAnimations: List<WindowInsetsAnimationCompat>,
-            ): WindowInsetsCompat = insets
-
-            override fun onEnd(animation: WindowInsetsAnimationCompat) {
-                if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
-                    imeClosing = false
-                }
-            }
-        }
-        ViewCompat.setWindowInsetsAnimationCallback(view, animations)
-        onDispose { ViewCompat.setWindowInsetsAnimationCallback(view, null) }
+    val lastImePx = remember { mutableIntStateOf(-1) }
+    val imeNowPx = WindowInsets.ime.getBottom(LocalDensity.current)
+    SideEffect {
+        imeClosing = imeNowPx < lastImePx.intValue && imeNowPx > 0
+        lastImePx.intValue = imeNowPx
     }
     // A tap outside any close glide clears a stale close request (e.g. a
     // hide the IME swallowed without animating at all). Taps inside the
