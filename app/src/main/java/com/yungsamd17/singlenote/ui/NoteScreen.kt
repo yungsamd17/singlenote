@@ -17,8 +17,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -119,9 +117,15 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
+
+// Closed-state settle before a system-hide exits editing: transient
+// isImeVisible edges last a frame or two, a real landing settles for
+// good, so this margin keeps reopens alive without a visible lag.
+private const val LANDING_SETTLE_MS = 75L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -281,14 +285,11 @@ fun NoteScreen(
     // field scrolls to follow it, so overflow stays reachable at any font
     // scale instead of being clipped or truncated.
 
-    // True from a Done tap's hide() until focus actually clears: marks a
-    // close-glide the bar should anticipate (see the bar scope below).
-    // Declared up here because finishEditing below resets it.
-    var hideRequested by remember { mutableStateOf(false) }
-
+    // Keyboard already closed on every path below (landing flip,
+    // hidden back-press, closed Done tap): just release focus and save.
+    // Never hide() here — a hide into the IME's settle window bounces
+    // Gboard back up for ~600ms. Hides are issued only by the Done tap.
     fun finishEditing() {
-        hideRequested = false
-        keyboard?.hide()
         focusManager.clearFocus(force = true)
         viewModel.flushSave()
     }
@@ -325,16 +326,16 @@ fun NoteScreen(
         }
     }
 
-    // IME visibility straight from the Compose insets: no window relayout
-    // happens under adjustNothing, so there is no layout pass to observe —
-    // a global-layout listener would go silent and miss the close.
+    // A system-hide (back/gesture) keeps focus with Done shown, then
+    // exits editing once the closed state settles: isImeVisible flickers
+    // mid-animation under adjustNothing, so the settle delay lets any
+    // transient edge self-cancel instead of nuking a just-regained focus
+    // and killing a reopen. Any real open restarts the effect and cancels
+    // the pending clear. Done needs none of this — it clears up front.
     val isKeyboardOpen = WindowInsets.isImeVisible
-    var keyboardWasOpen by remember { mutableStateOf(false) }
     LaunchedEffect(isKeyboardOpen) {
-        if (isKeyboardOpen) {
-            keyboardWasOpen = true
-        } else if (keyboardWasOpen) {
-            keyboardWasOpen = false
+        if (!isKeyboardOpen) {
+            delay(LANDING_SETTLE_MS)
             if (isEditing) finishEditing()
         }
     }
@@ -345,17 +346,16 @@ fun NoteScreen(
         finishEditing()
     }
 
-    // Done tap mirrors the system-hide/back path: hide first, clear focus
-    // only after the keyboard fully lands (see the LaunchedEffect above).
-    // Hiding and unfocusing in the same frame snaps the animated IME inset
-    // — that snap was the shift seen only on Done tap. The bar itself
-    // starts morphing back just before the landing (see its scope below).
+    // Done tap is the only place that ever tells the IME to hide: clear
+    // focus first so there is no hide-while-focused race (a Done tap
+    // during the open animation settles closed instead of flashing back
+    // with focus held), then hide once. Taps that land mid-close regain
+    // focus normally and reopen — intentional reopens win and nothing
+    // observes the landing, so the reopen can't be killed by it.
     fun requestFinishEditing() {
         viewModel.flushSave()
-        if (isKeyboardOpen) {
-            hideRequested = true
-            keyboard?.hide()
-        } else finishEditing()
+        focusManager.clearFocus(force = true)
+        keyboard?.hide()
     }
 
     Scaffold(
@@ -534,9 +534,13 @@ fun NoteScreen(
 
             // Sole glider of this bar: the window is adjustNothing, so the
             // animated IME inset moves this stable container above the
-            // keyboard with no snap. The content switch inside never changes
+            // keyboard with no lag. The content switch inside never changes
             // size and never touches the insets, so the morph can't shift or
             // stick at the end of the keyboard slide.
+            // Read low in the tree: this scope already recomposes every
+            // inset frame via imePadding, so nothing above pays for it.
+            val density = LocalDensity.current
+            val imeRemainingPx = WindowInsets.ime.getBottom(density)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -546,33 +550,23 @@ fun NoteScreen(
                 // Head start on the landing: once only a sliver of keyboard
                 // remains, start morphing back so the FAB row settles right
                 // as the slide ends instead of lagging a full morph behind.
-                // Focused-but-settled (system-hide/back, no tap) still shows
-                // Done — only a tap-requested close anticipates.
-                // Read low in the tree: this scope already recomposes every
-                // inset frame via imePadding, so nothing above pays for it.
-                val density = LocalDensity.current
-                val imeRemainingPx = WindowInsets.ime.getBottom(density)
+                // Done stays visible through the close glide (focus is
+                // already gone, the open keyboard holds it) and while
+                // focused-but-settled (system-hide/back with no tap yet).
                 val keyboardSubstantiallyOpen =
                     imeRemainingPx.toFloat() >= with(density) {
                         KeyboardSwapThreshold.toPx()
                     }
-                val barDone = isEditing && (!hideRequested || keyboardSubstantiallyOpen)
+                val barDone = isEditing || keyboardSubstantiallyOpen
                 AnimatedContent(
                     targetState = barDone,
                     label = "bottomBar",
                     transitionSpec = {
-                        // Morph-style swap: position-neutral fade + scale so
-                        // it never fights the keyboard glide, in the same
+                        // Fade-only swap: no scale, so the button itself
+                        // never grows or shifts while the glide carries it
+                        // — the swap dissolves in place, in the same
                         // accent-tinted container family both ways.
-                        (fadeIn(tween(200)) + scaleIn(
-                            initialScale = 0.94f,
-                            animationSpec = tween(200)
-                        )).togetherWith(
-                            fadeOut(tween(160)) + scaleOut(
-                                targetScale = 0.96f,
-                                animationSpec = tween(160)
-                            )
-                        )
+                        fadeIn(tween(200)) togetherWith fadeOut(tween(160))
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
                     // padding = 88dp, so the crossfade dissolves in place with
