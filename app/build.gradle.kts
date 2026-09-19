@@ -60,6 +60,16 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.all {
+            testLogging {
+                events("failed")
+                exceptionFormat = "full"
+                showCauses = true
+                showStackTraces = true
+            }
+        }
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
