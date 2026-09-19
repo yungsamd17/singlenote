@@ -31,7 +31,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class NoteRepositoryTest {
 
-    private class FakeDao : NoteDao {
+    private class FakeDao : NoteDao() {
         private val notes = mutableMapOf<Long, Note>()
         private var nextId = 1L
         private val all = MutableStateFlow<List<Note>>(emptyList())
@@ -74,10 +74,6 @@ class NoteRepositoryTest {
 
         override suspend fun restore(id: Long) {
             notes[id]?.let { notes[id] = it.copy(state = Note.STATE_ACTIVE); emit() }
-        }
-
-        override suspend fun setState(id: Long, state: Int) {
-            notes[id]?.let { notes[id] = it.copy(state = state); emit() }
         }
 
         override suspend fun deleteById(id: Long) {
