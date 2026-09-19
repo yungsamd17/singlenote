@@ -8,6 +8,7 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_SMALL
+import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.NoteStore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -24,6 +25,19 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private val _text = MutableStateFlow("")
     val text: StateFlow<String> = _text.asStateFlow()
+
+    // Pending destructive action awaiting its Undo window: held here (not in
+    // the composable) so the snackbar can be re-shown after rotation and the
+    // restore still fires. Cleared on Undo, timeout, or dismissal.
+    enum class UndoKind { ARCHIVE, DELETE }
+    data class PendingUndo(
+        val kind: UndoKind,
+        val noteId: Long?,
+        val content: String,
+        val wasPinned: Boolean,
+    )
+    private val _pendingUndo = MutableStateFlow<PendingUndo?>(null)
+    val pendingUndo: StateFlow<PendingUndo?> = _pendingUndo.asStateFlow()
 
     // False until the stored note plus the display prefs have all emitted
     // their disk truth. The editor waits for it so its first frame already
@@ -98,20 +112,76 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     fun archiveCurrent() {
         saveJob?.cancel()
         viewModelScope.launch {
+            val snapshot = _text.value
+            val snapshotId = currentNoteId
+            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
             persist()
             store.archiveActive()
             currentNoteId = null
             _text.value = ""
+            if (snapshot.isNotBlank()) {
+                _pendingUndo.value = PendingUndo(UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned)
+            }
         }
     }
 
     fun deleteCurrent() {
         saveJob?.cancel()
         viewModelScope.launch {
+            val snapshot = _text.value
+            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
             store.deleteActive()
             currentNoteId = null
             _text.value = ""
+            if (snapshot.isNotBlank()) {
+                _pendingUndo.value = PendingUndo(UndoKind.DELETE, null, snapshot, wasPinned)
+            }
         }
+    }
+
+    fun undoPending() {
+        val pending = _pendingUndo.value ?: return
+        _pendingUndo.value = null
+        saveJob?.cancel()
+        viewModelScope.launch {
+            when (pending.kind) {
+                UndoKind.ARCHIVE -> {
+                    // Production store implements both: move the archived row
+                    // back instead of duplicating it. Fakes/tests fall back
+                    // to re-saving the cached text.
+                    val archiveStore = store as? ArchiveStore
+                    val restored = if (archiveStore != null && pending.noteId != null) {
+                        try { archiveStore.restore(pending.noteId) } catch (_: Exception) { false }
+                    } else false
+                    if (!restored) {
+                        store.saveActive(pending.content)
+                        currentNoteId = store.getActive()?.id
+                        _text.value = pending.content
+                    } else {
+                        // Optimistic: show the text at once; the DB flow
+                        // re-adopts the same content a moment later.
+                        currentNoteId = pending.noteId
+                        _text.value = pending.content
+                        refreshFromDatabase()
+                    }
+                    if (pending.wasPinned) {
+                        try { store.setPinned(true) } catch (_: Exception) { }
+                    }
+                }
+                UndoKind.DELETE -> {
+                    store.saveActive(pending.content)
+                    currentNoteId = store.getActive()?.id
+                    _text.value = pending.content
+                    if (pending.wasPinned) {
+                        try { store.setPinned(true) } catch (_: Exception) { }
+                    }
+                }
+            }
+        }
+    }
+
+    fun consumePendingUndo() {
+        _pendingUndo.value = null
     }
 
     private fun scheduleSave() {

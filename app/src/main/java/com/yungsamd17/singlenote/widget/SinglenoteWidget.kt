@@ -22,6 +22,7 @@ import androidx.glance.appwidget.provideContent
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import com.yungsamd17.singlenote.MainActivity
+import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 
 class SinglenoteWidget : GlanceAppWidget() {
@@ -29,14 +30,15 @@ class SinglenoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val note = AppDatabase.get(context).noteDao().getActive()
         val openIntent = Intent(context, MainActivity::class.java)
+        val fallbackHint = context.getString(R.string.hint_write_one_thing)
         provideContent {
-            WidgetContent(openIntent = openIntent, content = note?.content.orEmpty())
+            WidgetContent(openIntent = openIntent, content = note?.content.orEmpty(), fallbackHint = fallbackHint)
         }
     }
 }
 
 @Composable
-private fun WidgetContent(openIntent: Intent, content: String) {
+private fun WidgetContent(openIntent: Intent, content: String, fallbackHint: String) {
     GlanceTheme {
         Box(
             modifier = GlanceModifier
@@ -47,13 +49,15 @@ private fun WidgetContent(openIntent: Intent, content: String) {
                 .padding(14.dp),
             contentAlignment = Alignment.CenterStart
         ) {
+            // 2x1 cells fit ~2 lines: 6 lines always ellipsized into an
+            // unreadable block, so cap at 2 with ellipsis.
             Text(
-                text = content.ifBlank { FALLBACK_HINT },
+                text = content.ifBlank { fallbackHint },
                 style = TextStyle(
                     color = GlanceTheme.colors.onSurface,
-                    fontSize = 18.sp
+                    fontSize = 14.sp
                 ),
-                maxLines = 6
+                maxLines = 2
             )
         }
     }
@@ -62,5 +66,3 @@ private fun WidgetContent(openIntent: Intent, content: String) {
 class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = SinglenoteWidget()
 }
-
-private const val FALLBACK_HINT = "Write one thing to remember…"

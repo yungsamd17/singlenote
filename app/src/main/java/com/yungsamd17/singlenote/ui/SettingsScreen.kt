@@ -1,15 +1,19 @@
 package com.yungsamd17.singlenote.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,6 +28,7 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,6 +51,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -94,9 +102,19 @@ fun SettingsScreen(
     ) { innerPadding ->
         // First frame waits for stored truth (same as the note screen):
         // rows appear with the saved values — nothing flashes defaults.
-        // Early return keeps the diff (and the layout) untouched otherwise.
+        // A labelled spinner keeps TalkBack informed instead of silence.
         if (!ready) {
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
+            val loadingLabel = stringResource(R.string.loading)
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.semantics {
+                        contentDescription = loadingLabel
+                    }
+                )
+            }
             return@Scaffold
         }
         Column(
@@ -257,7 +275,7 @@ private fun ValueRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .selectable(selected = false, onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -288,7 +306,7 @@ private fun ToggleRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .selectable(selected = checked, onClick = { onCheckedChange(!checked) })
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -335,12 +353,17 @@ private fun SelectionDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column {
+            Column(Modifier.selectableGroup()) {
                 options.forEach { (key, label) ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .selectable(selected = key == selected, onClick = { onSelect(key) })
+                            .heightIn(min = 48.dp)
+                            .selectable(
+                                selected = key == selected,
+                                onClick = { onSelect(key) },
+                                role = Role.RadioButton
+                            )
                             .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {

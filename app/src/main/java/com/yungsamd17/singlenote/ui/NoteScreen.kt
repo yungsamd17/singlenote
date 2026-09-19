@@ -53,6 +53,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,8 +65,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
@@ -91,6 +94,9 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hint
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -191,6 +197,31 @@ fun NoteScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var lastLimitHintMs by remember { mutableLongStateOf(0L) }
+    val pendingUndo by viewModel.pendingUndo.collectAsStateWithLifecycle()
+    val undoArchiveLabel = stringResource(R.string.note_archived)
+    val undoDeleteLabel = stringResource(R.string.note_deleted)
+    val undoActionLabel = stringResource(R.string.action_undo)
+
+    // Undo window: ViewModel holds the snapshot so rotation re-shows the
+    // bar instead of losing the chance to restore.
+    LaunchedEffect(pendingUndo) {
+        val pending = pendingUndo ?: return@LaunchedEffect
+        val message = when (pending.kind) {
+            NoteViewModel.UndoKind.ARCHIVE -> undoArchiveLabel
+            NoteViewModel.UndoKind.DELETE -> undoDeleteLabel
+        }
+        val result = snackbarHostState.showSnackbar(
+            message = message,
+            actionLabel = undoActionLabel,
+            duration = SnackbarDuration.Long,
+            withDismissAction = true
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            viewModel.undoPending()
+        } else {
+            viewModel.consumePendingUndo()
+        }
+    }
 
     // Editing starts the moment the note field gains focus (a tap puts the
     // cursor exactly where it landed) and ends when Done clears focus.
@@ -428,9 +459,19 @@ fun NoteScreen(
     ) { innerPadding ->
         // First frame waits for stored truth (see viewModel.ready): the
         // card, text and bar appear with final dims — nothing resizes.
-        // Early return keeps the diff (and the layout) untouched otherwise.
+        // A labelled spinner keeps TalkBack informed instead of silence.
         if (!ready) {
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding))
+            val loadingLabel = stringResource(R.string.loading)
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.semantics {
+                        contentDescription = loadingLabel
+                    }
+                )
+            }
             return@Scaffold
         }
         Column(
@@ -543,7 +584,8 @@ fun NoteScreen(
                                     .align(Alignment.CenterStart)
                                     .alpha(if (hasContent) 1f else 0.38f),
                                 shape = CircleShape,
-                                elevation = noShadowElevation()
+                                elevation = noShadowElevation(),
+                                enabled = hasContent
                             ) {
                                 Icon(
                                     Icons.Outlined.Archive,
@@ -566,7 +608,8 @@ fun NoteScreen(
                                     .align(Alignment.CenterEnd)
                                     .alpha(if (hasContent) 1f else 0.38f),
                                 shape = CircleShape,
-                                elevation = noShadowElevation()
+                                elevation = noShadowElevation(),
+                                enabled = hasContent
                             ) {
                                 Icon(
                                     Icons.Outlined.Delete,
@@ -690,6 +733,9 @@ private fun NoteEditorField(
     // so a tap puts the cursor exactly where it landed with nothing to
     // follow or reveal while typing.
 
+    // Accessible label: the visual hint overlay below is invisible to
+    // TalkBack, so expose it as the text field's hint semantics.
+    val editorHint = stringResource(R.string.hint_write_one_thing)
     BasicTextField(
         value = fieldValue,
         onValueChange = { new ->
@@ -793,7 +839,7 @@ private fun NoteEditorField(
             }
         },
         interactionSource = interactionSource,
-        modifier = modifier,
+        modifier = modifier.semantics { hint = editorHint },
         textStyle = TextStyle(
             fontFamily = fontFamily,
             fontSize = fontSize,
