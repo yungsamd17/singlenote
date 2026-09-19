@@ -24,6 +24,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -97,6 +99,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -326,9 +329,20 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(isKeyboardOpen) {
+    // NOTE: an earlier revision tracked the glide frame-by-frame and held
+    // the swallow past landing — but with nothing left to recompose, the
+    // gate froze shut and the field went dead until navigation. The gate
+    // below therefore keys on hideRequested only: set on Done tap, cleared
+    // in finishEditing when the close lands. Both are guaranteed to run, so
+    // it can never wedge.
+    LaunchedEffect(isKeyboardOpen, hideRequested) {
         if (isKeyboardOpen) {
             keyboardWasOpen = true
+            // Done tapped while the open animation was still running: hide()
+            // loses to the in-flight show and the keyboard flashes back with
+            // focus never cleared. Re-hide until the close sticks — a frame
+            // later the show has settled, so the retry lands.
+            if (hideRequested) keyboard?.hide()
         } else if (keyboardWasOpen) {
             keyboardWasOpen = false
             if (isEditing) finishEditing()
@@ -510,17 +524,37 @@ fun NoteScreen(
                     .height(noteCardHeight)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                NoteEditorField(
-                    externalText = text,
-                    onTextChange = viewModel::onTextChange,
-                    onLimitReached = ::notifyLimitReached,
-                    interactionSource = fieldInteraction,
-                    fontFamily = noteFontFamily,
-                    fontSize = noteFontSize,
-                    lineHeight = noteLineHeight,
-                    maxLength = noteMaxLength,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    NoteEditorField(
+                        externalText = text,
+                        onTextChange = viewModel::onTextChange,
+                        onLimitReached = ::notifyLimitReached,
+                        interactionSource = fieldInteraction,
+                        fontFamily = noteFontFamily,
+                        fontSize = noteFontSize,
+                        lineHeight = noteLineHeight,
+                        maxLength = noteMaxLength,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // While a Done close is in flight, swallow taps before
+                    // they reach the field: racing the tap's show request
+                    // with a focus release lets the keyboard pop for a few
+                    // frames first. Consuming down at an overlay above the
+                    // field prevents the show entirely — no ripple, no
+                    // semantics node, gone when finishEditing clears the
+                    // request at landing.
+                    if (hideRequested) {
+                        Box(
+                            Modifier
+                                .matchParentSize()
+                                .pointerInput(Unit) {
+                                    awaitEachGesture {
+                                        awaitFirstDown().consume()
+                                    }
+                                }
+                        )
+                    }
+                }
             }
 
             // Takes the slack so the bar sits at the bottom when the keyboard
