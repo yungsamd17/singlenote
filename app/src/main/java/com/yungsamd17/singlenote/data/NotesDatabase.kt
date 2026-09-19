@@ -222,7 +222,7 @@ class NoteRepository(
 
     override suspend fun setLockscreenVisible(value: Boolean) {
         preferences.setLockscreenVisible(value)
-        notifyNoteChanged()
+        notifyNow()
     }
 
     override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
