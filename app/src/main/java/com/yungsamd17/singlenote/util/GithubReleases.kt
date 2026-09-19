@@ -5,7 +5,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import java.io.IOException
 import java.net.HttpURLConnection
-import java.net.URL
+import java.net.URI
 
 /**
  * Public GitHub release info, fetched on demand only (changelog sheet,
@@ -23,8 +23,10 @@ object GithubReleases {
     )
 
     suspend fun fetch(limit: Int = 20): List<Release> = withContext(Dispatchers.IO) {
+        // URI().toURL(): the URL(String) constructor is deprecated; the
+        // only dependency here is the platform, no extra HTTP client.
         val connection =
-            URL("$API/releases?per_page=$limit").openConnection() as HttpURLConnection
+            URI("$API/releases?per_page=$limit").toURL().openConnection() as HttpURLConnection
         try {
             connection.setRequestProperty("Accept", "application/vnd.github+json")
             connection.setRequestProperty("User-Agent", "Singlenote-Android-App")

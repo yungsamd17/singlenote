@@ -87,6 +87,7 @@
     <string name="action_download">Download</string>
     <string name="update_uptodate">You’re up to date</string>
     <string name="update_check_failed">Couldn’t check for updates. Try again later.</string>
+    <string name="no_app_to_open_link">No app found to open this link</string>
     <string name="email_title">Email</string>
     <string name="email_address">yungsamd@proton.me</string>
     <string name="privacy_title">Privacy Policy</string>

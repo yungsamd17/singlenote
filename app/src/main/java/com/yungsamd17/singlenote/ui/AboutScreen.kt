@@ -1,8 +1,10 @@
 package com.yungsamd17.singlenote.ui
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -488,6 +490,16 @@ private fun LicenseRow(textRes: Int) {
     )
 }
 
+// No browser or mail app installed (or no handler at all): tell the
+// user instead of crashing with ActivityNotFoundException.
 private fun openUrl(context: Context, url: String) {
-    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    try {
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(
+            context,
+            context.getString(R.string.no_app_to_open_link),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 }
