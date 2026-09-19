@@ -9,12 +9,12 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
 import com.yungsamd17.singlenote.data.NoteRepository
 import com.yungsamd17.singlenote.data.PreferencesStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -354,7 +354,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun saves_coalesceToLeadingPlusTrailing() = runTest {
+    fun saves_coalesceToLeadingPlusTrailing() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val seen = mutableListOf<String>()
         var now = 10_000L
@@ -366,25 +366,27 @@ class NoteRepositoryTest {
             3000L
         )
 
-        // Leading: first save in a quiet window notifies at once.
+        // Leading: first save in a quiet window notifies at once. Unconfined
+        // runs the launch eagerly: StandardTestDispatcher + advanceUntilIdle
+        // never resumes this background launch (seen stays []), so virtual
+        // time can't be used here — the trailing delay below uses real time.
         repo.saveActive("a")
         advanceUntilIdle()
         assertEquals(listOf("a"), seen)
 
         // Two more saves inside the window collapse into one trailing
-        // broadcast instead of two full Glance rebuilds. Do NOT advance
-        // here: advanceUntilIdle would jump virtual time forward and run
-        // the trailing delay early. The saves themselves are suspend and
-        // have completed their DAO work by the time they return; only the
-        // trailing broadcast stays pending until the explicit time advance
-        // below.
+        // broadcast instead of two full Glance rebuilds. No advance here:
+        // the trailing delay is pending real time, so seen must still be
+        // just the leading broadcast.
         now = 10_100L
         repo.saveActive("b")
         now = 10_200L
         repo.saveActive("c")
         assertEquals(listOf("a"), seen)
 
-        advanceTimeBy(3000L)
+        // Trailing fires ~2.8s (3000 - 200) after the leading one in real
+        // time; wait past it, then collect.
+        delay(3100L)
         advanceUntilIdle()
         assertEquals(listOf("a", "c"), seen)
         assertEquals("c", dao.getActive()?.content)

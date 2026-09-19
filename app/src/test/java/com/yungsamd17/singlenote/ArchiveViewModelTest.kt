@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -126,8 +127,14 @@ class ArchiveViewModelTest {
     }
 
     @Test
-    fun swap_clearsConflictSwapsStatesAndEmitsRestored() = runTest {
-        installMain()
+    fun swap_clearsConflictSwapsStatesAndEmitsRestored() = runTest(UnconfinedTestDispatcher()) {
+        // Unconfined Main + background: two sequential ViewModel actions
+        // (restore-conflict, then swap) lose the second Channel event under
+        // StandardTestDispatcher even with early subscription — the second
+        // advance never resumes the collector. Unconfined runs sends and
+        // collects eagerly, so no advance juggling is needed (advances kept
+        // as harmless no-ops for symmetry with the other tests).
+        Dispatchers.setMain(UnconfinedTestDispatcher())
         val note = archived(1, "old")
         val store = FakeArchiveStore().apply {
             active = Note(id = 2, content = "current", createdAt = 0, updatedAt = 0)
@@ -154,8 +161,10 @@ class ArchiveViewModelTest {
     }
 
     @Test
-    fun replace_clearsConflictReplacesActiveAndEmitsRestored() = runTest {
-        installMain()
+    fun replace_clearsConflictReplacesActiveAndEmitsRestored() = runTest(UnconfinedTestDispatcher()) {
+        // Same two-action Channel race as swap above: Unconfined dispatches
+        // eagerly so the replace event can't be lost between advances.
+        Dispatchers.setMain(UnconfinedTestDispatcher())
         val note = archived(1, "old")
         val store = FakeArchiveStore().apply {
             active = Note(id = 2, content = "current", createdAt = 0, updatedAt = 0)
