@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 
 const val ACTION_NOTE_UPDATED = "com.yungsamd17.singlenote.NOTE_UPDATED"
 
-@Database(entities = [Note::class], version = 1, exportSchema = false)
+// exportSchema=true: the schema JSON (app/schemas/) is the baseline the
+// next migration diffs against — never flip this back to false.
+@Database(entities = [Note::class], version = 1, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
