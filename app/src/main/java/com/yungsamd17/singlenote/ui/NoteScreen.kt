@@ -125,7 +125,7 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // Closed-state settle before a system-hide exits editing: transient
 // isImeVisible edges last a frame or two, a real landing settles for
 // good, so this margin keeps reopens alive without a visible lag.
-private const val LANDING_SETTLE_MS = 100L
+private const val LANDING_SETTLE_MS = 75L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
