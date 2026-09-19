@@ -1,11 +1,13 @@
 package com.yungsamd17.singlenote.ui
 
 import android.content.ClipData
+import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PersistableBundle
 import android.view.ViewTreeObserver
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -253,9 +255,19 @@ fun NoteScreen(
 
     // Copy always confirms: same snackbar position as the limit hint,
     // so it floats above Done/actions whether the keyboard is open or not.
+    // On API 33+ the clip is marked sensitive so the system hides its
+    // content from the clipboard preview; Share stays a plain-text
+    // chooser to the app you pick (see the Privacy Policy for both
+    // caveats, including keyboard history).
     fun copyNoteWithFeedback() {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
+        val clip = ClipData.newPlainText("note", text)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            clip.description.extras = PersistableBundle().apply {
+                putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true)
+            }
+        }
+        clipboard.setPrimaryClip(clip)
         scope.launch {
             snackbarHostState.showSnackbar(context.getString(R.string.note_copied))
         }
