@@ -96,7 +96,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-<import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -699,7 +699,7 @@ private fun NoteEditorField(
         }
     }
 
-<    // Accessible label: the visual hint overlay below is invisible to
+    // Accessible label: the visual hint overlay below is invisible to
     // TalkBack, so expose it as the text field's content description.
     val editorHint = stringResource(R.string.hint_write_one_thing)
     BasicTextField(
@@ -737,7 +737,7 @@ private fun NoteEditorField(
             onTextChange(new.text)
         },
         interactionSource = interactionSource,
-<        modifier = modifier
+        modifier = modifier
             .verticalScroll(scrollState)
             .semantics { contentDescription = editorHint },
         textStyle = TextStyle(
