@@ -5,6 +5,8 @@ import android.content.Intent
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,7 +19,7 @@ import kotlinx.coroutines.sync.withLock
 
 const val ACTION_NOTE_UPDATED = "com.yungsamd17.singlenote.NOTE_UPDATED"
 
-@Database(entities = [Note::class], version = 1, exportSchema = false)
+@Database(entities = [Note::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
@@ -31,8 +33,27 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "singlenote.db"
-                ).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
             }
+    }
+}
+
+// Adds the activeSlot single-ACTIVE-row guard (see Note). Pre-existing
+// duplicate ACTIVE rows — the bug being fixed — collapse to the newest one,
+// the rest return to the archive before the unique index is created.
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN activeSlot INTEGER")
+        db.execSQL(
+            "UPDATE notes SET state = ${Note.STATE_ARCHIVED} WHERE state = ${Note.STATE_ACTIVE} " +
+                "AND id NOT IN (SELECT id FROM notes WHERE state = ${Note.STATE_ACTIVE} " +
+                "ORDER BY updatedAt DESC, id DESC LIMIT 1)"
+        )
+        db.execSQL(
+            "UPDATE notes SET activeSlot = ${Note.ACTIVE_SLOT} " +
+                "WHERE state = ${Note.STATE_ACTIVE}"
+        )
+        db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_notes_activeSlot ON notes(activeSlot)")
     }
 }
 
@@ -75,10 +96,12 @@ interface ArchiveStore {
  *
  * Writes serialize on [writeMutex] so a debounced flush racing an archive,
  * swap or replace can't interleave read-modify-write sequences into a
- * duplicated ACTIVE row. Content saves broadcast throttled (leading +
- * trailing, [BROADCAST_THROTTLE_MS]) so every keystroke-save doesn't force
- * a full Glance rebuild; explicit user actions (pin, archive, restore,
- * swap, replace, clear) broadcast immediately.
+ * duplicated ACTIVE row. Each compound op additionally runs in a DAO
+ * @Transaction, and the unique activeSlot index is the cross-process
+ * backstop against a duplicated ACTIVE row. Content saves broadcast throttled
+ * (leading + trailing, [BROADCAST_THROTTLE_MS]) so every keystroke-save
+ * doesn't force a full Glance rebuild; explicit user actions (pin, archive,
+ * restore, swap, replace, clear) broadcast immediately.
  */
 class NoteRepository(
     private val dao: NoteDao,
@@ -98,13 +121,19 @@ class NoteRepository(
         }
     )
 
-    private val writeMutex = Mutex()
     private val notifyLock = Any()
 
     // Null until the first broadcast: the first save always notifies at
     // once instead of waiting out a throttle window anchored at zero.
     private var lastBroadcastMs: Long? = null
     private var trailingBroadcast: Job? = null
+
+    // Serializes every active-note mutation in this process: debounced
+    // saves, ON_STOP flushes, shade actions and archive restores all funnel
+    // through here. Each compound op additionally runs in a DAO
+    // @Transaction, and the unique activeSlot index is the cross-process
+    // backstop against a duplicated ACTIVE row.
+    private val writeMutex = Mutex()
 
     override val activeNote: Flow<Note?> = dao.observeActive()
     override val pinned: Flow<Boolean> = preferences.pinned
@@ -118,33 +147,15 @@ class NoteRepository(
     override suspend fun getActive(): Note? = dao.getActive()
 
     override suspend fun saveActive(content: String) {
-        val changed = writeMutex.withLock {
-            val now = clock()
-            val existing = dao.getActive()
-            when {
-                existing == null && content.isBlank() -> false
-                existing == null -> {
-                    dao.insert(Note(content = content, createdAt = now, updatedAt = now))
-                    true
-                }
-                existing.content != content -> {
-                    dao.update(existing.copy(content = content, updatedAt = now))
-                    true
-                }
-                // Same content re-saved (flush after an already-persisted
-                // edit): nothing changed, so no widget/notification churn.
-                else -> false
-            }
+        val now = clock()
+        val wrote = writeMutex.withLock { dao.saveActiveContent(content, now) }
+        if (wrote) {
+            notifyThrottled()
         }
-        if (changed) notifyThrottled()
     }
 
     override suspend fun archiveActive() {
-        val archived = writeMutex.withLock {
-            val active = dao.getActive() ?: return@withLock false
-            dao.archive(active.id)
-            true
-        }
+        val archived = writeMutex.withLock { dao.archiveActiveNote() }
         if (archived) {
             // Same as delete: archiving empties the main view, so the next
             // note starts unpinned instead of inheriting the pinned state.
@@ -154,11 +165,7 @@ class NoteRepository(
     }
 
     override suspend fun deleteActive() {
-        val deleted = writeMutex.withLock {
-            val active = dao.getActive() ?: return@withLock false
-            dao.deleteById(active.id)
-            true
-        }
+        val deleted = writeMutex.withLock { dao.deleteActiveNote() }
         if (deleted) {
             // Unpin with the note: the next note starts unpinned instead of
             // inheriting the deleted note's pinned state. setPinned already
@@ -168,43 +175,30 @@ class NoteRepository(
     }
 
     override suspend fun restore(noteId: Long): Boolean {
-        val restored = writeMutex.withLock {
-            if (dao.getActive() != null) return@withLock false
-            dao.restore(noteId)
-            true
+        val restored = writeMutex.withLock { dao.restoreIfNoActive(noteId) }
+        if (restored) {
+            notifyNow()
         }
-        if (restored) notifyNow()
         return restored
     }
 
-    override suspend fun deleteArchived(noteId: Long) = dao.deleteById(noteId)
+    override suspend fun deleteArchived(noteId: Long) =
+        writeMutex.withLock { dao.deleteById(noteId) }
 
     override suspend fun hasActiveNote(): Boolean = dao.getActive() != null
 
     override suspend fun swapWithActive(noteId: Long) {
-        val swapped = writeMutex.withLock {
-            val active = dao.getActive()
-            val archived = dao.getById(noteId)
-            if (active != null && archived != null && archived.state == Note.STATE_ARCHIVED) {
-                dao.setState(active.id, Note.STATE_ARCHIVED)
-                dao.setState(archived.id, Note.STATE_ACTIVE)
-                true
-            } else {
-                false
-            }
+        val swapped = writeMutex.withLock { dao.swapActiveWith(noteId) }
+        if (swapped) {
+            notifyNow()
         }
-        if (swapped) notifyNow()
     }
 
     override suspend fun replaceActive(noteId: Long) {
-        val replaced = writeMutex.withLock {
-            val archived = dao.getById(noteId) ?: return@withLock false
-            if (archived.state != Note.STATE_ARCHIVED) return@withLock false
-            dao.getActive()?.let { dao.deleteById(it.id) }
-            dao.restore(noteId)
-            true
+        val replaced = writeMutex.withLock { dao.replaceActiveWith(noteId) }
+        if (replaced) {
+            notifyNow()
         }
-        if (replaced) notifyNow()
     }
 
     override suspend fun clearArchived() {
