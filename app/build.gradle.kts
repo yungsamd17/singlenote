@@ -92,6 +92,10 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Real org.json for JVM unit tests: android.jar only ships stubs that
+    // throw, so GithubReleases.parse needs this on the test classpath. The
+    // test jar wins over android.jar because it comes first.
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.ui.tooling)
