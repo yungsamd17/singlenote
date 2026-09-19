@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote.ui
 
+import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -37,6 +38,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         val noteId: Long?,
         val content: String,
         val wasPinned: Boolean,
+        val createdAtMs: Long,
     )
     private val _pendingUndo = MutableStateFlow<PendingUndo?>(null)
     val pendingUndo: StateFlow<PendingUndo?> = _pendingUndo.asStateFlow()
@@ -148,7 +150,10 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             currentNoteId = null
             _text.value = ""
             if (snapshot.isNotBlank()) {
-                _pendingUndo.value = PendingUndo(UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned)
+                _pendingUndo.value = PendingUndo(
+                    UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned,
+                    SystemClock.elapsedRealtime()
+                )
             }
         }
     }
@@ -164,7 +169,10 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             currentNoteId = null
             _text.value = ""
             if (snapshot.isNotBlank()) {
-                _pendingUndo.value = PendingUndo(UndoKind.DELETE, null, snapshot, wasPinned)
+                _pendingUndo.value = PendingUndo(
+                    UndoKind.DELETE, null, snapshot, wasPinned,
+                    SystemClock.elapsedRealtime()
+                )
             }
         }
     }
@@ -247,6 +255,11 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     companion object {
         private const val SAVE_DEBOUNCE_MS = 500L
+
+        // Undo window: matches the snackbar's Short duration. A bar that
+        // never resolves (e.g. cancelled by navigating away) goes stale
+        // instead of resurrecting on return.
+        const val UNDO_WINDOW_MS = 4_000L
 
         // Note capacity per text size, enforced in the editor for new
         // input: a character cap (maxLength) plus an exact visual-line

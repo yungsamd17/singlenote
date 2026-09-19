@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PersistableBundle
+import android.os.SystemClock
 import android.view.ViewTreeObserver
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -222,9 +223,15 @@ fun NoteScreen(
     val undoActionLabel = stringResource(R.string.action_undo)
 
     // Undo window: ViewModel holds the snapshot so rotation re-shows the
-    // bar instead of losing the chance to restore.
+    // bar instead of losing the chance to restore — but only inside the
+    // window: navigating away cancels the bar without resolving it, so a
+    // stale snapshot must not resurrect the bar on return.
     LaunchedEffect(pendingUndo) {
         val pending = pendingUndo ?: return@LaunchedEffect
+        if (SystemClock.elapsedRealtime() - pending.createdAtMs > NoteViewModel.UNDO_WINDOW_MS) {
+            viewModel.consumePendingUndo()
+            return@LaunchedEffect
+        }
         val message = when (pending.kind) {
             NoteViewModel.UndoKind.ARCHIVE -> undoArchiveLabel
             NoteViewModel.UndoKind.DELETE -> undoDeleteLabel
@@ -232,7 +239,7 @@ fun NoteScreen(
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = undoActionLabel,
-            duration = SnackbarDuration.Long
+            duration = SnackbarDuration.Short
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoPending()
