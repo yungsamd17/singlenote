@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,8 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -57,12 +61,56 @@ fun ArchiveScreen(
     onBack: () -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val pendingDelete by viewModel.pendingDelete.collectAsStateWithLifecycle()
+    val pendingClear by viewModel.pendingClear.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     // Hoisted: creating formatters during scroll composition is needlessly heavy.
     val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val undoLabel = stringResource(R.string.action_undo)
+    val deletedLabel = stringResource(R.string.archived_note_deleted)
+    val clearedLabel = stringResource(R.string.archive_cleared)
+
+    // Optimistic hiding: pending rows vanish at once while the DB write
+    // waits out the Undo window. Survives rotation via the ViewModel.
+    val pendingClearIds = remember(pendingClear) {
+        pendingClear?.map { it.id }?.toSet() ?: emptySet()
+    }
+    val visibleNotes = remember(notes, pendingDelete, pendingClearIds) {
+        notes.filter { note ->
+            note.id != pendingDelete?.id && !pendingClearIds.contains(note.id)
+        }
+    }
+
+    LaunchedEffect(pendingDelete) {
+        val pending = pendingDelete ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = deletedLabel,
+            actionLabel = undoLabel,
+            duration = SnackbarDuration.Long,
+            withDismissAction = true
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            viewModel.undoDelete()
+        }
+        // On timeout/dismiss the ViewModel job commits the delete itself.
+    }
+
+    LaunchedEffect(pendingClear) {
+        val pending = pendingClear ?: return@LaunchedEffect
+        if (pending.isEmpty()) return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = clearedLabel,
+            actionLabel = undoLabel,
+            duration = SnackbarDuration.Long,
+            withDismissAction = true
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            viewModel.undoClear()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -89,7 +137,7 @@ fun ArchiveScreen(
                     }
                 },
                 actions = {
-                    if (notes.isNotEmpty()) {
+                    if (visibleNotes.isNotEmpty()) {
                         IconButton(onClick = { showClearDialog = true }) {
                             Icon(
                                 Icons.Outlined.Delete,
@@ -104,9 +152,19 @@ fun ArchiveScreen(
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        // Lifted above the gesture bar like the note screen's host so the
+        // Undo bar never sits under it.
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier
+                    .navigationBarsPadding()
+                    .imePadding()
+                    .padding(bottom = 16.dp)
+            )
+        }
     ) { innerPadding ->
-        if (notes.isEmpty()) {
+        if (visibleNotes.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -126,7 +184,7 @@ fun ArchiveScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(notes, key = { it.id }) { note ->
+                items(visibleNotes, key = { it.id }) { note ->
                     ArchivedNoteItem(
                         note = note,
                         date = dateFormat.format(Date(note.updatedAt)),
@@ -195,7 +253,7 @@ fun ArchiveScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.delete(note)
+                        viewModel.deleteWithUndo(note)
                         noteToDelete = null
                     },
                     colors = ButtonDefaults.textButtonColors(
@@ -228,7 +286,7 @@ fun ArchiveScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.clearArchive()
+                        viewModel.clearWithUndo(notes)
                         showClearDialog = false
                     },
                     colors = ButtonDefaults.textButtonColors(

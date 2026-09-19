@@ -33,8 +33,17 @@ class NoteTileService : TileService() {
                     ?.let { truncate(it, MAX_SUBTITLE_LENGTH) }
             }
             val tile = qsTile ?: return@launch
-            tile.label = getString(R.string.app_name)
-            tile.subtitle = summary ?: getString(R.string.tile_no_note)
+            val label = getString(R.string.app_name)
+            val subtitleText = summary ?: getString(R.string.tile_no_note)
+            tile.label = label
+            tile.subtitle = subtitleText
+            // TalkBack reads label and subtitle as one flat string without
+            // this: expose "App: note preview" so the two are distinguishable.
+            tile.contentDescription = getString(
+                R.string.tile_content_desc,
+                label,
+                subtitleText
+            )
             tile.updateTile()
         }
     }
