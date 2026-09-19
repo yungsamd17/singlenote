@@ -17,13 +17,20 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Singlenote">
+        android:theme="@style/Theme.Singlenote"
+        android:usesCleartextTraffic="false">
 
+        <!-- No portrait lock: the note layout (fixed card + bottom bar)
+            measures from density, so it adapts to landscape, foldables,
+            tablets and multi-window (resizeableActivity stays true).
+            adjustNothing is kept on purpose: the editor's keyboard glide
+            relies on a stable layout plus imePadding insets. http:// links
+            still render: LinkedText only displays them, never fetches. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -60,6 +67,9 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <!-- App updates also wipe notifications: re-post the pin
+                    without waiting for the next app open. -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

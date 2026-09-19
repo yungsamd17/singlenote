@@ -70,6 +70,12 @@ android {
     }
 }
 
+// Room schema export location for @Database(exportSchema = true): the
+// generated app/schemas/*.json is committed so migrations diff against it.
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
