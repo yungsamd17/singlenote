@@ -95,7 +95,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.hint
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
@@ -578,14 +578,17 @@ fun NoteScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 16.dp)
                         ) {
+                            // FloatingActionButton has no enabled parameter: the
+                            // dimmed look plus disabled semantics carry the
+                            // state while the click guard blocks the action.
                             FloatingActionButton(
                                 onClick = { if (hasContent) viewModel.archiveCurrent() },
                                 modifier = Modifier
                                     .align(Alignment.CenterStart)
-                                    .alpha(if (hasContent) 1f else 0.38f),
+                                    .alpha(if (hasContent) 1f else 0.38f)
+                                    .semantics { if (!hasContent) disabled() },
                                 shape = CircleShape,
-                                elevation = noShadowElevation(),
-                                enabled = hasContent
+                                elevation = noShadowElevation()
                             ) {
                                 Icon(
                                     Icons.Outlined.Archive,
@@ -606,10 +609,10 @@ fun NoteScreen(
                                 onClick = { if (hasContent) showDeleteDialog = true },
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
-                                    .alpha(if (hasContent) 1f else 0.38f),
+                                    .alpha(if (hasContent) 1f else 0.38f)
+                                    .semantics { if (!hasContent) disabled() },
                                 shape = CircleShape,
-                                elevation = noShadowElevation(),
-                                enabled = hasContent
+                                elevation = noShadowElevation()
                             ) {
                                 Icon(
                                     Icons.Outlined.Delete,
@@ -734,7 +737,7 @@ private fun NoteEditorField(
     // follow or reveal while typing.
 
     // Accessible label: the visual hint overlay below is invisible to
-    // TalkBack, so expose it as the text field's hint semantics.
+    // TalkBack, so expose it as the text field's content description.
     val editorHint = stringResource(R.string.hint_write_one_thing)
     BasicTextField(
         value = fieldValue,
@@ -839,7 +842,7 @@ private fun NoteEditorField(
             }
         },
         interactionSource = interactionSource,
-        modifier = modifier.semantics { hint = editorHint },
+        modifier = modifier.semantics { contentDescription = editorHint },
         textStyle = TextStyle(
             fontFamily = fontFamily,
             fontSize = fontSize,
