@@ -109,14 +109,21 @@ jobs:
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk "singlenote-${{ github.ref_name }}-debug.apk"
           cp app/build/outputs/apk/release/app-release.apk "singlenote-${{ github.ref_name }}-release.apk"
+          sha256sum "singlenote-${{ github.ref_name }}-debug.apk" > "singlenote-${{ github.ref_name }}-debug.apk.sha256"
+          sha256sum "singlenote-${{ github.ref_name }}-release.apk" > "singlenote-${{ github.ref_name }}-release.apk.sha256"
+          # v1.0.0 plan: log the release hash in the workflow output.
+          sha256sum "singlenote-${{ github.ref_name }}-debug.apk" "singlenote-${{ github.ref_name }}-release.apk"
 
       - name: Release APKs on tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           # Versioned names (e.g. singlenote-v0.3.3-release.apk) so assets
-          # are identifiable without opening the release.
+          # are identifiable without opening the release; the .sha256
+          # files let sideloaders verify with `sha256sum -c`.
           files: |
             singlenote-${{ github.ref_name }}-debug.apk
+            singlenote-${{ github.ref_name }}-debug.apk.sha256
             singlenote-${{ github.ref_name }}-release.apk
+            singlenote-${{ github.ref_name }}-release.apk.sha256
           generate_release_notes: true
