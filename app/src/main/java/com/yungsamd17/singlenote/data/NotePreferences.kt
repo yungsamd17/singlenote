@@ -10,7 +10,12 @@ import kotlinx.coroutines.flow.map
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
-class NotePreferences(private val context: Context) {
+/**
+ * App-scoped preferences holder. Use [get] everywhere instead of
+ * constructing instances per call site: N wrappers on one DataStore file
+ * contend on the same file and obscure the single source of truth.
+ */
+class NotePreferences private constructor(private val context: Context) {
 
     val pinned: Flow<Boolean> = context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     val notificationsEnabled: Flow<Boolean> =
@@ -48,6 +53,18 @@ class NotePreferences(private val context: Context) {
     }
 
     companion object {
+        @Volatile
+        private var instance: NotePreferences? = null
+
+        /**
+         * Single app-scoped instance (holds the application context, never
+         * an activity). Mirrors [AppDatabase.get].
+         */
+        fun get(context: Context): NotePreferences =
+            instance ?: synchronized(this) {
+                instance ?: NotePreferences(context.applicationContext).also { instance = it }
+            }
+
         const val KEY_PINNED_NAME = "pin_current_note"
 
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)

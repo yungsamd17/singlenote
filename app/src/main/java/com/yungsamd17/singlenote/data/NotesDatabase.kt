@@ -62,7 +62,7 @@ interface ArchiveStore {
 class NoteRepository(private val dao: NoteDao, private val context: Context) :
     NoteStore, ArchiveStore {
 
-    private val preferences = NotePreferences(context)
+    private val preferences = NotePreferences.get(context)
 
     override val activeNote: Flow<Note?> = dao.observeActive()
     override val pinned: Flow<Boolean> = preferences.pinned

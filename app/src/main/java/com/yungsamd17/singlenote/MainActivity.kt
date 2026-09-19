@@ -69,13 +69,13 @@ class MainActivity : ComponentActivity() {
             val themeMode by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).themeMode.collect { value = it }
+                    NotePreferences.get(applicationContext).themeMode.collect { value = it }
                 }
             )
             val accent by produceState<String?>(
                 initialValue = null,
                 producer = {
-                    NotePreferences(applicationContext).accentColor.collect { value = it }
+                    NotePreferences.get(applicationContext).accentColor.collect { value = it }
                 }
             )
             // Paint nothing until the stored theme arrives: falling back to
@@ -192,7 +192,7 @@ class MainActivity : ComponentActivity() {
     // state exists. Falls back to the system theme if prefs can't be read.
     private fun resolveDarkTheme(): Boolean {
         val themeMode = try {
-            runBlocking { NotePreferences(this@MainActivity).themeMode.first() }
+            runBlocking { NotePreferences.get(this@MainActivity).themeMode.first() }
         } catch (_: Exception) {
             NotePreferences.THEME_SYSTEM
         }

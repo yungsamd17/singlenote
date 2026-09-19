@@ -43,7 +43,7 @@ object PinNotification {
     suspend fun refresh(context: Context) {
         ensureChannel(context)
         val manager = NotificationManagerCompat.from(context)
-        val prefs = NotePreferences(context)
+        val prefs = NotePreferences.get(context)
 
         val notificationsEnabled = prefs.notificationsEnabled.first()
         val pinned = prefs.pinned.first()
