@@ -11,6 +11,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsAnimationCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -19,6 +22,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -108,18 +112,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
-
-// Longer than a normal IME close glide: the Done-tap backstop below only
-// fires when the close never landed at all.
-private const val CLOSE_SETTLE_TIMEOUT_MS = 350L
-
-// Post-landing swallow: the bar is still morphing here, and a reopen on top
-// of it reads as the flash.
-private const val SETTLE_SWALLOW_MS = 250L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -288,9 +283,50 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    // Swallow window past the landing: taps in the settle gap reopen onto a
-    // still-morphing bar and read as a flash, so the close wins a beat longer.
-    var settling by remember { mutableStateOf(false) }
+    // True while an IME close glide is actually running, driven by the real
+    // animation callback — fast and slow devices alike, no timers. Taps that
+    // land in this window would reopen onto a moving keyboard and read as a
+    // flash, so the overlay below eats them until onEnd.
+    var imeClosing by remember { mutableStateOf(false) }
+    DisposableEffect(view) {
+        val animations = object : WindowInsetsAnimationCompat.Callback(
+            DISPATCH_MODE_CONTINUE_ON_SUBTREE
+        ) {
+            override fun onStart(
+                animation: WindowInsetsAnimationCompat,
+                bounds: WindowInsetsAnimationCompat.BoundsCompat,
+            ): WindowInsetsAnimationCompat.BoundsCompat {
+                if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
+                    // Combined bottoms: an IME glide dominates them, so
+                    // shrinking means closing on any device speed.
+                    imeClosing = bounds.lowerBound.bottom > bounds.upperBound.bottom
+                }
+                return bounds
+            }
+
+            override fun onProgress(
+                insets: WindowInsetsCompat,
+                runningAnimations: List<WindowInsetsAnimationCompat>,
+            ): WindowInsetsCompat = insets
+
+            override fun onEnd(animation: WindowInsetsAnimationCompat) {
+                if (animation.typeMask and WindowInsetsCompat.Type.ime() != 0) {
+                    imeClosing = false
+                }
+            }
+        }
+        ViewCompat.setWindowInsetsAnimationCallback(view, animations)
+        onDispose { ViewCompat.setWindowInsetsAnimationCallback(view, null) }
+    }
+    // A tap outside any close glide clears a stale close request (e.g. a
+    // hide the IME swallowed without animating at all). Taps inside the
+    // glide never reach the field — the overlay eats them — so this can't
+    // cancel a real close.
+    LaunchedEffect(fieldInteraction) {
+        fieldInteraction.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Press && !imeClosing) hideRequested = false
+        }
+    }
     LaunchedEffect(isKeyboardOpen, hideRequested) {
         if (isKeyboardOpen) {
             keyboardWasOpen = true
@@ -302,11 +338,6 @@ fun NoteScreen(
         } else if (keyboardWasOpen) {
             keyboardWasOpen = false
             if (isEditing) finishEditing()
-            settling = true
-            scope.launch {
-                delay(SETTLE_SWALLOW_MS)
-                settling = false
-            }
         }
     }
 
@@ -326,15 +357,6 @@ fun NoteScreen(
         if (isKeyboardOpen) {
             hideRequested = true
             keyboard?.hide()
-            // Backstop for a hide the IME swallows: if the close never lands
-            // (show wins late, no inset change retriggers the effect above),
-            // release focus anyway so the stuck keyboard loses its anchor and
-            // drops. A normal close clears hideRequested first, making this a
-            // no-op.
-            scope.launch {
-                delay(CLOSE_SETTLE_TIMEOUT_MS)
-                if (hideRequested) finishEditing()
-            }
         } else finishEditing()
     }
 
@@ -496,14 +518,13 @@ fun NoteScreen(
                         maxLength = noteMaxLength,
                         modifier = Modifier.fillMaxSize()
                     )
-                    // While a Done close is in flight — plus a beat past its
-                    // landing — swallow taps before they reach the field:
-                    // racing the tap's show request with a focus release lets
-                    // the keyboard pop for a few frames first. Consuming down
-                    // at an overlay above the field prevents the show
-                    // entirely — no ripple, no semantics node, gone when the
-                    // close settles.
-                    if (hideRequested || settling) {
+                    // While an IME close glide is running, swallow taps before
+                    // they reach the field: racing the tap's show request
+                    // with a focus release lets the keyboard pop for a few
+                    // frames first. Consuming down at an overlay above the
+                    // field prevents the show entirely — no ripple, no
+                    // semantics node, gone at onEnd on any device speed.
+                    if (imeClosing) {
                         Box(
                             Modifier
                                 .matchParentSize()
