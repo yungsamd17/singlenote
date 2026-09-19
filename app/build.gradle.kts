@@ -5,6 +5,9 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 android {
     namespace = "com.yungsamd17.singlenote"
     compileSdk = 35
@@ -60,16 +63,6 @@ android {
         compose = true
         buildConfig = true
     }
-    testOptions {
-        unitTests.all {
-            testLogging {
-                events("failed")
-                exceptionFormat = "full"
-                showCauses = true
-                showStackTraces = true
-            }
-        }
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -109,4 +102,15 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.ui.tooling)
+}
+
+// Full failure details in CI logs so a red testDebugUnitTest names the
+// asserting line (expected vs actual) instead of only the test method.
+tasks.withType<Test> {
+    testLogging {
+        events("FAILED")
+        exceptionFormat = TestExceptionFormat.FULL
+        showCauses = true
+        showStackTraces = true
+    }
 }
