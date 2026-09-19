@@ -64,6 +64,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         viewModelScope.launch {
             if (!pinned.value && !notificationsEnabled.value) {
                 store.setNotificationsEnabled(true)
+                // Fresh opt-in: the lockscreen part defaults on with the
+                // permission grant (still one tap off in Settings).
+                store.setLockscreenVisible(true)
             }
             store.setPinned(!pinned.value)
         }
