@@ -19,6 +19,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -79,7 +80,9 @@ import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -283,12 +286,32 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    // NOTE: an earlier revision tracked the glide frame-by-frame and held
-    // the swallow past landing — but with nothing left to recompose, the
-    // gate froze shut and the field went dead until navigation. The gate
-    // below therefore keys on hideRequested only: set on Done tap, cleared
-    // in finishEditing when the close lands. Both are guaranteed to run, so
-    // it can never wedge.
+    // Glide tracking that cannot wedge: a shrinking IME bottom means a close
+    // is running (covers Done taps AND back/gesture closes); an exact zero
+    // clears it deterministically at landing. Equal-nonzero frames keep the
+    // previous value, bridging debug hitches that repeat a value mid-glide.
+    // Steady open/closed states can never latch it on: they either hold zero
+    // or keep a value that was already cleared at the last landing.
+    var imeClosing by remember { mutableStateOf(false) }
+    val lastImePx = remember { mutableIntStateOf(-1) }
+    val imeNowPx = WindowInsets.ime.getBottom(LocalDensity.current)
+    SideEffect {
+        if (imeNowPx == 0) {
+            imeClosing = false
+        } else if (imeNowPx < lastImePx.intValue && lastImePx.intValue != -1) {
+            imeClosing = true
+        }
+        lastImePx.intValue = imeNowPx
+    }
+    // A tap outside any close glide clears a stale close request (e.g. a
+    // hide the IME swallowed without animating at all). Taps inside the
+    // glide never reach the field — the overlay eats them — so this can't
+    // cancel a real close.
+    LaunchedEffect(fieldInteraction) {
+        fieldInteraction.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Press && !imeClosing) hideRequested = false
+        }
+    }
     LaunchedEffect(isKeyboardOpen, hideRequested) {
         DebugLog.log("ime open=$isKeyboardOpen hideReq=$hideRequested editing=$isEditing")
         if (isKeyboardOpen) {
@@ -502,14 +525,15 @@ fun NoteScreen(
                         maxLength = noteMaxLength,
                         modifier = Modifier.fillMaxSize()
                     )
-                    // While a Done close is in flight, swallow taps before
-                    // they reach the field: racing the tap's show request
-                    // with a focus release lets the keyboard pop for a few
-                    // frames first. Consuming down at an overlay above the
-                    // field prevents the show entirely — no ripple, no
-                    // semantics node, gone when finishEditing clears the
-                    // request at landing.
-                    if (hideRequested) {
+                    // Swallow taps while any close is running — Done-initiated
+                    // (hideRequested, set below) or back/gesture-initiated
+                    // (imeClosing from the glide tracker above). Racing the
+                    // tap's show request with a focus release lets the
+                    // keyboard pop for a few frames first; consuming down at
+                    // an overlay above the field prevents the show entirely.
+                    // No ripple, no semantics node, and neither flag can
+                    // wedge shut (landing clears both deterministically).
+                    if (hideRequested || imeClosing) {
                         Box(
                             Modifier
                                 .matchParentSize()
