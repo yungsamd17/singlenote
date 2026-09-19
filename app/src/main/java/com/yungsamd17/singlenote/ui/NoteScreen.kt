@@ -117,6 +117,10 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // fires when the close never landed at all.
 private const val CLOSE_SETTLE_TIMEOUT_MS = 350L
 
+// Post-landing swallow: the bar is still morphing here, and a reopen on top
+// of it reads as the flash.
+private const val SETTLE_SWALLOW_MS = 250L
+
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
 // lands, instead of lagging a full morph behind it.
@@ -284,6 +288,9 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
+    // Swallow window past the landing: taps in the settle gap reopen onto a
+    // still-morphing bar and read as a flash, so the close wins a beat longer.
+    var settling by remember { mutableStateOf(false) }
     LaunchedEffect(isKeyboardOpen, hideRequested) {
         if (isKeyboardOpen) {
             keyboardWasOpen = true
@@ -295,6 +302,11 @@ fun NoteScreen(
         } else if (keyboardWasOpen) {
             keyboardWasOpen = false
             if (isEditing) finishEditing()
+            settling = true
+            scope.launch {
+                delay(SETTLE_SWALLOW_MS)
+                settling = false
+            }
         }
     }
 
@@ -484,13 +496,14 @@ fun NoteScreen(
                         maxLength = noteMaxLength,
                         modifier = Modifier.fillMaxSize()
                     )
-                    // While a Done close is in flight, swallow taps before
-                    // they reach the field: racing the tap's show request
-                    // with a focus release lets the keyboard pop for a few
-                    // frames first. Consuming down at an overlay above the
-                    // field prevents the show entirely — no ripple, no
-                    // semantics node, gone when the close lands.
-                    if (hideRequested) {
+                    // While a Done close is in flight — plus a beat past its
+                    // landing — swallow taps before they reach the field:
+                    // racing the tap's show request with a focus release lets
+                    // the keyboard pop for a few frames first. Consuming down
+                    // at an overlay above the field prevents the show
+                    // entirely — no ripple, no semantics node, gone when the
+                    // close settles.
+                    if (hideRequested || settling) {
                         Box(
                             Modifier
                                 .matchParentSize()
