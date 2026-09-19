@@ -5,6 +5,7 @@ import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.ui.ArchiveEvent
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,6 +24,7 @@ import org.junit.Test
  * Covers ArchiveViewModel restore conflict, swap/replace and clear paths
  * against a fake [ArchiveStore].
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ArchiveViewModelTest {
 
     private class FakeArchiveStore : ArchiveStore {
@@ -132,9 +134,14 @@ class ArchiveViewModelTest {
             archivedNotes.value = listOf(note)
         }
         val vm = ArchiveViewModel(store)
+        // Subscribe before any action: subscribing late (after restore)
+        // races the Channel event and flakes under StandardTestDispatcher.
+        val received = collectEvents(vm)
+
         vm.restore(note)
         advanceUntilIdle()
-        val received = collectEvents(vm)
+        // Conflict path emits nothing.
+        assertTrue(received.isEmpty())
 
         vm.swap(note)
         advanceUntilIdle()
@@ -155,9 +162,14 @@ class ArchiveViewModelTest {
             archivedNotes.value = listOf(note)
         }
         val vm = ArchiveViewModel(store)
+        // Subscribe before any action: subscribing late (after restore)
+        // races the Channel event and flakes under StandardTestDispatcher.
+        val received = collectEvents(vm)
+
         vm.restore(note)
         advanceUntilIdle()
-        val received = collectEvents(vm)
+        // Conflict path emits nothing.
+        assertTrue(received.isEmpty())
 
         vm.replace(note)
         advanceUntilIdle()

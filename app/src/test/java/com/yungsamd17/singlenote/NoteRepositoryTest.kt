@@ -8,10 +8,12 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
 import com.yungsamd17.singlenote.data.NoteRepository
 import com.yungsamd17.singlenote.data.PreferencesStore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -26,6 +28,7 @@ import org.junit.Test
  * throttling with an in-memory fake DAO, a fake prefs store and a recording
  * broadcast — no Room, DataStore or framework needed.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class NoteRepositoryTest {
 
     private class FakeDao : NoteDao {
@@ -122,7 +125,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun saveActive_insertsNewNoteAndBroadcasts() = runTest {
+    fun saveActive_insertsNewNoteAndBroadcasts() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -135,7 +138,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun saveActive_blankWithNoNote_isNoOp() = runTest {
+    fun saveActive_blankWithNoNote_isNoOp() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -148,7 +151,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun saveActive_sameContent_skipsWriteAndBroadcast() = runTest {
+    fun saveActive_sameContent_skipsWriteAndBroadcast() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         var now = 10_000L
@@ -171,7 +174,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun saveActive_updatesExistingNoteWithoutDuplicating() = runTest {
+    fun saveActive_updatesExistingNoteWithoutDuplicating() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val repo = NoteRepository(dao, FakePrefs(), {}, { 10_000L }, backgroundScope, 0L)
 
@@ -184,7 +187,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun archiveActive_archivesAndUnpins() = runTest {
+    fun archiveActive_archivesAndUnpins() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val prefs = FakePrefs().apply { pinned.value = true }
         var broadcasts = 0
@@ -201,7 +204,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun archiveActive_noActiveNote_isNoOp() = runTest {
+    fun archiveActive_noActiveNote_isNoOp() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -213,7 +216,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun deleteActive_deletesAndUnpins() = runTest {
+    fun deleteActive_deletesAndUnpins() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val prefs = FakePrefs().apply { pinned.value = true }
         var broadcasts = 0
@@ -230,7 +233,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun restore_succeedsWhenNoActiveNote() = runTest {
+    fun restore_succeedsWhenNoActiveNote() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val archivedId = dao.insertArchived("old")
         var broadcasts = 0
@@ -244,7 +247,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun restore_failsWhenActiveNoteExists() = runTest {
+    fun restore_failsWhenActiveNoteExists() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val archivedId = dao.insertArchived("old")
         var broadcasts = 0
@@ -262,7 +265,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun swapWithActive_swapsStates() = runTest {
+    fun swapWithActive_swapsStates() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -281,7 +284,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun swapWithActive_noOpForUnknownOrActiveId() = runTest {
+    fun swapWithActive_noOpForUnknownOrActiveId() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -299,7 +302,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun replaceActive_replacesActiveWithArchived() = runTest {
+    fun replaceActive_replacesActiveWithArchived() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -319,7 +322,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun replaceActive_noOpForNonArchived() = runTest {
+    fun replaceActive_noOpForNonArchived() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -337,7 +340,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun clearArchived_removesArchivedAndBroadcasts() = runTest {
+    fun clearArchived_removesArchivedAndBroadcasts() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         var broadcasts = 0
         val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
@@ -369,12 +372,16 @@ class NoteRepositoryTest {
         assertEquals(listOf("a"), seen)
 
         // Two more saves inside the window collapse into one trailing
-        // broadcast instead of two full Glance rebuilds.
+        // broadcast instead of two full Glance rebuilds. Do NOT advance
+        // here: advanceUntilIdle would jump virtual time forward and run
+        // the trailing delay early. The saves themselves are suspend and
+        // have completed their DAO work by the time they return; only the
+        // trailing broadcast stays pending until the explicit time advance
+        // below.
         now = 10_100L
         repo.saveActive("b")
         now = 10_200L
         repo.saveActive("c")
-        advanceUntilIdle()
         assertEquals(listOf("a"), seen)
 
         advanceTimeBy(3000L)
@@ -384,7 +391,7 @@ class NoteRepositoryTest {
     }
 
     @Test
-    fun concurrentSaves_keepSingleActiveRow() = runTest {
+    fun concurrentSaves_keepSingleActiveRow() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val repo = NoteRepository(dao, FakePrefs(), {}, { 10_000L }, backgroundScope, 0L)
 
