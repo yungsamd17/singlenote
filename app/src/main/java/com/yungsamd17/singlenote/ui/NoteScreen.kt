@@ -254,7 +254,11 @@ fun NoteScreen(
     fun finishEditing(source: String = "?") {
         DebugLog.log("finishEditing src=$source editing=$isEditing")
         hideRequested = false
-        keyboard?.hide()
+        // No hide() here on purpose: every caller runs with the keyboard
+        // already closed (landing flip, hidden back-press, closed Done tap),
+        // and a redundant hide into the IME's settle window bounces the
+        // keyboard back up for ~600ms on this Gboard. Hides are issued only
+        // where insets report open (Done tap + retry below).
         focusManager.clearFocus(force = true)
         viewModel.flushSave()
     }
