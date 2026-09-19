@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -179,6 +180,14 @@ class MainActivity : ComponentActivity() {
         // Re-apply on return (e.g. from recents): the system styling, not
         // the app theme, may have driven the bars while away.
         applyBarAppearance(resolveDarkTheme())
+    }
+
+    // singleTask relaunches (launcher icon, notification Open action)
+    // arrive here instead of a new onCreate: keep the latest intent so
+    // getIntent() never serves a stale one.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
     }
 
     private fun applyBarAppearance(darkTheme: Boolean) {
