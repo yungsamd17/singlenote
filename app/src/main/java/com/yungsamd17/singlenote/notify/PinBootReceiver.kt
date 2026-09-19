@@ -9,17 +9,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
- * Brings the pinned note back after a reboot: notifications don't survive
- * restarts, so without this the pin silently disappears until the app is
- * opened again. Plain BOOT_COMPLETED (not direct-boot aware) is deliberate:
- * it fires after unlock, when credential-encrypted storage (DataStore/Room)
- * is available. [PinNotification.refresh] no-ops unless a note is pinned
- * with content.
+ * Brings the pinned note back after a reboot or an app update:
+ * notifications don't survive either, so without this the pin silently
+ * disappears until the app is opened again. Plain BOOT_COMPLETED (not
+ * direct-boot aware) is deliberate: it fires after unlock, when
+ * credential-encrypted storage (DataStore/Room) is available.
+ * MY_PACKAGE_REPLACED is delivered while the app is already unlocked,
+ * so the same refresh applies. [PinNotification.refresh] no-ops unless
+ * a note is pinned with content.
  */
 class PinBootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
+            intent.action != Intent.ACTION_MY_PACKAGE_REPLACED
+        ) return
         val pendingResult = goAsync()
         val app = context.applicationContext
         CoroutineScope(Dispatchers.IO).launch {
