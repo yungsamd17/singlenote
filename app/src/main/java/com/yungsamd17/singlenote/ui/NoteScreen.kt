@@ -19,6 +19,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -276,9 +277,22 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    LaunchedEffect(isKeyboardOpen) {
+    // A fresh tap into the field cancels a pending close: without this, the
+    // re-hide below would fight an intentional reopen and close the keyboard
+    // against the user's tap.
+    LaunchedEffect(fieldInteraction) {
+        fieldInteraction.interactions.collect { interaction ->
+            if (interaction is PressInteraction.Press) hideRequested = false
+        }
+    }
+    LaunchedEffect(isKeyboardOpen, hideRequested) {
         if (isKeyboardOpen) {
             keyboardWasOpen = true
+            // Done tapped while the open animation was still running: hide()
+            // loses to the in-flight show and the keyboard flashes back with
+            // focus never cleared. Re-hide until the close sticks — a frame
+            // later the show has settled, so the retry lands.
+            if (hideRequested) keyboard?.hide()
         } else if (keyboardWasOpen) {
             keyboardWasOpen = false
             if (isEditing) finishEditing()
