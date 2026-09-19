@@ -78,8 +78,24 @@ jobs:
             cp ~/.config/.android/debug.keystore ~/.android/debug.keystore
           fi
 
-      - name: Set up release keystore
+      # Fork PRs receive no secrets: detect signing ability once and let
+      # every release-only step key off it, so forks stay green on the
+      # debug-only path below. Upstream (and tags) always have secrets.
+      - name: Detect release signing
+        id: signing
         if: steps.filter.outputs.app == 'true'
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "has-signing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No release secrets; building debug only."
+            echo "has-signing=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up release keystore
+        if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing == 'true'
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
         run: |
@@ -91,11 +107,16 @@ jobs:
             echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
-      # Release ships minified+shrunk code, so lint the release variant
-      # too — the v1.0.0 plan demands lintRelease clean.
       - name: Build, test, lint
-        if: steps.filter.outputs.app == 'true'
+        if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing == 'true'
         run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease
+
+      # Unsigned fallback for forks: same checks minus assembleRelease,
+      # which would fail at signing time without the release keystore.
+      # lintRelease needs no keystore, so the plan's demand still holds.
+      - name: Build, test, lint (debug only)
+        if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing != 'true'
+        run: ./gradlew --no-daemon clean assembleDebug testDebugUnitTest lintDebug lintRelease
 
       - name: Upload debug APK artifact
         if: steps.filter.outputs.app == 'true' && github.ref_type != 'tag'
@@ -104,8 +125,11 @@ jobs:
           name: singlenote-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+      # Tag builds hand versioned APKs + checksums to the release
+      # publishing below. Gated on signing: fork tags build debug-only,
+      # so there is no signed release APK to name — skip, stay green.
       - name: Name APKs for release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has-signing == 'true'
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk "singlenote-${{ github.ref_name }}-debug.apk"
           cp app/build/outputs/apk/release/app-release.apk "singlenote-${{ github.ref_name }}-release.apk"
@@ -115,7 +139,7 @@ jobs:
           sha256sum "singlenote-${{ github.ref_name }}-debug.apk" "singlenote-${{ github.ref_name }}-release.apk"
 
       - name: Release APKs on tag
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has-signing == 'true'
         uses: softprops/action-gh-release@v2
         with:
           # Versioned names (e.g. singlenote-v0.3.3-release.apk) so assets
