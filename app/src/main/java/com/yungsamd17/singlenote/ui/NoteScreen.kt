@@ -106,9 +106,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
+
+// Longer than a normal IME close glide: the Done-tap backstop below only
+// fires when the close never landed at all.
+private const val CLOSE_SETTLE_TIMEOUT_MS = 350L
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -315,6 +320,15 @@ fun NoteScreen(
         if (isKeyboardOpen) {
             hideRequested = true
             keyboard?.hide()
+            // Backstop for a hide the IME swallows: if the close never lands
+            // (show wins late, no inset change retriggers the effect above),
+            // release focus anyway so the stuck keyboard loses its anchor and
+            // drops. A normal close clears hideRequested first, making this a
+            // no-op; a fresh field tap cancels it the same way.
+            scope.launch {
+                delay(CLOSE_SETTLE_TIMEOUT_MS)
+                if (hideRequested) finishEditing()
+            }
         } else finishEditing()
     }
 
