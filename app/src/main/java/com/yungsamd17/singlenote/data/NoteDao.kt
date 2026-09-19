@@ -3,42 +3,105 @@ package com.yungsamd17.singlenote.data
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface NoteDao {
+abstract class NoteDao {
 
     @Query("SELECT * FROM notes WHERE state = ${Note.STATE_ACTIVE} ORDER BY updatedAt DESC LIMIT 1")
-    fun observeActive(): Flow<Note?>
+    abstract fun observeActive(): Flow<Note?>
 
     @Query("SELECT * FROM notes WHERE state = ${Note.STATE_ACTIVE} ORDER BY updatedAt DESC LIMIT 1")
-    suspend fun getActive(): Note?
+    abstract suspend fun getActive(): Note?
 
     @Query("SELECT * FROM notes WHERE state = ${Note.STATE_ARCHIVED} ORDER BY updatedAt DESC")
-    fun observeArchived(): Flow<List<Note>>
+    abstract fun observeArchived(): Flow<List<Note>>
 
     @Query("SELECT * FROM notes WHERE id = :id")
-    suspend fun getById(id: Long): Note?
+    abstract suspend fun getById(id: Long): Note?
 
     @Insert
-    suspend fun insert(note: Note): Long
+    abstract suspend fun insert(note: Note): Long
 
     @Update
-    suspend fun update(note: Note)
+    abstract suspend fun update(note: Note)
 
-    @Query("UPDATE notes SET state = ${Note.STATE_ARCHIVED} WHERE id = :id")
-    suspend fun archive(id: Long)
+    // Every state flip maintains activeSlot alongside state so the unique
+    // index keeps enforcing a single ACTIVE row.
+    @Query("UPDATE notes SET state = ${Note.STATE_ARCHIVED}, activeSlot = NULL WHERE id = :id")
+    abstract suspend fun archive(id: Long)
 
-    @Query("UPDATE notes SET state = ${Note.STATE_ACTIVE} WHERE id = :id")
-    suspend fun restore(id: Long)
-
-    @Query("UPDATE notes SET state = :state WHERE id = :id")
-    suspend fun setState(id: Long, state: Int)
+    @Query("UPDATE notes SET state = ${Note.STATE_ACTIVE}, activeSlot = ${Note.ACTIVE_SLOT} WHERE id = :id")
+    abstract suspend fun restore(id: Long)
 
     @Query("DELETE FROM notes WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    abstract suspend fun deleteById(id: Long)
 
     @Query("DELETE FROM notes WHERE state = ${Note.STATE_ARCHIVED}")
-    suspend fun deleteArchived()
+    abstract suspend fun deleteArchived()
+
+    // Atomic read-modify-write: the SELECT and the write run in one
+    // transaction, so a concurrent flush can never interleave and duplicate
+    // the ACTIVE row. Returns false when there is nothing to persist (blank
+    // input with no active note, or content identical to the stored note so
+    // a post-debounce flush doesn't rewrite the row or annoy the widget).
+    @Transaction
+    open suspend fun saveActiveContent(content: String, now: Long): Boolean {
+        val existing = getActive()
+        when {
+            existing == null && content.isBlank() -> return false
+            existing == null ->
+                insert(Note(content = content, createdAt = now, updatedAt = now))
+            existing.content != content ->
+                update(existing.copy(content = content, updatedAt = now))
+            else -> return false
+        }
+        return true
+    }
+
+    // Archives the current active note in the same transaction as the read,
+    // so a concurrent save cannot resurrect a duplicate ACTIVE row.
+    @Transaction
+    open suspend fun archiveActiveNote(): Boolean {
+        val active = getActive() ?: return false
+        archive(active.id)
+        return true
+    }
+
+    @Transaction
+    open suspend fun deleteActiveNote(): Boolean {
+        val active = getActive() ?: return false
+        deleteById(active.id)
+        return true
+    }
+
+    @Transaction
+    open suspend fun restoreIfNoActive(noteId: Long): Boolean {
+        if (getActive() != null) return false
+        restore(noteId)
+        return true
+    }
+
+    @Transaction
+    open suspend fun swapActiveWith(noteId: Long): Boolean {
+        val active = getActive()
+        val archived = getById(noteId)
+        if (active != null && archived != null && archived.state == Note.STATE_ARCHIVED) {
+            archive(active.id)
+            restore(archived.id)
+            return true
+        }
+        return false
+    }
+
+    @Transaction
+    open suspend fun replaceActiveWith(noteId: Long): Boolean {
+        val archived = getById(noteId) ?: return false
+        if (archived.state != Note.STATE_ARCHIVED) return false
+        getActive()?.let { deleteById(it.id) }
+        restore(noteId)
+        return true
+    }
 }
