@@ -282,12 +282,14 @@ fun NoteScreen(
     // a global-layout listener would go silent and miss the close.
     val isKeyboardOpen = WindowInsets.isImeVisible
     var keyboardWasOpen by remember { mutableStateOf(false) }
-    // A fresh tap into the field cancels a pending close: without this, the
-    // re-hide below would fight an intentional reopen and close the keyboard
-    // against the user's tap.
+    // Taps landing mid-close are swallowed: reopening here would reverse the
+    // glide into a flash, so the close wins — tap again after it settles to
+    // reopen. Releasing focus keeps the held focus from re-showing the IME.
     LaunchedEffect(fieldInteraction) {
         fieldInteraction.interactions.collect { interaction ->
-            if (interaction is PressInteraction.Press) hideRequested = false
+            if (interaction is PressInteraction.Press && hideRequested) {
+                focusManager.clearFocus(force = true)
+            }
         }
     }
     LaunchedEffect(isKeyboardOpen, hideRequested) {
@@ -324,7 +326,7 @@ fun NoteScreen(
             // (show wins late, no inset change retriggers the effect above),
             // release focus anyway so the stuck keyboard loses its anchor and
             // drops. A normal close clears hideRequested first, making this a
-            // no-op; a fresh field tap cancels it the same way.
+            // no-op.
             scope.launch {
                 delay(CLOSE_SETTLE_TIMEOUT_MS)
                 if (hideRequested) finishEditing()
