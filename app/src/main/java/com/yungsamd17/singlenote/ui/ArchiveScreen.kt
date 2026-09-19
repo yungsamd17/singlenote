@@ -149,14 +149,21 @@ fun ArchiveScreen(
             },
             title = { Text(stringResource(R.string.restore_conflict_title)) },
             text = { Text(stringResource(R.string.restore_conflict_message)) },
+            // One action per slot: three buttons in a single row overflow at
+            // large font scales and announce in the wrong order. Cancel
+            // dismisses, Swap/Replace confirm — Material 3 has no neutral
+            // slot, so both choices share confirmButton where they wrap
+            // below Cancel instead of beside it.
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
             confirmButton = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
-                        Text(stringResource(R.string.cancel))
-                    }
                     TextButton(onClick = { viewModel.swap(note) }) {
                         Text(stringResource(R.string.action_swap))
                     }

@@ -20,6 +20,8 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -91,7 +93,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -213,10 +214,13 @@ fun NoteScreen(
         "large" -> 20.sp
         else -> 16.sp
     }
-    // Fixed editor capacity: the card below is exactly as tall as these
-    // lines, so input is capped at what visibly fits with nothing left to
-    // scroll to. Smaller fonts fit more text, larger fonts less.
-    val noteMaxLength = NoteViewModel.maxLengthForTextSize(textSizeKey)
+    // Editor capacity: one absolute character backstop (mirrors the
+    // ViewModel) so unbounded pastes can't grow the field forever. Within
+    // that budget the field scrolls — input is never capped to what
+    // visibly fits, so large font scales keep content reachable instead of
+    // clipping it. The card height below still scales with the font size so
+    // smaller fonts show more lines at once.
+    val noteMaxLength = NoteViewModel.MAX_LENGTH_SMALL
     val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
     val noteLineHeight = noteFontSize * 1.45f
     // Card height = line capacity plus the editor's vertical padding (16dp
@@ -228,9 +232,10 @@ fun NoteScreen(
         (noteLineHeight * noteMaxLines.toFloat()).toDp() + 42.dp
     }
 
-    // The editor card below is a fixed-size area with no scrolling: a tap
-    // puts the cursor exactly where it landed and the capped content
-    // always fits, so no follow-scroll is needed.
+    // The editor card below is a fixed-size viewport with a scrolling
+    // field inside: a tap puts the cursor exactly where it landed and the
+    // field scrolls to follow it, so overflow stays reachable at any font
+    // scale instead of being clipped or truncated.
 
     // True from a Done tap's hide() until focus actually clears: marks a
     // close-glide the bar should anticipate (see the bar scope below).
@@ -454,7 +459,6 @@ fun NoteScreen(
                     fontSize = noteFontSize,
                     lineHeight = noteLineHeight,
                     maxLength = noteMaxLength,
-                    maxLines = noteMaxLines,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -624,86 +628,45 @@ private fun NoteEditorField(
     fontSize: TextUnit,
     lineHeight: TextUnit,
     maxLength: Int,
-    maxLines: Int,
     modifier: Modifier = Modifier,
 ) {
     // Local editing state: keystrokes recompose only this field, not the
     // whole screen, which keeps typing smooth on slower devices.
     // Over-limit input is swallowed synchronously (the previous value is
     // kept untouched, so nothing flashes and the cursor never jumps) and
-    // only genuinely new, fitting content is accepted. An exact
-    // visual-line guard on layout remains as the backstop for user edits no
-    // synchronous check can judge (pastes, IME batch commits).
+    // only genuinely new, fitting content is accepted.
     // Stored content is never truncated here: a note saved under a smaller
     // font holds more than a larger font allows, and must survive relaunch
-    // and font-size changes unchanged.
+    // and font-size changes unchanged. Within the absolute cap the field
+    // scrolls, so pasted content stays reachable at any font scale.
     var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
-    // Last value known before the current user edit: overflowing user edits
-    // revert here.
-    var lastFitting by remember { mutableStateOf(fieldValue) }
-    // True while the content came from typing rather than an external sync:
-    // only then is a guard revert propagated back to the store.
-    var userEdit by remember { mutableStateOf(false) }
-    // Latest truthful layout, used to judge the next keystroke before it
-    // renders. Only trusted while it still describes the current value.
-    var lastLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var lastLayoutText by remember { mutableStateOf<String?>(null) }
+    val scrollState = rememberScrollState()
     // Sync external truth (database load, restore, archive clear) whole —
     // never capped. Deliberately keyed on externalText only so a font-size
-    // change never resets the field or moves the cursor.
+    // change never resets the field or moves the cursor. Jumps back to the
+    // top so restored content starts visible.
     LaunchedEffect(externalText) {
         if (externalText != fieldValue.text) {
             val fresh = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
             fieldValue = fresh
-            lastFitting = fresh
+            scrollState.scrollTo(0)
         }
-        userEdit = false
     }
-
-    // Drop enough trailing characters to re-enter the line budget, always
-    // shrinking so repeated layouts converge on a fitting prefix.
-    fun shrinkToFit(text: String, lineCount: Int): String {
-        if (text.isEmpty()) return text
-        val avgPerLine = text.length.toFloat() / lineCount.coerceAtLeast(1)
-        val target = (avgPerLine * maxLines).toInt()
-            .coerceAtMost(text.length - 1)
-            .coerceAtLeast(0)
-        return text.take(target)
-    }
-
-    // True when the last line has no room for another character, judged
-    // from the last truthful layout: its right edge is within ~1.25 average
-    // character widths of the field edge.
-    fun isLastLineFull(layout: TextLayoutResult): Boolean {
-        val last = layout.lineCount - 1
-        if (last < 0) return false
-        val start = layout.getLineStart(last)
-        val end = layout.getLineEnd(last, visibleEnd = true)
-        if (end <= start) return false
-        val left = layout.getLineLeft(last)
-        val right = layout.getLineRight(last)
-        val avgChar = (right - left) / (end - start).coerceAtLeast(1)
-        return right + avgChar * 1.25f >= layout.size.width
-    }
-
-    // No scroll state on purpose: the capped content always fits the card,
-    // so a tap puts the cursor exactly where it landed with nothing to
-    // follow or reveal while typing.
 
     BasicTextField(
         value = fieldValue,
         onValueChange = { new ->
-            // Swallow what certainly overflows before it ever renders.
-            // Anything uncertain is accepted tentatively and the line guard
-            // in onTextLayout refines it — that path stays rare.
+            // Absolute backstop only: within budget everything is accepted
+            // whole — including long pastes — and the scrollable field
+            // keeps it reachable. Only input past the cap is cut, always
+            // with a hint, never silently.
             if (new.text.length > maxLength) {
                 // Net deletions toward the budget are always accepted as-is,
-                // even while still over it: after a font-size increase the
-                // stored note can start over maxLength, and a backspace must
-                // delete one character — never truncate to the cap.
+                // even while still over it: stored content is adopted whole,
+                // and editing back toward the cap must delete one character
+                // at a time — never truncate to the cap.
                 if (new.text.length < fieldValue.text.length) {
                     fieldValue = new
-                    userEdit = true
                     onTextChange(new.text)
                     return@BasicTextField
                 }
@@ -717,83 +680,15 @@ private fun NoteEditorField(
                 }
                 // A longer overage (e.g. a paste): keep the fitting prefix.
                 fieldValue = TextFieldValue(text = truncated, selection = TextRange(truncated.length))
-                userEdit = true
                 onTextChange(truncated)
                 onLimitReached()
                 return@BasicTextField
             }
-            val layout = lastLayout
-            if (layout != null && lastLayoutText == fieldValue.text &&
-                fieldValue.composition == null && layout.lineCount >= maxLines
-            ) {
-                val addedBreaks = new.text.count { it == '\n' } -
-                    fieldValue.text.count { it == '\n' }
-                val appendedOne = new.text.length == fieldValue.text.length + 1 &&
-                    new.text.startsWith(fieldValue.text)
-                // A new hard break past a full budget always overflows, and a
-                // single appended character overflows when the last line is
-                // already full. Both are swallowed silently with a hint.
-                if (addedBreaks > 0 || (appendedOne && isLastLineFull(layout))) {
-                    onLimitReached()
-                    return@BasicTextField
-                }
-            }
             fieldValue = new
-            userEdit = true
             onTextChange(new.text)
         },
-        // No maxLines cap on purpose: the field must report its true line
-        // count so the guard below sees overflow. The fixed card viewport
-        // can only ever show maxLines lines, so fitting content leaves the
-        // internal cursor-follow scroll with nowhere to go.
-        onTextLayout = { layout ->
-            // Never validate an active IME composition: that would destroy
-            // it. The commit ending it comes back through onValueChange and
-            // re-validates anyway.
-            if (fieldValue.composition != null) return@BasicTextField
-            // Snapshot every genuine layout: the next keystroke's pre-check
-            // must judge against current metrics (a text/line-count gate
-            // here would go stale across font-size changes and could wedge
-            // swallowing on. A snapshot write only recomposes; without
-            // changed layout inputs nothing relayouts, so this terminates.)
-            lastLayout = layout
-            lastLayoutText = fieldValue.text
-            if (layout.lineCount <= maxLines) {
-                lastFitting = fieldValue
-                userEdit = false
-            } else if (userEdit) {
-                // Backstop for user edits no synchronous check could judge
-                // (pastes, IME batch commits). Net deletions and same-length
-                // replacements are always accepted as the new baseline —
-                // after a font increase the stored note can start over
-                // budget, and editing toward fit must never truncate.
-                // Only genuine growth past the budget reverts with a hint.
-                if (fieldValue.text.length <= lastFitting.text.length) {
-                    lastFitting = fieldValue
-                    userEdit = false
-                    return@BasicTextField
-                }
-                userEdit = false
-                val overBy = fieldValue.text.length - lastFitting.text.length
-                val reverted = if (overBy in 1..2) {
-                    lastFitting.text
-                } else {
-                    shrinkToFit(fieldValue.text, layout.lineCount)
-                }
-                fieldValue = TextFieldValue(text = reverted, selection = TextRange(reverted.length))
-                onTextChange(reverted)
-                onLimitReached()
-            } else {
-                // Stored content over the current line budget (relaunch
-                // before prefs resolve, or a font-size increase): keep it
-                // whole and never propagate a shrink — data outranks fit.
-                // The fixed card simply clips the overflow until a smaller
-                // font shows it all again.
-                lastFitting = fieldValue
-            }
-        },
         interactionSource = interactionSource,
-        modifier = modifier,
+        modifier = modifier.verticalScroll(scrollState),
         textStyle = TextStyle(
             fontFamily = fontFamily,
             fontSize = fontSize,
