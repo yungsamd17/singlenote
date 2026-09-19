@@ -281,14 +281,12 @@ fun NoteScreen(
     // field scrolls to follow it, so overflow stays reachable at any font
     // scale instead of being clipped or truncated.
 
+    // Keyboard already closed on every path below (landing flip,
+    // hidden back-press, closed Done tap): just release focus and save.
+    // Never hide() here — a hide into the IME's settle window bounces
+    // Gboard back up for ~600ms. Hides are issued only by the Done tap.
     fun finishEditing() {
-        // Clear focus first: focus loss reverses an in-flight open
-        // animation through the input service, so a Done tap while the
-        // keyboard is still opening settles closed instead of flashing
-        // back up with focus held. The hide is belt-and-braces for the
-        // steady-open case.
         focusManager.clearFocus(force = true)
-        keyboard?.hide()
         viewModel.flushSave()
     }
 
@@ -344,13 +342,16 @@ fun NoteScreen(
         finishEditing()
     }
 
-    // Done tap mirrors the system-hide/back path: clear focus up front
-    // (see finishEditing above) so there is no hide-while-focused race,
-    // then let the LaunchedEffect above no-op on landing. Taps that land
-    // mid-close regain focus normally and reopen — intentional reopens win.
+    // Done tap is the only place that ever tells the IME to hide: clear
+    // focus first so there is no hide-while-focused race (a Done tap
+    // during the open animation settles closed instead of flashing back
+    // with focus held), then hide once. The LaunchedEffect above no-ops
+    // on landing. Taps that land mid-close regain focus normally and
+    // reopen — intentional reopens win.
     fun requestFinishEditing() {
         viewModel.flushSave()
-        finishEditing()
+        focusManager.clearFocus(force = true)
+        keyboard?.hide()
     }
 
     Scaffold(
