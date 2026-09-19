@@ -57,7 +57,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -363,6 +362,14 @@ fun NoteScreen(
         keyboard?.hide()
     }
 
+    // First frame waits for stored truth (see viewModel.ready): the whole
+    // screen — toolbar included — appears together after one blank beat,
+    // so nothing staggers in pieces and no spinner flashes.
+    if (!ready) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
+    }
+
     Scaffold(
         // Lifted above the 88dp bottom bar (and the keyboard via
         // imePadding) so limit hints never cover Done or the actions.
@@ -490,23 +497,6 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
-        // First frame waits for stored truth (see viewModel.ready): the
-        // card, text and bar appear with final dims — nothing resizes.
-        // A labelled spinner keeps TalkBack informed instead of silence.
-        if (!ready) {
-            val loadingLabel = stringResource(R.string.loading)
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.semantics {
-                        contentDescription = loadingLabel
-                    }
-                )
-            }
-            return@Scaffold
-        }
         // Subtle entrance after the blank gate: a fast fade with a small
         // rise so the card and bar arrive together instead of popping in.
         AnimatedVisibility(

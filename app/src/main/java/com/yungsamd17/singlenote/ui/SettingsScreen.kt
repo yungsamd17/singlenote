@@ -32,7 +32,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,8 +56,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -94,6 +91,14 @@ fun SettingsScreen(
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
 
+    // First frame waits for stored truth (same as the note screen): the
+    // whole screen — toolbar included — appears together after one blank
+    // beat, so nothing staggers in pieces and no spinner flashes.
+    if (!ready) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -109,23 +114,6 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
-        // First frame waits for stored truth (same as the note screen):
-        // rows appear with the saved values — nothing flashes defaults.
-        // A labelled spinner keeps TalkBack informed instead of silence.
-        if (!ready) {
-            val loadingLabel = stringResource(R.string.loading)
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.semantics {
-                        contentDescription = loadingLabel
-                    }
-                )
-            }
-            return@Scaffold
-        }
         // Subtle entrance after the blank gate: a fast fade with a small
         // rise so the rows arrive together instead of popping in.
         AnimatedVisibility(
