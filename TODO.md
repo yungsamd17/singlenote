@@ -73,8 +73,10 @@ they land; the `v1.0.0` checklist stays in [`docs/v1.0.0-plan.md`](docs/v1.0.0-p
   `PinNotification` branches and an instrumented archive-flow test. )
 - [x] Dependencies ~9 months stale (Kotlin 2.1.0, AGP 8.7.3, BOM 2024.12.01),
   no Dependabot/Renovate. The 2.1→2.2 + AGP 8→9 jump breaks KSP all at once.
-  ( Landed: Dependabot config. Version bumps deliberately deferred as a
-  follow-up — the Kotlin/AGP jump breaks KSP all at once. )
+  ( Landed: Dependabot config, then the coordinated jump itself — Kotlin 2.3,
+  AGP 9, KSP 2.3, Room 2.8, coroutines 1.11, Gradle 9. Held: `composeBom`
+  (needs SDK 37) and KSP-less Kotlin 2.4. Version updates frozen since,
+  security-only. )
 
 ## Accessibility and UX
 
