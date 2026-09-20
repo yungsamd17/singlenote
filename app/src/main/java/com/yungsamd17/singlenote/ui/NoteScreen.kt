@@ -14,11 +14,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -57,7 +57,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -69,21 +68,26 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -114,9 +118,18 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val LIMIT_HINT_COOLDOWN_MS = 3000L
+
+// Closed-state settle before a system-hide exits editing: transient
+// isImeVisible edges last a frame or two, a real landing settles for
+// good, so this margin keeps reopens alive without a visible lag.
+private const val LANDING_SETTLE_MS = 75L
+
+// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
+private const val APPEAR_MS = 150
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -213,9 +226,15 @@ fun NoteScreen(
     val undoActionLabel = stringResource(R.string.action_undo)
 
     // Undo window: ViewModel holds the snapshot so rotation re-shows the
-    // bar instead of losing the chance to restore.
+    // bar instead of losing the chance to restore — but only inside the
+    // window: navigating away cancels the bar without resolving it, so a
+    // stale snapshot must not resurrect the bar on return.
     LaunchedEffect(pendingUndo) {
         val pending = pendingUndo ?: return@LaunchedEffect
+        if (System.currentTimeMillis() - pending.createdAtMs > NoteViewModel.UNDO_WINDOW_MS) {
+            viewModel.consumePendingUndo()
+            return@LaunchedEffect
+        }
         val message = when (pending.kind) {
             NoteViewModel.UndoKind.ARCHIVE -> undoArchiveLabel
             NoteViewModel.UndoKind.DELETE -> undoDeleteLabel
@@ -223,8 +242,9 @@ fun NoteScreen(
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = undoActionLabel,
-            duration = SnackbarDuration.Long,
-            withDismissAction = true
+            // Short on purpose: the bar is a 4s Undo window, and a swipe
+            // settles exactly like the timeout (the pending op commits).
+            duration = SnackbarDuration.Short
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoPending()
@@ -277,14 +297,11 @@ fun NoteScreen(
     // field scrolls to follow it, so overflow stays reachable at any font
     // scale instead of being clipped or truncated.
 
-    // True from a Done tap's hide() until focus actually clears: marks a
-    // close-glide the bar should anticipate (see the bar scope below).
-    // Declared up here because finishEditing below resets it.
-    var hideRequested by remember { mutableStateOf(false) }
-
+    // Keyboard already closed on every path below (landing flip,
+    // hidden back-press, closed Done tap): just release focus and save.
+    // Never hide() here — a hide into the IME's settle window bounces
+    // Gboard back up for ~600ms. Hides are issued only by the Done tap.
     fun finishEditing() {
-        hideRequested = false
-        keyboard?.hide()
         focusManager.clearFocus(force = true)
         viewModel.flushSave()
     }
@@ -321,16 +338,16 @@ fun NoteScreen(
         }
     }
 
-    // IME visibility straight from the Compose insets: no window relayout
-    // happens under adjustNothing, so there is no layout pass to observe —
-    // a global-layout listener would go silent and miss the close.
+    // A system-hide (back/gesture) keeps focus with Done shown, then
+    // exits editing once the closed state settles: isImeVisible flickers
+    // mid-animation under adjustNothing, so the settle delay lets any
+    // transient edge self-cancel instead of nuking a just-regained focus
+    // and killing a reopen. Any real open restarts the effect and cancels
+    // the pending clear. Done needs none of this — it clears up front.
     val isKeyboardOpen = WindowInsets.isImeVisible
-    var keyboardWasOpen by remember { mutableStateOf(false) }
     LaunchedEffect(isKeyboardOpen) {
-        if (isKeyboardOpen) {
-            keyboardWasOpen = true
-        } else if (keyboardWasOpen) {
-            keyboardWasOpen = false
+        if (!isKeyboardOpen) {
+            delay(LANDING_SETTLE_MS)
             if (isEditing) finishEditing()
         }
     }
@@ -341,24 +358,31 @@ fun NoteScreen(
         finishEditing()
     }
 
-    // Done tap mirrors the system-hide/back path: hide first, clear focus
-    // only after the keyboard fully lands (see the LaunchedEffect above).
-    // Hiding and unfocusing in the same frame snaps the animated IME inset
-    // — that snap was the shift seen only on Done tap. The bar itself
-    // starts morphing back just before the landing (see its scope below).
+    // Done tap is the only place that ever tells the IME to hide: clear
+    // focus first so there is no hide-while-focused race (a Done tap
+    // during the open animation settles closed instead of flashing back
+    // with focus held), then hide once. Taps that land mid-close regain
+    // focus normally and reopen — intentional reopens win and nothing
+    // observes the landing, so the reopen can't be killed by it.
     fun requestFinishEditing() {
         viewModel.flushSave()
-        if (isKeyboardOpen) {
-            hideRequested = true
-            keyboard?.hide()
-        } else finishEditing()
+        focusManager.clearFocus(force = true)
+        keyboard?.hide()
+    }
+
+    // First frame waits for stored truth (see viewModel.ready): the whole
+    // screen — toolbar included — appears together after one blank beat,
+    // so nothing staggers in pieces and no spinner flashes.
+    if (!ready) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
     }
 
     Scaffold(
         // Lifted above the 88dp bottom bar (and the keyboard via
         // imePadding) so limit hints never cover Done or the actions.
         snackbarHost = {
-            SnackbarHost(
+            SwipeableSnackbarHost(
                 snackbarHostState,
                 modifier = Modifier
                     .navigationBarsPadding()
@@ -481,28 +505,18 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
-        // First frame waits for stored truth (see viewModel.ready): the
-        // card, text and bar appear with final dims — nothing resizes.
-        // A labelled spinner keeps TalkBack informed instead of silence.
-        if (!ready) {
-            val loadingLabel = stringResource(R.string.loading)
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.semantics {
-                        contentDescription = loadingLabel
-                    }
-                )
-            }
-            return@Scaffold
-        }
-        Column(
+        // Subtle entrance after the blank gate: a fast fade with a small
+        // rise so the card and bar arrive together instead of popping in.
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
+                tween(APPEAR_MS)
+            ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -530,9 +544,13 @@ fun NoteScreen(
 
             // Sole glider of this bar: the window is adjustNothing, so the
             // animated IME inset moves this stable container above the
-            // keyboard with no snap. The content switch inside never changes
+            // keyboard with no lag. The content switch inside never changes
             // size and never touches the insets, so the morph can't shift or
             // stick at the end of the keyboard slide.
+            // Read low in the tree: this scope already recomposes every
+            // inset frame via imePadding, so nothing above pays for it.
+            val density = LocalDensity.current
+            val imeRemainingPx = WindowInsets.ime.getBottom(density)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -542,33 +560,23 @@ fun NoteScreen(
                 // Head start on the landing: once only a sliver of keyboard
                 // remains, start morphing back so the FAB row settles right
                 // as the slide ends instead of lagging a full morph behind.
-                // Focused-but-settled (system-hide/back, no tap) still shows
-                // Done — only a tap-requested close anticipates.
-                // Read low in the tree: this scope already recomposes every
-                // inset frame via imePadding, so nothing above pays for it.
-                val density = LocalDensity.current
-                val imeRemainingPx = WindowInsets.ime.getBottom(density)
+                // Done stays visible through the close glide (focus is
+                // already gone, the open keyboard holds it) and while
+                // focused-but-settled (system-hide/back with no tap yet).
                 val keyboardSubstantiallyOpen =
                     imeRemainingPx.toFloat() >= with(density) {
                         KeyboardSwapThreshold.toPx()
                     }
-                val barDone = isEditing && (!hideRequested || keyboardSubstantiallyOpen)
+                val barDone = isEditing || keyboardSubstantiallyOpen
                 AnimatedContent(
                     targetState = barDone,
                     label = "bottomBar",
                     transitionSpec = {
-                        // Morph-style swap: position-neutral fade + scale so
-                        // it never fights the keyboard glide, in the same
+                        // Fade-only swap: no scale, so the button itself
+                        // never grows or shifts while the glide carries it
+                        // — the swap dissolves in place, in the same
                         // accent-tinted container family both ways.
-                        (fadeIn(tween(200)) + scaleIn(
-                            initialScale = 0.94f,
-                            animationSpec = tween(200)
-                        )).togetherWith(
-                            fadeOut(tween(160)) + scaleOut(
-                                targetScale = 0.96f,
-                                animationSpec = tween(160)
-                            )
-                        )
+                        fadeIn(tween(200)) togetherWith fadeOut(tween(160))
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
                     // padding = 88dp, so the crossfade dissolves in place with
@@ -646,6 +654,7 @@ fun NoteScreen(
                     }
                 }
             }
+        }
         }
     }
 
@@ -856,4 +865,40 @@ private fun TooltipIconButton(
             content()
         }
     }
+}
+
+/**
+ * Undo/feedback bars dismiss by swiping left or right instead of a
+ * dedicated close button. A swipe settles exactly like the timeout does
+ * (the pending op commits), while Undo stays tappable the whole time.
+ */
+@Composable
+internal fun SwipeableSnackbarHost(
+    hostState: SnackbarHostState,
+    modifier: Modifier = Modifier,
+) {
+    SnackbarHost(
+        hostState = hostState,
+        modifier = modifier,
+        snackbar = { data ->
+            // Fresh swipe state per message: without the key a swiped-away
+            // bar would leave the next message pre-dismissed.
+            key(data) {
+                val dismissState = rememberSwipeToDismissBoxState()
+                val swipedAway = dismissState.currentValue != SwipeToDismissBoxValue.Settled
+                LaunchedEffect(swipedAway) {
+                    if (swipedAway) hostState.currentSnackbarData?.dismiss()
+                }
+                SwipeToDismissBox(
+                    state = dismissState,
+                    // Explicit directions so short swipes always clear
+                    // the bar instead of snapping it back.
+                    enableDismissFromStartToEnd = true,
+                    enableDismissFromEndToStart = true,
+                    backgroundContent = {},
+                    content = { Snackbar(snackbarData = data) }
+                )
+            }
+        }
+    )
 }

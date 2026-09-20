@@ -3,6 +3,7 @@ package com.yungsamd17.singlenote
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -10,6 +11,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -105,10 +108,30 @@ class MainActivity : ComponentActivity() {
                 applyBarAppearance(darkTheme)
             }
             MaterialTheme(
-                colorScheme = accentScheme(accentKey, darkTheme)
+                // Material You follows the wallpaper on Android 12+; older
+                // releases (and every tuned accent) use the app's schemes.
+                colorScheme = if (accentKey == NotePreferences.ACCENT_SYSTEM &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                ) {
+                    if (darkTheme) dynamicDarkColorScheme(this)
+                    else dynamicLightColorScheme(this)
+                } else {
+                    accentScheme(accentKey, darkTheme)
+                }
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    // Activity-scoped on purpose: entry-scoped ViewModels die
+                    // on pop, cancelling a pending delayed undo write — a
+                    // note deleted in the archive would resurrect when
+                    // backing out and returning. Surviving in-app nav keeps
+                    // the commit (and the Undo window) alive.
+                    val noteViewModel: NoteViewModel =
+                        viewModel(factory = NoteViewModel.factory(repository))
+                    val archiveViewModel: ArchiveViewModel =
+                        viewModel(factory = ArchiveViewModel.factory(repository))
+                    val settingsViewModel: SettingsViewModel =
+                        viewModel(factory = SettingsViewModel.factory(repository))
                     NavHost(
                         navController = navController,
                         startDestination = "note",
@@ -142,20 +165,20 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("note") {
                             NoteScreen(
-                                viewModel = viewModel(factory = NoteViewModel.factory(repository)),
+                                viewModel = noteViewModel,
                                 onOpenArchive = { navController.navigate("archive") },
                                 onOpenSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("archive") {
                             ArchiveScreen(
-                                viewModel = viewModel(factory = ArchiveViewModel.factory(repository)),
+                                viewModel = archiveViewModel,
                                 onBack = { navController.popBackStack() }
                             )
                         }
                         composable("settings") {
                             SettingsScreen(
-                                viewModel = viewModel(factory = SettingsViewModel.factory(repository)),
+                                viewModel = settingsViewModel,
                                 onBack = { navController.popBackStack() },
                                 onOpenAbout = { navController.navigate("about") }
                             )

@@ -44,6 +44,7 @@
     <string name="accent_green">Green</string>
     <string name="accent_orange">Orange</string>
     <string name="accent_pink">Pink</string>
+    <string name="accent_system">Material You</string>
     <string name="settings_font">Font</string>
     <string name="settings_text_size">Text size</string>
     <string name="theme_system">System</string>
@@ -61,7 +62,6 @@
     <string name="action_done">Done</string>
     <string name="action_undo">Undo</string>
     <string name="action_retry">Retry</string>
-    <string name="loading">Loading</string>
     <string name="note_archived">Note archived</string>
     <string name="note_deleted">Note deleted</string>
     <string name="archived_note_deleted">Note deleted from archive</string>
@@ -74,7 +74,7 @@
     <string name="setting_show_notifications">Pinned notification</string>
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
     <string name="setting_lockscreen_visible">Show note on lock screen</string>
-    <string name="setting_lockscreen_visible_desc">Off hides the note content on the lock screen (recommended)</string>
+    <string name="setting_lockscreen_visible_desc">Off hides the note content on the lock screen</string>
     <string name="change">Change</string>
     <string name="about_title">About app</string>
     <string name="about_subtitle">Version, terms, privacy, and more</string>

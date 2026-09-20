@@ -32,7 +32,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -206,16 +205,10 @@ fun AboutScreen(
                         onClick = ::checkForUpdates,
                         enabled = !checkingUpdate
                     ) {
-                        if (checkingUpdate) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp)
-                            )
-                        } else {
-                            Icon(
-                                Icons.Outlined.Refresh,
-                                contentDescription = stringResource(R.string.cd_check_updates)
-                            )
-                        }
+                        Icon(
+                            Icons.Outlined.Refresh,
+                            contentDescription = stringResource(R.string.cd_check_updates)
+                        )
                     }
                 }
             }
@@ -301,14 +294,14 @@ fun AboutScreen(
                             Text(stringResource(R.string.action_retry))
                         }
                     }
+                    // Blank while the notes load: no spinner flash for a
+                    // fetch that usually resolves in a beat.
                     release == null -> Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 32.dp)
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    ) { }
                     else -> MarkdownText(
                         markdown = release.body.ifBlank {
                             context.getString(R.string.changelog_empty_notes)
@@ -385,6 +378,11 @@ fun LicenseScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
+            LinkedText(
+                text = stringResource(R.string.license_full),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
             Text(
                 text = stringResource(R.string.license_components_title),
                 style = MaterialTheme.typography.titleSmall,
@@ -404,11 +402,6 @@ fun LicenseScreen(onBack: () -> Unit) {
                 text = stringResource(R.string.license_third_party),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(vertical = 4.dp)
-            )
-            LinkedText(
-                text = stringResource(R.string.license_full),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(vertical = 12.dp)
             )
         }
     }

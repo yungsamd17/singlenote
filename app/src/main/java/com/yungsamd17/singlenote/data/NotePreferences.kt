@@ -43,8 +43,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
+    // On by default: showing on the lock screen is the point of pinning,
+    // and the toggle stays one tap away in Settings for opting out.
     override val lockscreenVisible: Flow<Boolean> =
-        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: false }
+        context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: true }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
@@ -123,11 +125,15 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         const val ACCENT_GREEN = "green"
         const val ACCENT_ORANGE = "orange"
         const val ACCENT_PINK = "pink"
+        const val ACCENT_SYSTEM = "system"
 
         val THEMES = listOf(THEME_SYSTEM, THEME_LIGHT, THEME_DARK)
         val FONTS = listOf(FONT_DEFAULT, FONT_MONO, FONT_SERIF)
         val SIZES = listOf(SIZE_SMALL, SIZE_MEDIUM, SIZE_LARGE)
         val ACCENTS =
-            listOf(ACCENT_DEFAULT, ACCENT_BLUE, ACCENT_TEAL, ACCENT_GREEN, ACCENT_ORANGE, ACCENT_PINK)
+            listOf(
+                ACCENT_DEFAULT, ACCENT_BLUE, ACCENT_TEAL, ACCENT_GREEN, ACCENT_ORANGE, ACCENT_PINK,
+                ACCENT_SYSTEM
+            )
     }
 }
