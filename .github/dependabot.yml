@@ -1,9 +1,8 @@
 version: 2
 updates:
-  # Dependencies are ~9 months stale (Kotlin 2.1.0, AGP 8.7.3, BOM
-  # 2024.12.01), but the 2.1→2.2 + AGP 8→9 jump breaks KSP all at once —
-  # that bump stays a deliberate follow-up. This automation keeps future
-  # updates small and reviewable instead.
+  # Weekly automation keeps updates small and reviewable. Major jumps
+  # that move in lockstep (Kotlin/KSP/AGP) still land as deliberate
+  # follow-ups, not blind bump merges.
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
