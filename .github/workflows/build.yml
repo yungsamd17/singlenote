@@ -7,6 +7,14 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Batch merges: only the latest main build runs to completion — an
+# earlier one still in flight when the next PR lands is cancelled, and
+# the survivor covers the whole batch. PRs, tags, and dispatches never
+# cancel each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
+
 # Least privilege by default: the `build` job only reads the repo.
 # The tag-only `release` job below escalates to `contents: write` —
 # the minimum softprops/action-gh-release needs to create the GitHub
