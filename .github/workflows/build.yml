@@ -148,15 +148,14 @@ jobs:
           name: singlenote-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
-      # Tag builds hand versioned APKs + checksums to the `release` job
+      # Tag builds hand the two versioned APKs to the `release` job
       # instead of publishing from here, so this job needs no write scope.
-      - name: Name APKs and checksums for release job
+      # No checksum files: releases ship exactly debug + release APKs.
+      - name: Name APKs for release job
         if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has-signing == 'true'
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk "singlenote-${{ github.ref_name }}-debug.apk"
           cp app/build/outputs/apk/release/app-release.apk "singlenote-${{ github.ref_name }}-release.apk"
-          sha256sum "singlenote-${{ github.ref_name }}-debug.apk" > "singlenote-${{ github.ref_name }}-debug.apk.sha256"
-          sha256sum "singlenote-${{ github.ref_name }}-release.apk" > "singlenote-${{ github.ref_name }}-release.apk.sha256"
           # v1.0.0 plan: log the release hash in the workflow output.
           sha256sum "singlenote-${{ github.ref_name }}-debug.apk" "singlenote-${{ github.ref_name }}-release.apk"
 
@@ -167,9 +166,7 @@ jobs:
           name: singlenote-apks
           path: |
             singlenote-${{ github.ref_name }}-debug.apk
-            singlenote-${{ github.ref_name }}-debug.apk.sha256
             singlenote-${{ github.ref_name }}-release.apk
-            singlenote-${{ github.ref_name }}-release.apk.sha256
 
   release:
     # Tags only — and only with signing secrets, so a fork's own tags
@@ -208,11 +205,9 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           # Versioned names (e.g. singlenote-v0.3.3-release.apk) so assets
-          # are identifiable without opening the release; the .sha256
-          # files let sideloaders verify with `sha256sum -c`.
+          # are identifiable without opening the release. Exactly two
+          # assets, nothing else: debug + release APKs, no checksums.
           files: |
             dist/singlenote-${{ github.ref_name }}-debug.apk
-            dist/singlenote-${{ github.ref_name }}-debug.apk.sha256
             dist/singlenote-${{ github.ref_name }}-release.apk
-            dist/singlenote-${{ github.ref_name }}-release.apk.sha256
           generate_release_notes: true
