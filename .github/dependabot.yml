@@ -1,14 +1,16 @@
 version: 2
 updates:
-  # Weekly automation keeps updates small and reviewable. Major jumps
-  # that move in lockstep (Kotlin/KSP/AGP) still land as deliberate
-  # follow-ups, not blind bump merges.
+  # Version bumps are frozen: limit 0 means no update PRs are filed.
+  # Security updates bypass the limit and still arrive as PRs, which is
+  # the only dependabot traffic wanted right now. To resume version
+  # updates, raise the limit (and/or switch interval to monthly).
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 0
