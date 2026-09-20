@@ -41,8 +41,11 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    // Initial matches the DataStore default (on): the toggle's own flow
+    // starts cold when the rows first compose, so a mismatched initial
+    // would flash the wrong state for a frame on fresh launch.
     val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     init {
         viewModelScope.launch {
