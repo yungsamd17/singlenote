@@ -21,6 +21,7 @@ Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widge
 ```
 
 - CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest lintDebug` on every push/PR, and publishes APKs to a GitHub Release on `v*` tags.
+- Batch merges are cheap by design: rapid merges to `main` cancel the superseded in-flight main builds (concurrency cancel), so only the last build of the batch runs to completion and covers everything. Per-PR builds still gate every PR — never merge on a stale green.
 - Every non-tag build also uploads the `singlenote-debug-apk` artifact — fetch it with `gh run download <run-id> -n singlenote-debug-apk` to verify on-device when no ADB connection exists.
 - Local sandboxes often lack the Android SDK/JDK — if Gradle can't run, rely on careful code review and let CI verify. Never skip updating tests when changing shared interfaces.
 
