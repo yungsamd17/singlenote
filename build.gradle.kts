@@ -9,7 +9,7 @@ plugins {
 // libs.versions.toml (kotlin, ksp) — catalogs aren't visible here.
 buildscript {
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.3.21")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20")
         classpath("com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.12")
     }
 }
