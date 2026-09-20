@@ -1,6 +1,10 @@
 package com.yungsamd17.singlenote.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +32,6 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,8 +56,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -69,6 +70,9 @@ private const val DIALOG_THEME = "theme"
 private const val DIALOG_ACCENT = "accent"
 private const val DIALOG_FONT = "font"
 private const val DIALOG_SIZE = "size"
+
+// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
+private const val APPEAR_MS = 150
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +91,14 @@ fun SettingsScreen(
 
     var openDialog by remember { mutableStateOf(DIALOG_NONE) }
 
+    // First frame waits for stored truth (same as the note screen): the
+    // whole screen — toolbar included — appears together after one blank
+    // beat, so nothing staggers in pieces and no spinner flashes.
+    if (!ready) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -102,27 +114,20 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
-        // First frame waits for stored truth (same as the note screen):
-        // rows appear with the saved values — nothing flashes defaults.
-        // A labelled spinner keeps TalkBack informed instead of silence.
-        if (!ready) {
-            val loadingLabel = stringResource(R.string.loading)
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.semantics {
-                        contentDescription = loadingLabel
-                    }
-                )
-            }
-            return@Scaffold
-        }
-        Column(
+        // Subtle entrance after the blank gate: a fast fade with a small
+        // rise so the rows arrive together instead of popping in.
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
+                tween(APPEAR_MS)
+            ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
@@ -198,6 +203,7 @@ fun SettingsScreen(
                     )
                 }
             }
+        }
         }
     }
 

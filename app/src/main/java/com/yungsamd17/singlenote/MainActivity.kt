@@ -121,6 +121,17 @@ class MainActivity : ComponentActivity() {
             ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    // Activity-scoped on purpose: entry-scoped ViewModels die
+                    // on pop, cancelling a pending delayed undo write — a
+                    // note deleted in the archive would resurrect when
+                    // backing out and returning. Surviving in-app nav keeps
+                    // the commit (and the Undo window) alive.
+                    val noteViewModel: NoteViewModel =
+                        viewModel(factory = NoteViewModel.factory(repository))
+                    val archiveViewModel: ArchiveViewModel =
+                        viewModel(factory = ArchiveViewModel.factory(repository))
+                    val settingsViewModel: SettingsViewModel =
+                        viewModel(factory = SettingsViewModel.factory(repository))
                     NavHost(
                         navController = navController,
                         startDestination = "note",
@@ -154,20 +165,20 @@ class MainActivity : ComponentActivity() {
                     ) {
                         composable("note") {
                             NoteScreen(
-                                viewModel = viewModel(factory = NoteViewModel.factory(repository)),
+                                viewModel = noteViewModel,
                                 onOpenArchive = { navController.navigate("archive") },
                                 onOpenSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("archive") {
                             ArchiveScreen(
-                                viewModel = viewModel(factory = ArchiveViewModel.factory(repository)),
+                                viewModel = archiveViewModel,
                                 onBack = { navController.popBackStack() }
                             )
                         }
                         composable("settings") {
                             SettingsScreen(
-                                viewModel = viewModel(factory = SettingsViewModel.factory(repository)),
+                                viewModel = settingsViewModel,
                                 onBack = { navController.popBackStack() },
                                 onOpenAbout = { navController.navigate("about") }
                             )

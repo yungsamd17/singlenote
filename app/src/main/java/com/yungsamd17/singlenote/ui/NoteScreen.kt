@@ -14,9 +14,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -55,7 +57,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -126,6 +127,9 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // isImeVisible edges last a frame or two, a real landing settles for
 // good, so this margin keeps reopens alive without a visible lag.
 private const val LANDING_SETTLE_MS = 75L
+
+// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
+private const val APPEAR_MS = 150
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -222,9 +226,15 @@ fun NoteScreen(
     val undoActionLabel = stringResource(R.string.action_undo)
 
     // Undo window: ViewModel holds the snapshot so rotation re-shows the
-    // bar instead of losing the chance to restore.
+    // bar instead of losing the chance to restore — but only inside the
+    // window: navigating away cancels the bar without resolving it, so a
+    // stale snapshot must not resurrect the bar on return.
     LaunchedEffect(pendingUndo) {
         val pending = pendingUndo ?: return@LaunchedEffect
+        if (System.currentTimeMillis() - pending.createdAtMs > NoteViewModel.UNDO_WINDOW_MS) {
+            viewModel.consumePendingUndo()
+            return@LaunchedEffect
+        }
         val message = when (pending.kind) {
             NoteViewModel.UndoKind.ARCHIVE -> undoArchiveLabel
             NoteViewModel.UndoKind.DELETE -> undoDeleteLabel
@@ -232,7 +242,9 @@ fun NoteScreen(
         val result = snackbarHostState.showSnackbar(
             message = message,
             actionLabel = undoActionLabel,
-            duration = SnackbarDuration.Long
+            // Short on purpose: the bar is a 4s Undo window, and a swipe
+            // settles exactly like the timeout (the pending op commits).
+            duration = SnackbarDuration.Short
         )
         if (result == SnackbarResult.ActionPerformed) {
             viewModel.undoPending()
@@ -356,6 +368,14 @@ fun NoteScreen(
         viewModel.flushSave()
         focusManager.clearFocus(force = true)
         keyboard?.hide()
+    }
+
+    // First frame waits for stored truth (see viewModel.ready): the whole
+    // screen — toolbar included — appears together after one blank beat,
+    // so nothing staggers in pieces and no spinner flashes.
+    if (!ready) {
+        Box(modifier = Modifier.fillMaxSize())
+        return
     }
 
     Scaffold(
@@ -485,28 +505,18 @@ fun NoteScreen(
             )
         }
     ) { innerPadding ->
-        // First frame waits for stored truth (see viewModel.ready): the
-        // card, text and bar appear with final dims — nothing resizes.
-        // A labelled spinner keeps TalkBack informed instead of silence.
-        if (!ready) {
-            val loadingLabel = stringResource(R.string.loading)
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.semantics {
-                        contentDescription = loadingLabel
-                    }
-                )
-            }
-            return@Scaffold
-        }
-        Column(
+        // Subtle entrance after the blank gate: a fast fade with a small
+        // rise so the card and bar arrive together instead of popping in.
+        AnimatedVisibility(
+            visible = true,
+            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
+                tween(APPEAR_MS)
+            ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            Column(modifier = Modifier.fillMaxSize()) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 modifier = Modifier
@@ -644,6 +654,7 @@ fun NoteScreen(
                     }
                 }
             }
+        }
         }
     }
 
@@ -880,6 +891,10 @@ internal fun SwipeableSnackbarHost(
                 }
                 SwipeToDismissBox(
                     state = dismissState,
+                    // Explicit directions so short swipes always clear
+                    // the bar instead of snapping it back.
+                    enableDismissFromStartToEnd = true,
+                    enableDismissFromEndToStart = true,
                     backgroundContent = {},
                     content = { Snackbar(snackbarData = data) }
                 )
