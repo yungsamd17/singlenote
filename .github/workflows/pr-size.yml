@@ -12,6 +12,9 @@ permissions:
 jobs:
   label:
     name: Add size label
+    # Dependabot PRs don't need size triage: skip the tag instead of
+    # labelling dependency bumps.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Compute diff and label
