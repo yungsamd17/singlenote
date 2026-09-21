@@ -94,6 +94,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -886,6 +887,10 @@ private fun TooltipIconButton(
  * opening, or closing states always delegate, so reopens keep working and
  * cursor placement is untouched. Isolated in its own scope so the per-frame
  * inset reads recompose nothing above.
+ *
+ * The provided controller is a single stable instance: swapping the object
+ * mid-session restarts the IME session and kills the keyboard, so all live
+ * inputs are read at call time instead of captured at creation.
  */
 @Composable
 private fun FieldKeyboardFilter(
@@ -898,15 +903,20 @@ private fun FieldKeyboardFilter(
     val lastImePx = remember { mutableIntStateOf(-1) }
     val steadyOpen = isEditing && imeNowPx > 0 &&
         lastImePx.intValue >= 0 && imeNowPx >= lastImePx.intValue
-    SideEffect { lastImePx.intValue = imeNowPx }
-    val filtered = remember(keyboard, steadyOpen) {
+    val keyboardRef = rememberUpdatedState(keyboard)
+    val dropShow = remember { mutableStateOf(false) }
+    SideEffect {
+        lastImePx.intValue = imeNowPx
+        dropShow.value = steadyOpen
+    }
+    val filtered = remember {
         object : SoftwareKeyboardController {
             override fun show() {
-                if (!steadyOpen) keyboard?.show()
+                if (!dropShow.value) keyboardRef.value?.show()
             }
 
             override fun hide() {
-                keyboard?.hide()
+                keyboardRef.value?.hide()
             }
         }
     }
