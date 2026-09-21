@@ -563,6 +563,7 @@ fun NoteScreen(
             // inset frame via imePadding, so nothing above pays for it.
             val density = LocalDensity.current
             val imeRemainingPx = WindowInsets.ime.getBottom(density)
+            val keyboardOpenLatch = remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -575,11 +576,17 @@ fun NoteScreen(
                 // Done stays visible through the close glide (focus is
                 // already gone, the open keyboard holds it) and while
                 // focused-but-settled (system-hide/back with no tap yet).
-                val keyboardSubstantiallyOpen =
-                    imeRemainingPx.toFloat() >= with(density) {
-                        KeyboardSwapThreshold.toPx()
-                    }
-                val barDone = isEditing || keyboardSubstantiallyOpen
+                // Hysteresis band: a single trip point chatters when the
+                // glide moves in load-stepped chunks near it, strobing the
+                // content mid-glide. Rising past the full threshold latches
+                // open; only falling past half unlatches — steady states
+                // read identically, flips happen exactly once per glide.
+                val openTripPx = with(density) {
+                    KeyboardSwapThreshold.toPx()
+                }
+                if (imeRemainingPx.toFloat() >= openTripPx) keyboardOpenLatch.value = true
+                else if (imeRemainingPx.toFloat() <= openTripPx / 2) keyboardOpenLatch.value = false
+                val barDone = isEditing || keyboardOpenLatch.value
                 AnimatedContent(
                     targetState = barDone,
                     label = "bottomBar",
