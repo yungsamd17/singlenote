@@ -83,11 +83,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -102,6 +104,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -524,6 +527,13 @@ fun NoteScreen(
                     .height(noteCardHeight)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                // Redundant-show filter (see below): tapping an already-open
+                // keyboard re-fires show() into Gboard, which rebinds and
+                // flashes its fallback number-row layout for a beat.
+                FieldKeyboardFilter(
+                    keyboard = keyboard,
+                    isEditing = isEditing
+                ) {
                 NoteEditorField(
                     externalText = text,
                     onTextChange = viewModel::onTextChange,
@@ -535,6 +545,7 @@ fun NoteScreen(
                     maxLength = noteMaxLength,
                     modifier = Modifier.fillMaxSize()
                 )
+                }
             }
 
             // Takes the slack so the bar sits at the bottom when the keyboard
@@ -865,6 +876,44 @@ private fun TooltipIconButton(
             content()
         }
     }
+}
+
+/**
+ * Drops redundant keyboard-show requests: tapping an already-focused field
+ * re-fires show() into Gboard, which rebinds the input session and flashes
+ * its fallback number-row layout for a beat. The show is dropped only while
+ * the field holds focus and the keyboard sits open and steady — closed,
+ * opening, or closing states always delegate, so reopens keep working and
+ * cursor placement is untouched. Isolated in its own scope so the per-frame
+ * inset reads recompose nothing above.
+ */
+@Composable
+private fun FieldKeyboardFilter(
+    keyboard: SoftwareKeyboardController?,
+    isEditing: Boolean,
+    content: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    val imeNowPx = WindowInsets.ime.getBottom(density)
+    val lastImePx = remember { mutableIntStateOf(-1) }
+    val steadyOpen = isEditing && imeNowPx > 0 &&
+        lastImePx.intValue >= 0 && imeNowPx >= lastImePx.intValue
+    SideEffect { lastImePx.intValue = imeNowPx }
+    val filtered = remember(keyboard, steadyOpen) {
+        object : SoftwareKeyboardController {
+            override fun show() {
+                if (!steadyOpen) keyboard?.show()
+            }
+
+            override fun hide() {
+                keyboard?.hide()
+            }
+        }
+    }
+    CompositionLocalProvider(
+        LocalSoftwareKeyboardController provides filtered,
+        content = content
+    )
 }
 
 /**
