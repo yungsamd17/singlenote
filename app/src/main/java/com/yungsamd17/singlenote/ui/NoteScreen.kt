@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -131,10 +130,6 @@ private const val LANDING_SETTLE_MS = 75L
 
 // Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
 private const val APPEAR_MS = 150
-
-// Downward glide ease: rises snap (see the bar scope), only teleports
-// down get rounded into a settle.
-private const val GLIDE_EASE_MS = 120
 
 // Remaining keyboard slide that starts the Done-to-actions morph: the bar
 // flips in the final stretch so the FAB row settles right as the keyboard
@@ -548,28 +543,19 @@ fun NoteScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Sole glider of this bar: the window is adjustNothing, so the
-            // IME inset carries this stable container above the keyboard.
-            // Asymmetric follow — rises snap so the opening ride stays
-            // exact, descents ease: Gboard swaps layouts mid-open under
-            // load (fallback number row in, real layout back), shrinking
-            // the keyboard a row in one frame. Easing only downward turns
-            // that teleport into a settle instead of a Done jump, while
-            // the morph itself is untouched.
+            // animated IME inset moves this stable container above the
+            // keyboard with no lag. The content switch inside never changes
+            // size and never touches the insets, so the morph can't shift or
+            // stick at the end of the keyboard slide.
             // Read low in the tree: this scope already recomposes every
-            // inset frame, so nothing above pays for it.
+            // inset frame via imePadding, so nothing above pays for it.
             val density = LocalDensity.current
             val imeRemainingPx = WindowInsets.ime.getBottom(density)
-            val glidePx = remember { Animatable(0f) }
-            LaunchedEffect(imeRemainingPx) {
-                val target = imeRemainingPx.toFloat()
-                if (target >= glidePx.value) glidePx.snapTo(target)
-                else glidePx.animateTo(target, tween(GLIDE_EASE_MS))
-            }
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
-                    .padding(bottom = with(density) { glidePx.value.toDp() })
+                    .imePadding()
             ) {
                 // Head start on the landing: once only a sliver of keyboard
                 // remains, start morphing back so the FAB row settles right
