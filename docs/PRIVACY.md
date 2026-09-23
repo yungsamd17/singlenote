@@ -12,7 +12,7 @@ Your note and settings stay in the app's private storage on your device. They ar
 
 ## Copy and share
 
-Copy puts plain text on the system clipboard — hidden from the preview on Android 13 and later, but it may linger in keyboard history. Share sends plain text to the app you choose.
+Copy puts plain text on the system clipboard — the system may show a preview, and it may linger in keyboard history. Share sends plain text to the app you choose.
 
 ## Permissions
 
