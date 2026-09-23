@@ -433,7 +433,17 @@ fun NoteScreen(
                                     Icon(
                                         Icons.Outlined.Share,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        // Disabled items dim their text
+                                        // automatically, but an explicit tint
+                                        // would stay bright — match it so the
+                                        // icon dims with the option.
+                                        tint = if (hasContent) {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.38f
+                                            )
+                                        }
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),
@@ -454,7 +464,14 @@ fun NoteScreen(
                                     Icon(
                                         Icons.Outlined.ContentCopy,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        // Same disabled-dim match as Share above.
+                                        tint = if (hasContent) {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                                                alpha = 0.38f
+                                            )
+                                        }
                                     )
                                 },
                                 modifier = Modifier.heightIn(min = 56.dp),

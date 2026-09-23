@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
@@ -221,11 +222,13 @@ fun AboutScreen(
             AboutRow(
                 icon = Icons.Outlined.Description,
                 title = stringResource(R.string.terms_title),
+                subtitle = stringResource(R.string.terms_subtitle),
                 onClick = onOpenTerms
             )
             AboutRow(
                 icon = Icons.Outlined.PrivacyTip,
                 title = stringResource(R.string.privacy_title),
+                subtitle = stringResource(R.string.privacy_subtitle),
                 onClick = onOpenPrivacy
             )
             AboutRow(
@@ -237,16 +240,19 @@ fun AboutScreen(
             AboutRow(
                 icon = Icons.Outlined.Code,
                 title = stringResource(R.string.source_title),
+                subtitle = stringResource(R.string.source_subtitle),
                 onClick = { openUrl(context, GITHUB_URL) }
             )
             AboutRow(
                 icon = Icons.Outlined.BugReport,
                 title = stringResource(R.string.issue_title),
+                subtitle = stringResource(R.string.issue_subtitle),
                 onClick = { openUrl(context, ISSUES_URL) }
             )
             AboutRow(
                 icon = Icons.Outlined.History,
                 title = stringResource(R.string.changelog_title),
+                subtitle = stringResource(R.string.changelog_subtitle),
                 onClick = ::openChangelog
             )
             AboutRow(
@@ -477,12 +483,19 @@ private fun AboutRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Column(modifier = Modifier.padding(start = 20.dp)) {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 if (subtitle != null) {
                     Text(
                         text = subtitle,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
