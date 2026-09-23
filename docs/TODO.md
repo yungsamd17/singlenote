@@ -3,7 +3,7 @@
 Review backlog from an outside-scrutiny pass (2026-09-18): four reviewers
 (platform, security/privacy, UX/accessibility, repo hygiene) tore the app
 down. Everything below was verified against the source. Check items off as
-they land; the `v1.0.0` checklist stays in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md).
+they land; the `v1.0.0` checklist stays in [`v1.0.0-plan.md`](v1.0.0-plan.md).
 
 ## Critical — privacy credibility
 
