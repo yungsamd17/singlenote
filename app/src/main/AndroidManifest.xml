@@ -20,16 +20,17 @@
         android:theme="@style/Theme.Singlenote"
         android:usesCleartextTraffic="false">
 
-        <!-- No portrait lock: the note layout (fixed card + bottom bar)
-            measures from density, so it adapts to landscape, foldables,
-            tablets and multi-window (resizeableActivity stays true).
-            adjustNothing is kept on purpose: the editor's keyboard glide
-            relies on a stable layout plus imePadding insets. http:// links
-            still render: LinkedText only displays them, never fetches. -->
+        <!-- Temporary portrait lock (was android:screenOrientation="portrait"
+            before rotation support): forces vertical orientation until the
+            landscape layout is fixed. adjustNothing is kept on purpose:
+            the editor's keyboard glide relies on a stable layout plus
+            imePadding insets. http:// links still render: LinkedText only
+            displays them, never fetches. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
