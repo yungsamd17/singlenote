@@ -147,6 +147,10 @@ jobs:
         with:
           name: singlenote-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          # 343 of these piled up at the 90-day default (5.4 GiB with the tag
+          # builds). A debug APK is reproducible from its commit, so it only
+          # has to survive long enough to be downloaded.
+          retention-days: 1
 
       # Tag builds hand the two versioned APKs to the `release` job
       # instead of publishing from here, so this job needs no write scope.
@@ -167,6 +171,11 @@ jobs:
           path: |
             singlenote-${{ github.ref_name }}-debug.apk
             singlenote-${{ github.ref_name }}-release.apk
+          # Hand-off to the `release` job below, which downloads this within
+          # the same run and attaches it to the GitHub Release. The Release
+          # is the durable copy; this needs to outlive the download and
+          # nothing more.
+          retention-days: 1
 
   release:
     # Tags only — and only with signing secrets, so a fork's own tags
