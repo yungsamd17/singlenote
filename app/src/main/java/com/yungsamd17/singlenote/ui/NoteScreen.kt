@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imeAnimationTarget
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -82,6 +83,7 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -128,11 +130,6 @@ private const val LANDING_SETTLE_MS = 75L
 
 // Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
 private const val APPEAR_MS = 150
-
-// Remaining keyboard slide that starts the Done-to-actions morph: the bar
-// flips in the final stretch so the FAB row settles right as the keyboard
-// lands, instead of lagging a full morph behind it.
-private val KeyboardSwapThreshold = 64.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -330,36 +327,48 @@ fun NoteScreen(
         }
     }
 
-    // A system-hide (back/gesture) keeps focus with Done shown, then
-    // exits editing once the closed state settles: isImeVisible flickers
-    // mid-animation under adjustNothing, so the settle delay lets any
-    // transient edge self-cancel instead of nuking a just-regained focus
-    // and killing a reopen. Any real open restarts the effect and cancels
-    // the pending clear. Done needs none of this — it clears up front.
+    // Preserve the input connection until the keyboard has settled closed.
+    // Clearing focus earlier can make the IME switch layouts mid-dismissal,
+    // changing its height and pushing the Done bar upward for a frame.
+    // A reopen cancels this pending focus clear through the effect keys.
     val isKeyboardOpen = WindowInsets.isImeVisible
-    LaunchedEffect(isKeyboardOpen) {
-        if (!isKeyboardOpen) {
+    val keyboardTargetOpen = WindowInsets.imeAnimationTarget.getBottom(density) > 0
+    val imeInsets = WindowInsets.ime
+    val keyboardHasInsets by remember(imeInsets, density) {
+        derivedStateOf { imeInsets.getBottom(density) > 0 }
+    }
+    val keyboardNearClosed by remember(imeInsets, density) {
+        derivedStateOf { imeInsets.getBottom(density) <= with(density) { 64.dp.toPx() } }
+    }
+    var keyboardWasOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(isKeyboardOpen, keyboardTargetOpen, keyboardHasInsets, isEditing) {
+        if (isKeyboardOpen || keyboardTargetOpen || keyboardHasInsets) {
+            keyboardWasOpen = true
+        } else if (isEditing && keyboardWasOpen) {
             delay(LANDING_SETTLE_MS)
-            if (isEditing) finishEditing()
+            finishEditing()
+            keyboardWasOpen = false
+        } else if (!isEditing) {
+            keyboardWasOpen = false
         }
     }
 
     // Guaranteed way out: with the keyboard already hidden, back ends
     // editing (with it open, the IME consumes the press instead).
-    BackHandler(enabled = isEditing) {
+    BackHandler(enabled = isEditing && !isKeyboardOpen && !keyboardTargetOpen && !keyboardHasInsets) {
         finishEditing()
     }
 
-    // Done tap is the only place that ever tells the IME to hide: clear
-    // focus first so there is no hide-while-focused race (a Done tap
-    // during the open animation settles closed instead of flashing back
-    // with focus held), then hide once. Taps that land mid-close regain
-    // focus normally and reopen — intentional reopens win and nothing
-    // observes the landing, so the reopen can't be killed by it.
+    // Hide while keeping the editor's input connection alive. The closed-state
+    // observer above clears focus only after the dismissal finishes, shared
+    // by Done and system back. Do not send a second hide after focus changes.
     fun requestFinishEditing() {
         viewModel.flushSave()
-        focusManager.clearFocus(force = true)
-        keyboard?.hide()
+        if (isKeyboardOpen || keyboardTargetOpen || keyboardHasInsets) {
+            keyboard?.hide()
+        } else {
+            finishEditing()
+        }
     }
 
     // First frame waits for stored truth (see viewModel.ready): the whole
@@ -551,32 +560,22 @@ fun NoteScreen(
             // never changes size, only the bar glides up.
             Spacer(modifier = Modifier.weight(1f))
 
-            // Sole glider of this bar: the window is adjustNothing, so the
-            // animated IME inset moves this stable container above the
-            // keyboard with no lag. The content switch inside never changes
-            // size and never touches the insets, so the morph can't shift or
-            // stick at the end of the keyboard slide.
-            // Read low in the tree: this scope already recomposes every
-            // inset frame via imePadding, so nothing above pays for it.
-            val density = LocalDensity.current
-            val imeRemainingPx = WindowInsets.ime.getBottom(density)
+            // Follow the platform keyboard directly. The content swap starts
+            // near its landing; focus clearing waits until it settles closed.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding()
                     .imePadding()
             ) {
-                // Head start on the landing: once only a sliver of keyboard
-                // remains, start morphing back so the FAB row settles right
-                // as the slide ends instead of lagging a full morph behind.
-                // Done stays visible through the close glide (focus is
-                // already gone, the open keyboard holds it) and while
-                // focused-but-settled (system-hide/back with no tap yet).
-                val keyboardSubstantiallyOpen =
-                    imeRemainingPx.toFloat() >= with(density) {
-                        KeyboardSwapThreshold.toPx()
-                    }
-                val barDone = isEditing || keyboardSubstantiallyOpen
+                // Begin the visual swap during the final 64dp of dismissal.
+                // Focus remains intact until the separate closed-state observer
+                // clears it safely; a reopen immediately keeps Done visible.
+                val barDone = if (keyboardWasOpen && !keyboardTargetOpen) {
+                    !keyboardNearClosed
+                } else {
+                    isEditing || keyboardHasInsets || keyboardTargetOpen
+                }
                 AnimatedContent(
                     targetState = barDone,
                     label = "bottomBar",
@@ -585,7 +584,11 @@ fun NoteScreen(
                         // never grows or shifts while the glide carries it
                         // — the swap dissolves in place, in the same
                         // accent-tinted container family both ways.
-                        fadeIn(tween(200)) togetherWith fadeOut(tween(160))
+                        if (targetState) {
+                            fadeIn(tween(160)) togetherWith fadeOut(tween(120))
+                        } else {
+                            fadeIn(tween(240)) togetherWith fadeOut(tween(200))
+                        }
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
                     // padding = 88dp, so the crossfade dissolves in place with
