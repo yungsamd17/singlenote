@@ -85,6 +85,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
+    val context = LocalContext.current
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val accentColor by viewModel.accentColor.collectAsStateWithLifecycle()
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
@@ -146,7 +147,9 @@ fun SettingsScreen(
                     )
                 }
                 SettingCard {
-                    val languageTag = AppLanguage.getLanguageTag(LocalContext.current)
+                    val languageTag = AppLanguage.getLanguageTag(context).ifBlank {
+                        context.resources.configuration.locales[0].language
+                    }
                     ValueRow(
                         icon = Icons.Outlined.Language,
                         title = stringResource(R.string.settings_language),
@@ -264,13 +267,15 @@ fun SettingsScreen(
         DIALOG_LANGUAGE -> SelectionDialog(
             title = stringResource(R.string.settings_language),
             options = listOf(
-                "" to stringResource(R.string.language_system),
+                "en" to stringResource(R.string.language_english),
                 "sk" to stringResource(R.string.language_slovak)
             ),
-            selected = AppLanguage.getLanguageTag(LocalContext.current),
+            selected = AppLanguage.getLanguageTag(context).ifBlank {
+                if (context.resources.configuration.locales[0].language == "sk") "sk" else "en"
+            },
             onSelect = { tag ->
-                AppLanguage.setLanguage(LocalContext.current, tag)
                 openDialog = DIALOG_NONE
+                AppLanguage.setLanguage(context, tag)
             },
             onDismiss = { openDialog = DIALOG_NONE }
         )
@@ -472,5 +477,5 @@ private fun sizeLabel(key: String): String = when (key) {
 @Composable
 private fun languageLabel(languageTag: String): String = when (languageTag) {
     "sk" -> stringResource(R.string.language_slovak)
-    else -> stringResource(R.string.language_system)
+    else -> stringResource(R.string.language_english)
 }

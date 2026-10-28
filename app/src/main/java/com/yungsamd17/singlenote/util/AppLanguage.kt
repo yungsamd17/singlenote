@@ -22,14 +22,71 @@ object AppLanguage {
             preferences(context).getString(LANGUAGE_KEY, "").orEmpty()
         }
 
+    private val transitions = java.util.WeakHashMap<Activity, android.widget.ImageView>()
+
     fun setLanguage(context: Context, languageTag: String) {
+        if (getLanguageTag(context) == languageTag) return
+        val activity = context.findActivity()
+        val content = activity?.findViewById<android.view.ViewGroup>(android.R.id.content)
+        if (activity == null || content == null || content.width == 0 || content.height == 0) {
+            applyLanguage(context, languageTag)
+            return
+        }
+        transitions.remove(activity)?.let { content.overlay.remove(it) }
+        val bitmap = android.graphics.Bitmap.createBitmap(
+            content.width, content.height, android.graphics.Bitmap.Config.ARGB_8888
+        )
+        content.draw(android.graphics.Canvas(bitmap))
+        val snapshot = android.widget.ImageView(activity).apply {
+            setImageBitmap(bitmap)
+            layout(0, 0, content.width, content.height)
+            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+        transitions[activity] = snapshot
+        content.overlay.add(snapshot)
+        applyLanguage(context, languageTag)
+        // Also handle selecting an explicit locale identical to the system
+        // locale, which may not dispatch a configuration change.
+        content.postDelayed({ finishTransition(activity) }, 500)
+    }
+
+    fun finishTransition(activity: Activity) {
+        val snapshot = transitions.remove(activity) ?: return
+        val content = activity.findViewById<android.view.ViewGroup>(android.R.id.content)
+        content.viewTreeObserver.addOnPreDrawListener(
+            object : android.view.ViewTreeObserver.OnPreDrawListener {
+                override fun onPreDraw(): Boolean {
+                    content.viewTreeObserver.removeOnPreDrawListener(this)
+                    snapshot.animate().alpha(0f).setDuration(240)
+                        .setInterpolator(android.view.animation.AccelerateDecelerateInterpolator())
+                        .withEndAction {
+                            content.overlay.remove(snapshot)
+                            snapshot.setImageDrawable(null)
+                        }.start()
+                    return true
+                }
+            }
+        )
+        content.invalidate()
+    }
+
+    private fun applyLanguage(context: Context, languageTag: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val locales = if (languageTag.isBlank()) LocaleList.getEmptyLocaleList()
             else LocaleList.forLanguageTags(languageTag)
             context.getSystemService(LocaleManager::class.java).applicationLocales = locales
         } else {
             preferences(context).edit().putString(LANGUAGE_KEY, languageTag).apply()
-            context.findActivity()?.recreate()
+            val activity = context.findActivity() ?: return
+            val configuration = Configuration(activity.resources.configuration).apply {
+                setLocales(LocaleList.forLanguageTags(languageTag))
+            }
+            // Older Android versions have no app-locale manager. Update the
+            // existing activity and dispatch the same configuration callback
+            // Compose observes on Android 13+, preserving its window and state.
+            @Suppress("DEPRECATION")
+            activity.resources.updateConfiguration(configuration, activity.resources.displayMetrics)
+            activity.onConfigurationChanged(configuration)
         }
     }
 

@@ -38,7 +38,7 @@
     <string name="settings_title">Nastavenia</string>
     <string name="settings_theme">Téma</string>
     <string name="settings_language">Jazyk</string>
-    <string name="language_system">Podľa systému</string>
+    <string name="language_english">English</string>
     <string name="language_slovak">Slovenčina</string>
     <string name="settings_accent">Farba zvýraznenia</string>
     <string name="accent_default">Predvolená</string>

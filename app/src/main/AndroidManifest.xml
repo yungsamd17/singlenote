@@ -28,6 +28,7 @@
             imePadding insets. http:// links still render: LinkedText only
             displays them, never fetches. -->
         <activity
+            android:configChanges="locale|layoutDirection"
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
