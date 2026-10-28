@@ -47,7 +47,9 @@ object AppLanguage {
         applyLanguage(context, languageTag)
         // Also handle selecting an explicit locale identical to the system
         // locale, which may not dispatch a configuration change.
-        content.postDelayed({ finishTransition(activity) }, 500)
+        content.postDelayed({
+            if (transitions[activity] === snapshot) finishTransition(activity)
+        }, 500)
     }
 
     fun finishTransition(activity: Activity) {
