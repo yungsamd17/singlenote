@@ -14,6 +14,12 @@ android {
 
     defaultConfig {
         applicationId = "com.yungsamd17.singlenote"
+        if (providers.gradleProperty("previewBuild").orNull == "true") {
+            applicationIdSuffix = ".preview"
+            manifestPlaceholders["appLabel"] = "Singlenote Preview"
+        } else {
+            manifestPlaceholders["appLabel"] = "@string/app_name"
+        }
         minSdk = 29
         targetSdk = 35
         versionCode = 15

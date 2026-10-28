@@ -147,6 +147,14 @@ fun SettingsScreen(
                     )
                 }
                 SettingCard {
+                    ValueRow(
+                        icon = painterResource(R.drawable.ic_format_paint),
+                        title = stringResource(R.string.settings_accent),
+                        value = accentLabel(accentColor),
+                        onClick = { openDialog = DIALOG_ACCENT }
+                    )
+                }
+                SettingCard {
                     val languageTag = AppLanguage.getLanguageTag(context).ifBlank {
                         context.resources.configuration.locales[0].language
                     }
@@ -155,14 +163,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_language),
                         value = languageLabel(languageTag),
                         onClick = { openDialog = DIALOG_LANGUAGE }
-                    )
-                }
-                SettingCard {
-                    ValueRow(
-                        icon = painterResource(R.drawable.ic_format_paint),
-                        title = stringResource(R.string.settings_accent),
-                        value = accentLabel(accentColor),
-                        onClick = { openDialog = DIALOG_ACCENT }
                     )
                 }
                 SettingCard {

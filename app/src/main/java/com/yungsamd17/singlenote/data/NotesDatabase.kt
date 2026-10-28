@@ -237,7 +237,12 @@ class NoteRepository(
 
     override suspend fun setTextSize(value: String) = preferences.setTextSize(value)
 
-    override suspend fun setAccentColor(value: String) = preferences.setAccentColor(value)
+    override suspend fun setAccentColor(value: String) {
+        preferences.setAccentColor(value)
+        // Wake inactive widget sessions so widgets following the app accent
+        // update even when the current note has not changed.
+        notifyNow()
+    }
 
     /**
      * Immediate broadcast: cancels any coalesced trailing save broadcast,
@@ -279,9 +284,9 @@ class NoteRepository(
     companion object {
         /**
          * Widget/notification coalescing window: debounced keystroke-saves
-         * arrive ~500ms apart, so 3s collapses a burst into leading +
+         * arrive ~500ms apart, so 1s collapses a burst into leading +
          * trailing broadcasts instead of a rebuild per keystroke.
          */
-        const val BROADCAST_THROTTLE_MS = 3000L
+        const val BROADCAST_THROTTLE_MS = 1000L
     }
 }

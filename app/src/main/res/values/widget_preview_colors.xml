@@ -1,0 +1,5 @@
+<resources>
+    <color name="widget_preview_background">#ECE6F0</color>
+    <color name="widget_preview_text">#1D1B20</color>
+    <color name="widget_preview_accent">#6750A4</color>
+</resources>

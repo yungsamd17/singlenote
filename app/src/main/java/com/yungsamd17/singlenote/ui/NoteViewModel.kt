@@ -133,9 +133,9 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         flushSave().join()
     }
 
-    fun archiveCurrent() {
+    fun archiveCurrent(): Job {
         saveJob?.cancel()
-        viewModelScope.launch {
+        return viewModelScope.launch {
             val snapshot = _text.value
             val snapshotId = currentNoteId
             val wasPinned = try { pinned.first() } catch (_: Exception) { false }
