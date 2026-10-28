@@ -35,6 +35,14 @@ visible everywhere — home screen widget, pinned notification, and quick settin
   Permissions: notifications (pinned note), and internet solely for release
   notes and update checks, only when you open them
 
+## Languages
+
+On `main` (pending the next release), Singlenote supports English and Slovak
+(Slovenčina). Open **Settings → Language** to select either language. The app
+initially follows the system language, falling back to English for unsupported
+languages; choosing a language saves an app-specific preference. Language changes
+crossfade in place without restarting the screen.
+
 ## Roadmap
 
 `v0.4.1` is the current release. Track the checklist for the first stable release in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md) — features, improvements, fixes and release steps for `v1.0.0`.
@@ -68,7 +76,7 @@ installable APKs to [Releases](https://github.com/yungsamd17/singlenote/releases
 | Language | Kotlin |
 | UI | Jetpack Compose (Material 3) |
 | Storage | Room (active note + archive) |
-| Settings | DataStore Preferences |
+| Settings | DataStore Preferences; app language via Android per-app locales (13+) or SharedPreferences (10–12) |
 | Widget | Glance |
 | Navigation | Navigation Compose |
 | Async | Kotlin Coroutines |

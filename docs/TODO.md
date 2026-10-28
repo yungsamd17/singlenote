@@ -114,10 +114,12 @@ they land; the `v1.0.0` checklist stays in [`v1.0.0-plan.md`](v1.0.0-plan.md).
 - [x] `singleTask` with no `onNewIntent`; `BOOT_COMPLETED` without
   `MY_PACKAGE_REPLACED` (pin vanishes on every update); no explicit
   `usesCleartextTraffic=false` while `http://` links render.
-- [x] `portrait` lock + `adjustNothing` bans foldables, tablets, landscape and
-  multi-window (`AndroidManifest.xml:23-24`). ( Landed: portrait lock removed,
-  multi-window left enabled. `adjustNothing` deliberately kept — the editor's
-  keyboard glide depends on a non-relayouting window. )
+- [ ] Complete rotation and large-screen support. Multi-window remains enabled,
+  but the portrait lock is currently retained until landscape layout is fixed.
+  The editor now uses edge-to-edge `adjustResize` with `imePadding` (#118).
+  Keyboard dismissal keeps editor focus until the keyboard settles closed,
+  fixing the transient number row and Done-button shift. Rotation and wider
+  layouts still need verification before this item can be completed.
 - [x] Deprecated `URL()` + raw `HttpURLConnection` (`GithubReleases.kt:27`);
   `openUrl()` with no `ActivityNotFoundException` guard (`AboutScreen.kt:491-493`);
   `@Database(exportSchema=false)` ships the next migration blind.

@@ -53,12 +53,15 @@ app/src/main/java/com/yungsamd17/singlenote/
 Key patterns:
 
 - `NoteStore` / `ArchiveStore` are interfaces; ViewModels depend on them, `NoteRepository` implements both. Any interface change must be applied to the repository AND to test fakes (see `NoteViewModelTest.FakeNoteStore`).
-- All user-visible text lives in `app/src/main/res/values/strings.xml` — never hardcode strings in composables.
+- All user-visible text lives in `app/src/main/res/values/strings.xml` — never hardcode strings in composables. Keep the Slovak translation in `values-sk/strings.xml` complete, with matching resource keys and formatting placeholders. Language names are displayed in their native form: English / Slovenčina.
+- `AppLanguage` manages Android per-app locales on Android 13+ and a SharedPreferences/context override on Android 10–12. The activity handles `locale|layoutDirection` changes in place; preserve the themed background and snapshot crossfade when modifying this flow.
 - Links and light markdown live in those strings as `[label](url)` and render via `LinkedText` / `MarkdownText` (`util/LinkedText.kt`): accent-colored, shown without the `https://` prefix. Bare URLs, emails, `#1234` issue refs, `@mentions` and `**bold**` linkify/style automatically; `#` / `##` / `###` become headings.
-- Settings persist via `NotePreferences` (DataStore). Expose flows as `StateFlow` with `SharingStarted.WhileSubscribed(5000)` in ViewModels.
+- Settings other than app language persist via `NotePreferences` (DataStore). Expose flows as `StateFlow` with `SharingStarted.WhileSubscribed(5000)` in ViewModels.
 - Note edits debounce-save (500ms) and flush on ON_STOP; repository broadcasts `ACTION_NOTE_UPDATED` so widget/tile/notification refresh.
 
 ## UI Conventions
+
+- The edge-to-edge editor uses `adjustResize` and `imePadding` to follow keyboard movement. Keep the input connection focused while dismissing the keyboard; clear focus only after it is fully closed and settled. Clearing it earlier can flash a different keyboard layout/number row and shift Done upward. A quick reopen must cancel pending focus clearing. The Done-to-Pinned visual transition starts during the final 64dp of dismissal, independently of focus clearing (240ms fade in / 200ms fade out).
 
 - Material 3 only. Settings follow the card-per-row style: one rounded `Card` (16dp corners) per row, 8dp gaps between cards, section labels in `colorScheme.primary`, switches use `thumbContent` check/close icons.
 - Top bar: icon `IconButton`s wrapped in `TooltipIconButton` (tooltip helper in `NoteScreen.kt`).
