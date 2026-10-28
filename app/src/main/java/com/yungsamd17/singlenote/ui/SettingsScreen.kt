@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
@@ -50,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -64,12 +66,14 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
+import com.yungsamd17.singlenote.util.AppLanguage
 
 private const val DIALOG_NONE = "none"
 private const val DIALOG_THEME = "theme"
 private const val DIALOG_ACCENT = "accent"
 private const val DIALOG_FONT = "font"
 private const val DIALOG_SIZE = "size"
+private const val DIALOG_LANGUAGE = "language"
 
 // Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
 private const val APPEAR_MS = 150
@@ -81,6 +85,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenAbout: () -> Unit,
 ) {
+    val context = LocalContext.current
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val accentColor by viewModel.accentColor.collectAsStateWithLifecycle()
     val fontFamily by viewModel.fontFamily.collectAsStateWithLifecycle()
@@ -139,6 +144,17 @@ fun SettingsScreen(
                         title = stringResource(R.string.settings_theme),
                         value = themeLabel(themeMode),
                         onClick = { openDialog = DIALOG_THEME }
+                    )
+                }
+                SettingCard {
+                    val languageTag = AppLanguage.getLanguageTag(context).ifBlank {
+                        context.resources.configuration.locales[0].language
+                    }
+                    ValueRow(
+                        icon = Icons.Outlined.Language,
+                        title = stringResource(R.string.settings_language),
+                        value = languageLabel(languageTag),
+                        onClick = { openDialog = DIALOG_LANGUAGE }
                     )
                 }
                 SettingCard {
@@ -245,6 +261,21 @@ fun SettingsScreen(
             onSelect = {
                 viewModel.setTextSize(it)
                 openDialog = DIALOG_NONE
+            },
+            onDismiss = { openDialog = DIALOG_NONE }
+        )
+        DIALOG_LANGUAGE -> SelectionDialog(
+            title = stringResource(R.string.settings_language),
+            options = listOf(
+                "en" to stringResource(R.string.language_english),
+                "sk" to stringResource(R.string.language_slovak)
+            ),
+            selected = AppLanguage.getLanguageTag(context).ifBlank {
+                if (context.resources.configuration.locales[0].language == "sk") "sk" else "en"
+            },
+            onSelect = { tag ->
+                openDialog = DIALOG_NONE
+                AppLanguage.setLanguage(context, tag)
             },
             onDismiss = { openDialog = DIALOG_NONE }
         )
@@ -441,4 +472,10 @@ private fun sizeLabel(key: String): String = when (key) {
     NotePreferences.SIZE_SMALL -> stringResource(R.string.size_small)
     NotePreferences.SIZE_LARGE -> stringResource(R.string.size_large)
     else -> stringResource(R.string.size_medium)
+}
+
+@Composable
+private fun languageLabel(languageTag: String): String = when (languageTag) {
+    "sk" -> stringResource(R.string.language_slovak)
+    else -> stringResource(R.string.language_english)
 }

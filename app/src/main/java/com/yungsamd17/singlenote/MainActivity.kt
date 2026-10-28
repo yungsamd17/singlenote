@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
@@ -24,6 +25,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,11 +44,21 @@ import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.util.AppLanguage
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        AppLanguage.finishTransition(this)
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,6 +131,11 @@ class MainActivity : ComponentActivity() {
                     accentScheme(accentKey, darkTheme)
                 }
             ) {
+                val background = MaterialTheme.colorScheme.background.toArgb()
+                SideEffect {
+                    window.setBackgroundDrawable(ColorDrawable(background))
+                    window.decorView.setBackgroundColor(background)
+                }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
                     // Activity-scoped on purpose: entry-scoped ViewModels die

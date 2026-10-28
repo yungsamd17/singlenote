@@ -312,7 +312,7 @@ fun NoteScreen(
     // Privacy Policy for both caveats, including keyboard history).
     fun copyNoteWithFeedback() {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText("note", text))
+        clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.app_name), text))
         scope.launch {
             snackbarHostState.showSnackbar(context.getString(R.string.note_copied))
         }
@@ -905,7 +905,14 @@ internal fun SwipeableSnackbarHost(
                     enableDismissFromStartToEnd = true,
                     enableDismissFromEndToStart = true,
                     backgroundContent = {},
-                    content = { Snackbar(snackbarData = data) }
+                    content = {
+                        Snackbar(
+                            snackbarData = data,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            actionColor = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 )
             }
         }
