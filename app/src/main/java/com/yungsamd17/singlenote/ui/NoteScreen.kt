@@ -560,8 +560,8 @@ fun NoteScreen(
             // never changes size, only the bar glides up.
             Spacer(modifier = Modifier.weight(1f))
 
-            // Follow the platform keyboard directly; only the content swap
-            // is delayed until the keyboard has settled closed.
+            // Follow the platform keyboard directly. The content swap starts
+            // near its landing; focus clearing waits until it settles closed.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

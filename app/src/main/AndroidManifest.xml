@@ -23,9 +23,8 @@
 
         <!-- Temporary portrait lock (was android:screenOrientation="portrait"
             before rotation support): forces vertical orientation until the
-            landscape layout is fixed. adjustNothing is kept on purpose:
-            the editor's keyboard glide relies on a stable layout plus
-            imePadding insets. http:// links still render: LinkedText only
+            landscape layout is fixed. Edge-to-edge adjustResize supplies
+            animated keyboard insets to the editor's imePadding. http:// links still render: LinkedText only
             displays them, never fetches. -->
         <activity
             android:configChanges="locale|layoutDirection"
