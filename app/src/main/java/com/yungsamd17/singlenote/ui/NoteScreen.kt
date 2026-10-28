@@ -88,6 +88,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,6 +96,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -144,6 +147,8 @@ internal fun noShadowElevation() = FloatingActionButtonDefaults.elevation(
 @Composable
 fun NoteScreen(
     viewModel: NoteViewModel,
+    widgetAction: String? = null,
+    onWidgetActionHandled: () -> Unit = {},
     onOpenArchive: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -158,6 +163,20 @@ fun NoteScreen(
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val view = LocalView.current
+    val widgetFocusRequester = remember { FocusRequester() }
+    var widgetCursorRequest by remember { mutableIntStateOf(0) }
+    LaunchedEffect(widgetAction, ready) {
+        val action = widgetAction ?: return@LaunchedEffect
+        if (!ready) return@LaunchedEffect
+        if (action == "archive") viewModel.archiveCurrent().join()
+        if (action == "edit" || action == "archive") {
+            widgetCursorRequest++
+            androidx.compose.runtime.withFrameNanos { }
+            widgetFocusRequester.requestFocus()
+            keyboard?.show()
+        }
+        onWidgetActionHandled()
+    }
 
     // Tapjacking defense: drop touches that land while another visible
     // window obscures the app, so one-tap Archive/Delete/Pin can't fire
@@ -544,6 +563,7 @@ fun NoteScreen(
             ) {
                 NoteEditorField(
                     externalText = text,
+                    cursorToEndRequest = widgetCursorRequest,
                     onTextChange = viewModel::onTextChange,
                     onLimitReached = ::notifyLimitReached,
                     interactionSource = fieldInteraction,
@@ -551,7 +571,7 @@ fun NoteScreen(
                     fontSize = noteFontSize,
                     lineHeight = noteLineHeight,
                     maxLength = noteMaxLength,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize().focusRequester(widgetFocusRequester)
                 )
             }
 
@@ -707,6 +727,7 @@ fun NoteScreen(
 @Composable
 private fun NoteEditorField(
     externalText: String,
+    cursorToEndRequest: Int,
     onTextChange: (String) -> Unit,
     onLimitReached: () -> Unit,
     interactionSource: MutableInteractionSource,
@@ -736,6 +757,14 @@ private fun NoteEditorField(
             val fresh = TextFieldValue(text = externalText, selection = TextRange(externalText.length))
             fieldValue = fresh
             scrollState.scrollTo(0)
+        }
+    }
+
+    LaunchedEffect(cursorToEndRequest) {
+        if (cursorToEndRequest > 0) {
+            fieldValue = fieldValue.copy(selection = TextRange(fieldValue.text.length), composition = null)
+            androidx.compose.runtime.withFrameNanos { }
+            scrollState.scrollTo(scrollState.maxValue)
         }
     }
 

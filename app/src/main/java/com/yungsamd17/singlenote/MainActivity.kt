@@ -21,6 +21,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -45,11 +48,25 @@ import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.util.AppLanguage
+import com.yungsamd17.singlenote.widget.WidgetActionSecurity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    companion object { const val EXTRA_WIDGET_ACTION = "widget_action" }
+    private var widgetAction by mutableStateOf<String?>(null)
+
+    private fun receiveWidgetAction(intent: Intent?) {
+        if (WidgetActionSecurity.valid(this, intent?.getStringExtra(WidgetActionSecurity.EXTRA_TOKEN))) {
+            widgetAction = intent?.getStringExtra(EXTRA_WIDGET_ACTION)?.takeIf {
+                it in setOf("open", "edit", "archive")
+            }
+        }
+        intent?.removeExtra(EXTRA_WIDGET_ACTION)
+        intent?.removeExtra(WidgetActionSecurity.EXTRA_TOKEN)
+    }
+
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
@@ -62,6 +79,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        receiveWidgetAction(intent)
         // Match the launch window to the system theme before the first
         // frame. The stored theme needs a DataStore read, which must never
         // block the UI thread — so the launch background uses the system
@@ -138,6 +156,11 @@ class MainActivity : ComponentActivity() {
                 }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    LaunchedEffect(widgetAction) {
+                        if (widgetAction != null && navController.currentDestination?.route != "note") {
+                            navController.navigate("note") { popUpTo("note") { inclusive = false }; launchSingleTop = true }
+                        }
+                    }
                     // Activity-scoped on purpose: entry-scoped ViewModels die
                     // on pop, cancelling a pending delayed undo write — a
                     // note deleted in the archive would resurrect when
@@ -183,6 +206,8 @@ class MainActivity : ComponentActivity() {
                         composable("note") {
                             NoteScreen(
                                 viewModel = noteViewModel,
+                                widgetAction = widgetAction,
+                                onWidgetActionHandled = { widgetAction = null },
                                 onOpenArchive = { navController.navigate("archive") },
                                 onOpenSettings = { navController.navigate("settings") }
                             )
@@ -257,6 +282,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        receiveWidgetAction(intent)
     }
 
     private fun applyBarAppearance(darkTheme: Boolean) {

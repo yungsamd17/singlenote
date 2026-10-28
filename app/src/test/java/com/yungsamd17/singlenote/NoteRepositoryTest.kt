@@ -355,6 +355,19 @@ class NoteRepositoryTest {
     }
 
     @Test
+    fun changingAccent_notifiesWidgetsWithoutChangingNote() = runTest(UnconfinedTestDispatcher()) {
+        val prefs = FakePrefs()
+        var broadcasts = 0
+        val repo = NoteRepository(FakeDao(), prefs, { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
+
+        repo.setAccentColor("blue")
+        advanceUntilIdle()
+
+        assertEquals("blue", prefs.accentColor.value)
+        assertEquals(1, broadcasts)
+    }
+
+    @Test
     fun saves_coalesceToLeadingPlusTrailing() = runTest(UnconfinedTestDispatcher()) {
         val dao = FakeDao()
         val seen = mutableListOf<String>()

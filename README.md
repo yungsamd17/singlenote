@@ -22,7 +22,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 ## Features
 
 - **One active note** — automatic saving as you type, flushed when you leave the app
-- **Home screen widget** — the current note at a glance
+- **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action are on `main` for the next release
 - **Pinned notification** — keeps your note visible in the notification shade
 - **Quick settings tile** — one swipe away
 - **Archive** — archive the current note, restore it later, or delete it permanently
@@ -65,6 +65,10 @@ Requires JDK 17 and the Android SDK (API 35). Open the project in Android Studio
 ```sh
 ./gradlew assembleDebug
 ```
+
+To install a separate debug preview alongside the release, build with
+`./gradlew -PpreviewBuild=true assembleDebug`. It uses the package
+`com.yungsamd17.singlenote.preview` and the launcher name **Singlenote Preview**.
 
 CI builds and tests every push to `main`; tagged releases (`v*`) automatically publish
 installable APKs to [Releases](https://github.com/yungsamd17/singlenote/releases).
