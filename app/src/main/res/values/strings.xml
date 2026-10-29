@@ -143,4 +143,7 @@
     <string name="license_symbols">Material Symbols (license, format_paint) — Apache License 2.0</string>
     <string name="license_bootstrap">Bootstrap Icons (sticky-fill) — MIT License</string>
     <string name="license_third_party">Full third-party notices: [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
+    <string name="export_archive">Save archive</string>
+    <string name="archive_export_success">Archive saved</string>
+    <string name="archive_export_failed">Could not save archive</string>
 </resources>

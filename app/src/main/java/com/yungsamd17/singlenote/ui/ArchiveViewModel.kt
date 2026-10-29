@@ -32,6 +32,9 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     private val _events = Channel<ArchiveEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
+    // Retain the selected snapshot while the system save picker is open.
+    var pendingExport: String? = null
+
     var restoreConflict by mutableStateOf<Note?>(null)
         private set
 
