@@ -1,5 +1,7 @@
 package com.yungsamd17.singlenote.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +56,9 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.Note
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +78,28 @@ fun ArchiveScreen(
     val undoLabel = stringResource(R.string.action_undo)
     val deletedLabel = stringResource(R.string.archived_note_deleted)
     val clearedLabel = stringResource(R.string.archive_cleared)
+    val exportSuccess = stringResource(R.string.archive_export_success)
+    val exportFailure = stringResource(R.string.archive_export_failed)
+    val scope = rememberCoroutineScope()
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+        val snapshot = viewModel.pendingExport
+        viewModel.pendingExport = null
+        if (uri != null) {
+            scope.launch {
+                val saved = snapshot != null && withContext(Dispatchers.IO) {
+                    try {
+                        val stream = context.contentResolver.openOutputStream(uri)
+                        if (stream == null) false else {
+                            stream.bufferedWriter(Charsets.UTF_8).use { it.write(snapshot) }
+                            true
+                        }
+                    } catch (_: java.io.IOException) { false }
+                      catch (_: SecurityException) { false }
+                }
+                snackbarHostState.showSnackbar(if (saved) exportSuccess else exportFailure)
+            }
+        }
+    }
 
     // Optimistic hiding: pending rows vanish at once while the DB write
     // waits out the Undo window. Survives rotation via the ViewModel.
@@ -135,6 +164,12 @@ fun ArchiveScreen(
                 },
                 actions = {
                     if (visibleNotes.isNotEmpty()) {
+                        IconButton(onClick = {
+                            viewModel.pendingExport = visibleNotes.joinToString("\n\n---\n\n") { it.content }
+                            exportLauncher.launch("singlenote-archive.txt")
+                        }) {
+                            Icon(Icons.Outlined.SaveAlt, contentDescription = stringResource(R.string.export_archive))
+                        }
                         IconButton(onClick = { showClearDialog = true }) {
                             Icon(
                                 Icons.Outlined.Delete,

@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
-import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.layout.Alignment
@@ -40,7 +39,9 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 
 class SinglenoteWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Exact
+    // Keep one flexible RemoteViews layout: some launchers report stale size
+    // options during resizing, leaving Exact layouts shorter than their frame.
+    override val sizeMode = SizeMode.Single
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val dao = AppDatabase.get(context).noteDao()
@@ -97,13 +98,11 @@ internal fun WidgetContent(openIntent: Intent?, content: String, fallbackHint: S
         modifier = interactiveModifier.padding(start = 14.dp, top = topPadding, end = 14.dp, bottom = 14.dp),
         contentAlignment = Alignment.TopStart
     ) {
-        Column {
+        Column(modifier = GlanceModifier.fillMaxSize()) {
             if (style.showTitle) {
                 Text(brand, style = TextStyle(color = accent, fontSize = style.titleSize.sp, fontWeight = FontWeight.Medium), maxLines = 1)
             }
-            val headerHeight = if (style.showTitle) style.titleSize * 1.4f else 0f
-            val maxLines = ((LocalSize.current.height - topPadding - 14.dp).value - headerHeight).div(textSize * 1.4f).toInt().coerceIn(1, 12)
-            Text(noteText, style = TextStyle(color = foreground, fontSize = textSize.sp), maxLines = maxLines)
+            Text(noteText, style = TextStyle(color = foreground, fontSize = textSize.sp))
         }
     }
 }
