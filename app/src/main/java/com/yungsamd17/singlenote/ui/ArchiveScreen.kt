@@ -65,6 +65,7 @@ import kotlinx.coroutines.withContext
 fun ArchiveScreen(
     viewModel: ArchiveViewModel,
     onBack: () -> Unit,
+    onRestored: () -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val pendingDelete by viewModel.pendingDelete.collectAsStateWithLifecycle()
@@ -143,7 +144,7 @@ fun ArchiveScreen(
             when (event) {
                 // Back on the main note: the restored/swapped/replaced note
                 // is already visible there, so the archive closes itself.
-                ArchiveEvent.Restored -> onBack()
+                ArchiveEvent.Restored -> onRestored()
                 ArchiveEvent.Cleared ->
                     snackbarHostState.showSnackbar(message = context.getString(R.string.archive_cleared))
             }

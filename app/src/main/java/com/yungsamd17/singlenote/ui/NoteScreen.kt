@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,8 +25,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -416,7 +419,12 @@ fun NoteScreen(
                 navigationIcon = {
                     TooltipIconButton(
                         tooltip = stringResource(R.string.cd_open_archive),
-                        onClick = onOpenArchive
+                        onClick = {
+                            scope.launch {
+                                viewModel.flushSaveAndAwait()
+                                onOpenArchive()
+                            }
+                        }
                     ) {
                         Icon(
                             Icons.Outlined.Inventory2,
@@ -660,7 +668,7 @@ fun NoteScreen(
                             }
 
                             if (notificationsEnabled) {
-                                FixedWidthPinButton(
+                                PinButton(
                                     pinned = pinned,
                                     onClick = ::requestPinToggle,
                                     fontSize = buttonFontSize,
@@ -773,7 +781,21 @@ private fun NoteEditorField(
     val editorHint = stringResource(R.string.hint_write_one_thing)
     BasicTextField(
         value = fieldValue,
-        onValueChange = { new ->
+        onValueChange = { incoming ->
+            val old = fieldValue
+            val cursor = old.selection.start
+            val insertedNewline = old.selection.collapsed && old.composition == null &&
+                incoming.composition == null && incoming.text.length == old.text.length + 1 &&
+                incoming.text == old.text.substring(0, cursor) + "\n" + old.text.substring(cursor)
+            val lineStart = old.text.lastIndexOf('\n', (cursor - 1).coerceAtLeast(-1)) + 1
+            val line = old.text.substring(lineStart, cursor)
+            val prefix = if (line.startsWith("- ")) "- " else if (line.startsWith("-")) "-" else ""
+            val new = if (insertedNewline && prefix.isNotEmpty() && incoming.text.length + prefix.length <= maxLength) {
+                incoming.copy(
+                    text = incoming.text.substring(0, cursor + 1) + prefix + incoming.text.substring(cursor + 1),
+                    selection = TextRange(cursor + 1 + prefix.length)
+                )
+            } else incoming
             // Absolute backstop only: within budget everything is accepted
             // whole — including long pastes — and the scrollable field
             // keeps it reachable. Only input past the cap is cut, always
@@ -841,40 +863,40 @@ private fun NoteEditorField(
 }
 
 @Composable
-fun FixedWidthPinButton(
+fun PinButton(
     pinned: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
 ) {
-    // Reserve the widest label width so the button never resizes when toggled.
-    val widestLabel = stringResource(R.string.pin_note)
-    val pinLabel = stringResource(if (pinned) R.string.pinned else R.string.pin_note)
-    ExtendedFloatingActionButton(
+    FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
         shape = CircleShape,
         elevation = noShadowElevation(),
-        icon = {
-            Icon(
-                if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                contentDescription = stringResource(
-                    if (pinned) R.string.cd_unpin else R.string.cd_pin
+    ) {
+        AnimatedContent(
+            targetState = pinned,
+            transitionSpec = {
+                (fadeIn(tween(160)) togetherWith fadeOut(tween(120))) using
+                    SizeTransform(clip = true) { _, _ -> tween(240) }
+            },
+            contentAlignment = Alignment.Center,
+            label = "pinButton",
+        ) { isPinned ->
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                    contentDescription = stringResource(if (isPinned) R.string.cd_unpin else R.string.cd_pin)
                 )
-            )
-        },
-        text = {
-            Box(contentAlignment = Alignment.Center) {
-                Text(
-                    widestLabel,
-                    maxLines = 1,
-                    fontSize = fontSize,
-                    modifier = Modifier.alpha(0f)
-                )
-                Text(pinLabel, maxLines = 1, fontSize = fontSize)
+                Spacer(Modifier.width(12.dp))
+                Text(stringResource(if (isPinned) R.string.pinned else R.string.pin_note), maxLines = 1, fontSize = fontSize)
             }
         }
-    )
+    }
 }
 
 private fun shareNote(context: Context, text: String) {

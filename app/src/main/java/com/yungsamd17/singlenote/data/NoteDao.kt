@@ -79,7 +79,11 @@ abstract class NoteDao {
 
     @Transaction
     open suspend fun restoreIfNoActive(noteId: Long): Boolean {
-        if (getActive() != null) return false
+        val archived = getById(noteId) ?: return false
+        if (archived.state != Note.STATE_ARCHIVED) return false
+        val active = getActive()
+        if (active != null && active.content.isNotBlank()) return false
+        if (active != null) deleteById(active.id)
         restore(noteId)
         return true
     }
