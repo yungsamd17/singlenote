@@ -215,7 +215,11 @@ class MainActivity : ComponentActivity() {
                         composable("archive") {
                             ArchiveScreen(
                                 viewModel = archiveViewModel,
-                                onBack = { navController.popBackStack() }
+                                onBack = { navController.popBackStack() },
+                                onRestored = {
+                                    noteViewModel.consumePendingUndo()
+                                    navController.popBackStack()
+                                }
                             )
                         }
                         composable("settings") {

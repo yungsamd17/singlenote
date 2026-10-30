@@ -40,10 +40,10 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
     fun restore(note: Note) {
         viewModelScope.launch {
-            if (archiveStore.hasActiveNote()) {
-                restoreConflict = note
-            } else if (archiveStore.restore(note.id)) {
+            if (archiveStore.restore(note.id)) {
                 _events.send(ArchiveEvent.Restored)
+            } else if (archiveStore.hasActiveNote()) {
+                restoreConflict = note
             }
         }
     }
