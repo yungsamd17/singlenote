@@ -6,8 +6,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-These changes are in the current development workspace and have not been
-published as a release. The latest published version is v0.4.1.
+Changes for the next release will be listed here.
+
+## [0.4.2] - 2026-11-01
 
 ### Added
 
