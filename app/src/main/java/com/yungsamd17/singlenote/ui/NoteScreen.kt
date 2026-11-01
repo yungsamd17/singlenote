@@ -19,6 +19,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.rememberScrollState
@@ -33,6 +35,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.imeAnimationTarget
@@ -40,11 +43,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Delete
@@ -70,7 +75,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -99,6 +103,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.alpha
@@ -187,10 +193,11 @@ fun NoteScreen(
     // clickable in this hierarchy.
     SideEffect { view.filterTouchesWhenObscured = true }
 
+    var showNotificationSettings by remember { mutableStateOf(false) }
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) viewModel.togglePinned()
+        if (granted) viewModel.togglePinned() else showNotificationSettings = true
     }
 
     fun requestPinToggle() {
@@ -199,11 +206,29 @@ fun NoteScreen(
                 context,
                 android.Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
-        if (needsPermission) {
+        if (pinned) {
+            viewModel.togglePinned()
+        } else if (needsPermission) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+            showNotificationSettings = true
         } else {
             viewModel.togglePinned()
         }
+    }
+
+    if (showNotificationSettings) {
+        AlertDialog(
+            onDismissRequest = { showNotificationSettings = false },
+            icon = { Icon(Icons.Outlined.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            title = { Text(stringResource(R.string.notification_settings_title)) },
+            text = { Text(stringResource(R.string.notification_settings_message)) },
+            confirmButton = { TextButton(onClick = {
+                showNotificationSettings = false
+                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName))
+            }) { Text(stringResource(R.string.notification_settings_open)) } },
+            dismissButton = { TextButton(onClick = { showNotificationSettings = false }, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } },
+        )
     }
 
     DisposableEffect(lifecycleOwner, view) {
@@ -236,10 +261,14 @@ fun NoteScreen(
     val hasContent = text.isNotBlank()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var lastLimitHintMs by remember { mutableLongStateOf(0L) }
+    val limitShake = remember { androidx.compose.animation.core.Animatable(0f) }
+    var limitBlink by remember { mutableStateOf(false) }
+    var limitJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val pendingUndo by viewModel.pendingUndo.collectAsStateWithLifecycle()
     val undoArchiveLabel = stringResource(R.string.note_archived)
     val undoDeleteLabel = stringResource(R.string.note_deleted)
+    val undoSwapLabel = stringResource(R.string.notes_swapped)
+    val undoReplaceLabel = stringResource(R.string.note_replaced)
     val undoActionLabel = stringResource(R.string.action_undo)
 
     // Undo window: ViewModel holds the snapshot so rotation re-shows the
@@ -255,6 +284,8 @@ fun NoteScreen(
         val message = when (pending.kind) {
             NoteViewModel.UndoKind.ARCHIVE -> undoArchiveLabel
             NoteViewModel.UndoKind.DELETE -> undoDeleteLabel
+            NoteViewModel.UndoKind.SWAP -> undoSwapLabel
+            NoteViewModel.UndoKind.REPLACE -> undoReplaceLabel
         }
         val result = snackbarHostState.showSnackbar(
             message = message,
@@ -278,7 +309,7 @@ fun NoteScreen(
     val noteFontFamily = when (fontFamilyKey) {
         "mono" -> FontFamily.Monospace
         "serif" -> FontFamily.Serif
-        else -> FontFamily.SansSerif
+        else -> MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
     }
     val noteFontSize = when (textSizeKey) {
         "small" -> 18.sp
@@ -291,28 +322,17 @@ fun NoteScreen(
         "large" -> 20.sp
         else -> 16.sp
     }
-    // Editor capacity: one absolute character backstop (mirrors the
-    // ViewModel) so unbounded pastes can't grow the field forever. Within
-    // that budget the field scrolls — input is never capped to what
-    // visibly fits, so large font scales keep content reachable instead of
-    // clipping it. The card height below still scales with the font size so
-    // smaller fonts show more lines at once.
+    // Keep the original minimum viewport, then grow to fit laid-out content.
+    // Once available screen space is exhausted, the field itself scrolls.
     val noteMaxLength = NoteViewModel.MAX_LENGTH_SMALL
     val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
     val noteLineHeight = noteFontSize * 1.45f
-    // Card height = line capacity plus the editor's vertical padding (16dp
-    // top + 16dp bottom) plus 10dp breathing room. Fixed once per font
-    // size: it never resizes with the keyboard, only the bottom bar glides
-    // above it.
     val density = LocalDensity.current
     val noteCardHeight = with(density) {
         (noteLineHeight * noteMaxLines.toFloat()).toDp() + 42.dp
     }
 
-    // The editor card below is a fixed-size viewport with a scrolling
-    // field inside: a tap puts the cursor exactly where it landed and the
-    // field scrolls to follow it, so overflow stays reachable at any font
-    // scale instead of being clipped or truncated.
+    val noteMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
 
     // Keyboard already closed on every path below (landing flip,
     // hidden back-press, closed Done tap): just release focus and save.
@@ -341,11 +361,19 @@ fun NoteScreen(
     // keystrokes are swallowed silently; this hint fires at most once per
     // cooldown so holding a key doesn't spam snackbars.
     fun notifyLimitReached() {
-        val now = System.currentTimeMillis()
-        if (now - lastLimitHintMs < LIMIT_HINT_COOLDOWN_MS) return
-        lastLimitHintMs = now
-        scope.launch {
-            snackbarHostState.showSnackbar(context.getString(R.string.note_limit_reached))
+        view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        limitJob?.cancel()
+        limitJob = scope.launch {
+            limitShake.snapTo(0f)
+            repeat(2) {
+                limitBlink = true
+                limitShake.animateTo(7f, tween(55))
+                limitShake.animateTo(-7f, tween(110))
+                limitBlink = false
+                limitShake.animateTo(0f, tween(55))
+                kotlinx.coroutines.delay(70)
+            }
+            limitBlink = false
         }
     }
 
@@ -402,6 +430,7 @@ fun NoteScreen(
     }
 
     Scaffold(
+        modifier = Modifier.offset { androidx.compose.ui.unit.IntOffset(limitShake.value.dp.roundToPx(), 0) },
         // Lifted above the 88dp bottom bar (and the keyboard via
         // imePadding) so limit hints never cover Done or the actions.
         snackbarHost = {
@@ -562,31 +591,59 @@ fun NoteScreen(
                 .padding(innerPadding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(noteCardHeight)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                NoteEditorField(
-                    externalText = text,
-                    cursorToEndRequest = widgetCursorRequest,
-                    onTextChange = viewModel::onTextChange,
-                    onLimitReached = ::notifyLimitReached,
-                    interactionSource = fieldInteraction,
-                    fontFamily = noteFontFamily,
-                    fontSize = noteFontSize,
-                    lineHeight = noteLineHeight,
-                    maxLength = noteMaxLength,
-                    modifier = Modifier.fillMaxSize().focusRequester(widgetFocusRequester)
-                )
-            }
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val measuredNoteHeight = with(density) {
+                    noteMeasurer.measure(
+                        text = text,
+                        style = TextStyle(fontFamily = noteFontFamily, fontSize = noteFontSize, lineHeight = noteLineHeight),
+                        constraints = androidx.compose.ui.unit.Constraints(maxWidth = (maxWidth - 72.dp).roundToPx().coerceAtLeast(1))
+                    ).size.height.toDp()
+                }
+                Card(
+                    shape = AppCardShape,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(maxOf(noteCardHeight, measuredNoteHeight + 48.dp).coerceAtMost(maxHeight))
+                        .padding(horizontal = NoteCardHorizontalPadding, vertical = NoteCardTopPadding)
+                ) {
+                    Box(Modifier.fillMaxSize()) {
+                    NoteEditorField(
+                        externalText = text,
+                        cursorToEndRequest = widgetCursorRequest,
+                        onTextChange = viewModel::onTextChange,
+                        onLimitReached = ::notifyLimitReached,
+                        interactionSource = fieldInteraction,
+                        fontFamily = noteFontFamily,
+                        fontSize = noteFontSize,
+                        lineHeight = noteLineHeight,
+                        maxLength = noteMaxLength,
+                        modifier = Modifier.fillMaxSize().focusRequester(widgetFocusRequester)
+                    )
+                    val remaining = (noteMaxLength - text.length).coerceAtLeast(0)
+                    val indicatorColor = when {
+                        remaining == 0 -> MaterialTheme.colorScheme.error
+                        remaining <= 20 -> androidx.compose.ui.graphics.Color(0xFFFFB300)
+                        else -> MaterialTheme.colorScheme.primary
+                    }
+                    if (text.length > 500) Box(
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp)
+                            .size(32.dp)
+                            .background(if (limitBlink) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            progress = { (text.length.toFloat() / noteMaxLength).coerceIn(0f, 1f) },
+                            modifier = Modifier.fillMaxSize(),
+                            color = indicatorColor,
+                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                            strokeWidth = 3.dp,
+                        )
+                        if (remaining <= 20) Text("$remaining", style = MaterialTheme.typography.labelSmall, color = if (limitBlink) MaterialTheme.colorScheme.surfaceContainerHighest else indicatorColor)
+                    }
+                    }
+                }
 
-            // Takes the slack so the bar sits at the bottom when the keyboard
-            // is closed, and collapses to zero when it opens — the card above
-            // never changes size, only the bar glides up.
-            Spacer(modifier = Modifier.weight(1f))
+            }
 
             // Follow the platform keyboard directly. The content swap starts
             // near its landing; focus clearing waits until it settles closed.
@@ -725,7 +782,7 @@ fun NoteScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -756,6 +813,31 @@ private fun NoteEditorField(
     // scrolls, so pasted content stays reachable at any font scale.
     var fieldValue by remember { mutableStateOf(TextFieldValue(externalText)) }
     val scrollState = rememberScrollState()
+    var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var viewportHeight by remember { mutableIntStateOf(0) }
+    val focused by interactionSource.collectIsFocusedAsState()
+    val contentPadding = with(LocalDensity.current) { 16.dp.roundToPx() }
+    // The outer scroll container owns the viewport, so explicitly follow the caret
+    // after text/selection changes and keyboard, font, or card-size changes.
+    // Scroll position is deliberately not an effect key: manual scrolling stays put.
+    LaunchedEffect(fieldValue.text, fieldValue.selection, textLayout, viewportHeight,
+        scrollState.maxValue, focused) {
+        val layout = textLayout ?: return@LaunchedEffect
+        if (!focused || viewportHeight <= 0 || layout.layoutInput.text.text != fieldValue.text) {
+            return@LaunchedEffect
+        }
+        val caret = layout.getCursorRect(fieldValue.selection.end.coerceIn(0, fieldValue.text.length))
+        val target = caretScrollOffset(
+            caretTop = kotlin.math.floor(caret.top).toInt() + contentPadding,
+            caretBottom = kotlin.math.ceil(caret.bottom).toInt() + contentPadding,
+            viewportHeight = viewportHeight,
+            currentOffset = scrollState.value,
+            maxOffset = scrollState.maxValue,
+            margin = contentPadding,
+        )
+        if (target != scrollState.value) scrollState.scrollTo(target)
+    }
+
     // Sync external truth (database load, restore, archive clear) whole —
     // never capped. Deliberately keyed on externalText only so a font-size
     // change never resets the field or moves the cursor. Jumps back to the
@@ -824,11 +906,14 @@ private fun NoteEditorField(
                 onLimitReached()
                 return@BasicTextField
             }
+            if (new.text.length == maxLength && fieldValue.text.length < maxLength) onLimitReached()
             fieldValue = new
             onTextChange(new.text)
         },
+        onTextLayout = { textLayout = it },
         interactionSource = interactionSource,
         modifier = modifier
+            .onSizeChanged { viewportHeight = it.height }
             .verticalScroll(scrollState)
             .semantics { contentDescription = editorHint },
         textStyle = TextStyle(
@@ -909,7 +994,7 @@ private fun shareNote(context: Context, text: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TooltipIconButton(
+internal fun TooltipIconButton(
     tooltip: String,
     enabled: Boolean = true,
     onClick: () -> Unit,
@@ -960,12 +1045,7 @@ internal fun SwipeableSnackbarHost(
                     enableDismissFromEndToStart = true,
                     backgroundContent = {},
                     content = {
-                        Snackbar(
-                            snackbarData = data,
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
-                            actionColor = MaterialTheme.colorScheme.primary
-                        )
+                        AppSnackbar(data)
                     }
                 )
             }

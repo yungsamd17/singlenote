@@ -8,8 +8,15 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
 import com.yungsamd17.singlenote.data.NoteRepository
 import com.yungsamd17.singlenote.data.PreferencesStore
+import com.yungsamd17.singlenote.ui.NoteViewModel
+import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -57,7 +64,7 @@ class NoteRepositoryTest {
         override suspend fun getById(id: Long): Note? = notes[id]
 
         override suspend fun insert(note: Note): Long {
-            val id = nextId++
+            val id = if (note.id == 0L) nextId++ else note.id.also { nextId = maxOf(nextId, it + 1) }
             notes[id] = note.copy(id = id)
             emit()
             return id
@@ -69,11 +76,11 @@ class NoteRepositoryTest {
         }
 
         override suspend fun archive(id: Long) {
-            notes[id]?.let { notes[id] = it.copy(state = Note.STATE_ARCHIVED); emit() }
+            notes[id]?.let { notes[id] = it.copy(state = Note.STATE_ARCHIVED, activeSlot = null, editedAt = if (it.archivedAt == null) null else it.editedAt, archivedAt = System.currentTimeMillis()); emit() }
         }
 
         override suspend fun restore(id: Long) {
-            notes[id]?.let { notes[id] = it.copy(state = Note.STATE_ACTIVE); emit() }
+            notes[id]?.let { notes[id] = it.copy(state = Note.STATE_ACTIVE, activeSlot = Note.ACTIVE_SLOT); emit() }
         }
 
         override suspend fun deleteById(id: Long) {
@@ -88,6 +95,14 @@ class NoteRepositoryTest {
     }
 
     private class FakePrefs : PreferencesStore {
+        override val appIcon = MutableStateFlow("default")
+        override suspend fun setAppIcon(value: String) { appIcon.value = value }
+        override val appFont = MutableStateFlow("system")
+        override suspend fun setAppFont(value: String) { appFont.value = value }
+        override val amoled = MutableStateFlow(false)
+        override suspend fun setAmoled(value: Boolean) { amoled.value = value }
+        override val dynamicColors = MutableStateFlow(false)
+        override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
@@ -124,6 +139,188 @@ class NoteRepositoryTest {
             accentColor.value = value
         }
     }
+
+    @Test
+    fun editingAndArchivingMaintainSeparateTimestamps() = runTest {
+        val dao = FakeDao()
+        dao.saveActiveContent("first", 100L)
+        val original = dao.getActive()!!
+        assertNull(original.editedAt)
+        dao.saveActiveContent("first revised", 150L)
+        assertNull(dao.getActive()?.editedAt)
+        dao.archiveActiveNote()
+        val archived = dao.getById(original.id)!!
+        assertNull(archived.editedAt)
+        assertTrue(archived.archivedAt != null)
+        dao.restoreIfNoActive(original.id)
+        assertNull(dao.getActive()?.editedAt)
+        dao.saveActiveContent("second", 200L)
+        assertEquals(200L, dao.getActive()?.editedAt)
+    }
+
+    @Test
+    fun firstArchiveClearsErroneousLegacyEditTimestamp() = runTest {
+        val dao = FakeDao()
+        val id = dao.insert(Note(content = "old preview", createdAt = 1, updatedAt = 2, editedAt = 2))
+        dao.archiveActiveNote()
+        assertNull(dao.getById(id)?.editedAt)
+        assertTrue(dao.getById(id)?.archivedAt != null)
+    }
+
+    @Test
+    fun delayedArchivedDeletionCannotRemoveAMainNoteRecoveredByUndo() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+        repo.saveActive("original main")
+        val original = repo.getActive()!!
+        val incoming = dao.insertArchived("incoming")
+        val undo = repo.restoreWithUndo(incoming, replace = false)!!
+        assertTrue(repo.undoRestore(undo))
+        repo.deleteArchived(original.id)
+        assertEquals(original, repo.getActive()?.copy(archivedAt = original.archivedAt))
+        assertTrue(repo.getActive()?.archivedAt != null)
+        assertEquals(1, dao.activeCount())
+    }
+
+    @Test
+    fun swapUndo_restoresBothOriginalRowsAndKeepsOtherArchivedNotes() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+        repo.saveActive("original main")
+        val original = repo.getActive()!!
+        val incoming = dao.insertArchived("incoming")
+        val unrelated = dao.insertArchived("unrelated")
+        val undo = repo.restoreWithUndo(incoming, replace = false)!!
+        assertEquals(incoming, repo.getActive()?.id)
+        assertTrue(repo.undoRestore(undo))
+        assertEquals(original, repo.getActive()?.copy(archivedAt = original.archivedAt))
+        assertTrue(repo.getActive()?.archivedAt != null)
+        assertEquals(Note.STATE_ARCHIVED, dao.getById(incoming)?.state)
+        assertEquals("incoming", dao.getById(incoming)?.content)
+        assertEquals("unrelated", dao.getById(unrelated)?.content)
+        assertEquals(1, dao.activeCount())
+    }
+
+    @Test
+    fun replaceUndo_recoversDeletedRowWithOriginalIdAndMetadata() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        var broadcasts = 0
+        val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, notifyScope = backgroundScope)
+        repo.saveActive("original main")
+        advanceUntilIdle()
+        val original = repo.getActive()!!
+        val incoming = dao.insertArchived("incoming")
+        broadcasts = 0
+        val undo = repo.restoreWithUndo(incoming, replace = true)!!
+        assertNull(dao.getById(original.id))
+        assertTrue(repo.undoRestore(undo))
+        advanceUntilIdle()
+        assertEquals(original, repo.getActive())
+        assertEquals(Note.STATE_ARCHIVED, dao.getById(incoming)?.state)
+        assertEquals(1, dao.activeCount())
+        assertEquals(2, broadcasts)
+        assertFalse(repo.undoRestore(undo))
+    }
+
+    @Test
+    fun restoreUndo_refusesToOverwriteANewerActiveNote() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+        repo.saveActive("original main")
+        val incoming = dao.insertArchived("incoming")
+        val undo = repo.restoreWithUndo(incoming, replace = true)!!
+        repo.archiveActive()
+        repo.saveActive("newer note")
+        val newer = repo.getActive()
+        assertFalse(repo.undoRestore(undo))
+        assertEquals(newer, repo.getActive())
+        assertEquals(1, dao.activeCount())
+    }
+
+    @Test
+    fun reversibleRestore_withMissingArchivedRowLeavesMainAlone() = runTest {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+        repo.saveActive("original main")
+        val original = repo.getActive()
+        assertNull(repo.restoreWithUndo(999L, replace = true))
+        assertNull(repo.restoreWithUndo(original!!.id, replace = false))
+        assertEquals(original, repo.getActive())
+    }
+
+    @Test
+    fun replaceUndo_fromMainFlushesIncomingEditsWithoutOverwritingRecoveredNote() = runTest(UnconfinedTestDispatcher()) {
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        try {
+            val dao = FakeDao()
+            val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+            repo.saveActive("original main")
+            val original = repo.getActive()!!
+            val incoming = dao.insertArchived("incoming")
+            val noteVm = NoteViewModel(repo)
+            val archiveVm = ArchiveViewModel(repo)
+            archiveVm.replace(dao.getById(incoming)!!)
+            advanceUntilIdle()
+            noteVm.onArchiveRestored(archiveVm.takeRestoreUndo())
+            advanceUntilIdle()
+            assertEquals(NoteViewModel.UndoKind.REPLACE, noteVm.pendingUndo.value?.kind)
+            noteVm.onTextChange("edited incoming")
+            noteVm.undoPending()
+            advanceUntilIdle()
+            assertEquals(original, repo.getActive())
+            assertEquals("original main", noteVm.text.value)
+            assertEquals("edited incoming", dao.getById(incoming)?.content)
+            assertEquals(Note.STATE_ARCHIVED, dao.getById(incoming)?.state)
+            assertNull(noteVm.pendingUndo.value)
+            advanceTimeBy(1_000L)
+            advanceUntilIdle()
+            assertEquals(original, repo.getActive())
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun dynamicColorChangesRefreshWidgetFollowers() =
+        runTest(UnconfinedTestDispatcher()) {
+            val prefs = FakePrefs()
+            var broadcasts = 0
+            val repo =
+                NoteRepository(FakeDao(), prefs, { broadcasts++ }, notifyScope = backgroundScope)
+            repo.setDynamicColors(true)
+            advanceUntilIdle()
+            assertTrue(prefs.dynamicColors.value)
+            assertEquals(1, broadcasts)
+            repo.setDynamicColors(false)
+            advanceUntilIdle()
+            assertFalse(prefs.dynamicColors.value)
+            assertEquals(2, broadcasts)
+        }
+
+    @Test
+    fun appearancePreferences_surviveRepositoryRecreationWithoutChangingExistingSettings() =
+        runTest {
+            val prefs = FakePrefs()
+            val dao = FakeDao()
+            val repo = NoteRepository(dao, prefs, notifyScope = backgroundScope)
+            repo.saveActive("Keep my note")
+            repo.setDynamicColors(true)
+            repo.setAmoled(true)
+            repo.setAppFont("flex")
+            repo.setAppIcon("accent")
+            val restored = NoteRepository(dao, prefs, notifyScope = backgroundScope)
+            assertTrue(restored.dynamicColors.first())
+            assertTrue(restored.amoled.first())
+            assertEquals("flex", restored.appFont.first())
+            assertEquals("accent", restored.appIcon.first())
+            assertEquals(ACCENT_DEFAULT, restored.accentColor.first())
+            assertEquals(FONT_DEFAULT, restored.fontFamily.first())
+            assertEquals(SIZE_MEDIUM, restored.textSize.first())
+            assertEquals("Keep my note", restored.getActive()?.content)
+            restored.setDynamicColors(false)
+            assertFalse(restored.dynamicColors.first())
+            assertEquals(ACCENT_DEFAULT, restored.accentColor.first())
+        }
 
     @Test
     fun saveActive_insertsNewNoteAndBroadcasts() = runTest(UnconfinedTestDispatcher()) {

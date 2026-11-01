@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.data.ArchiveRestoreUndo
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_LARGE
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
@@ -31,13 +32,14 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     // Pending destructive action awaiting its Undo window: held here (not in
     // the composable) so the snackbar can be re-shown after rotation and the
     // restore still fires. Cleared on Undo, timeout, or dismissal.
-    enum class UndoKind { ARCHIVE, DELETE }
+    enum class UndoKind { ARCHIVE, DELETE, SWAP, REPLACE }
     data class PendingUndo(
         val kind: UndoKind,
         val noteId: Long?,
         val content: String,
         val wasPinned: Boolean,
         val createdAtMs: Long,
+        val archiveRestore: ArchiveRestoreUndo? = null,
     )
     private val _pendingUndo = MutableStateFlow<PendingUndo?>(null)
     val pendingUndo: StateFlow<PendingUndo?> = _pendingUndo.asStateFlow()
@@ -59,7 +61,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
 
     val textSize: StateFlow<String> = store.textSize
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SIZE_MEDIUM)
 
     fun togglePinned() {
         viewModelScope.launch {
@@ -176,6 +178,24 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         }
     }
 
+    /** Adopt the restored row before offering Undo, cancelling stale editor writes. */
+    fun onArchiveRestored(undo: ArchiveRestoreUndo?) {
+        _pendingUndo.value = null
+        saveJob?.cancel()
+        viewModelScope.launch {
+            persistMutex.withLock {
+                val active = store.getActive()
+                adopt(active)
+                if (undo != null && active?.id == undo.restoredNoteId) {
+                    _pendingUndo.value = PendingUndo(
+                        if (undo.replaced) UndoKind.REPLACE else UndoKind.SWAP,
+                        active.id, active.content, false, undo.createdAtMs, undo
+                    )
+                }
+            }
+        }
+    }
+
     fun undoPending() {
         val pending = _pendingUndo.value ?: return
         _pendingUndo.value = null
@@ -203,6 +223,16 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
                     }
                     if (pending.wasPinned) {
                         try { store.setPinned(true) } catch (_: Exception) { }
+                    }
+                }
+                UndoKind.SWAP, UndoKind.REPLACE -> {
+                    val undo = pending.archiveRestore ?: return@launch
+                    val archiveStore = store as? ArchiveStore ?: return@launch
+                    persistMutex.withLock {
+                        // A newer active note must never be replaced by a stale Undo.
+                        if (store.getActive()?.id != undo.restoredNoteId) return@withLock
+                        persist()
+                        if (archiveStore.undoRestore(undo)) adopt(store.getActive())
                     }
                 }
                 UndoKind.DELETE -> {

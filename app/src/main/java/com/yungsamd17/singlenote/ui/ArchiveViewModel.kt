@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.yungsamd17.singlenote.data.ArchiveRestoreUndo
 import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
 import kotlinx.coroutines.Job
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -38,9 +40,14 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     var restoreConflict by mutableStateOf<Note?>(null)
         private set
 
+    private var restoredUndo: ArchiveRestoreUndo? = null
+
+    fun takeRestoreUndo(): ArchiveRestoreUndo? = restoredUndo.also { restoredUndo = null }
+
     fun restore(note: Note) {
         viewModelScope.launch {
             if (archiveStore.restore(note.id)) {
+                restoredUndo = null
                 _events.send(ArchiveEvent.Restored)
             } else if (archiveStore.hasActiveNote()) {
                 restoreConflict = note
@@ -50,7 +57,7 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
     fun swap(note: Note) {
         viewModelScope.launch {
-            archiveStore.swapWithActive(note.id)
+            restoredUndo = archiveStore.restoreWithUndo(note.id, replace = false) ?: return@launch
             restoreConflict = null
             _events.send(ArchiveEvent.Restored)
         }
@@ -58,7 +65,7 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
     fun replace(note: Note) {
         viewModelScope.launch {
-            archiveStore.replaceActive(note.id)
+            restoredUndo = archiveStore.restoreWithUndo(note.id, replace = true) ?: return@launch
             restoreConflict = null
             _events.send(ArchiveEvent.Restored)
         }
@@ -71,6 +78,8 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     fun delete(note: Note) {
         viewModelScope.launch { archiveStore.deleteArchived(note.id) }
     }
+
+    suspend fun importArchived(notes: List<Note>) = archiveStore.importArchived(notes)
 
     fun clearArchive() {
         viewModelScope.launch {
@@ -86,25 +95,37 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     // notes archived during the window.
     private val _pendingDelete = MutableStateFlow<Note?>(null)
     val pendingDelete: StateFlow<Note?> = _pendingDelete.asStateFlow()
-    private var deleteJob: Job? = null
+    private val _pendingDeleteIds = MutableStateFlow<Set<Long>>(emptySet())
+    val pendingDeleteIds: StateFlow<Set<Long>> = _pendingDeleteIds.asStateFlow()
+    private val deleteJobs = mutableMapOf<Long, Job>()
 
     private val _pendingClear = MutableStateFlow<List<Note>?>(null)
     val pendingClear: StateFlow<List<Note>?> = _pendingClear.asStateFlow()
     private var clearJob: Job? = null
 
     fun deleteWithUndo(note: Note) {
-        deleteJob?.cancel()
+        if (note.id in _pendingDeleteIds.value) return
+        _pendingDeleteIds.value = _pendingDeleteIds.value + note.id
         _pendingDelete.value = note
-        deleteJob = viewModelScope.launch {
+        deleteJobs[note.id] = viewModelScope.launch {
             delay(UNDO_WINDOW_MS)
-            try { archiveStore.deleteArchived(note.id) } catch (_: Exception) { }
-            _pendingDelete.value = null
+            try {
+                archiveStore.deleteArchived(note.id)
+                // Keep the row hidden until the database flow reflects the deletion.
+                archiveStore.archivedNotes.first { notes -> notes.none { it.id == note.id } }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) { }
+            _pendingDeleteIds.value = _pendingDeleteIds.value - note.id
+            if (_pendingDelete.value?.id == note.id) _pendingDelete.value = null
+            deleteJobs.remove(note.id)
         }
     }
 
     fun undoDelete() {
-        deleteJob?.cancel()
-        deleteJob = null
+        val note = _pendingDelete.value ?: return
+        deleteJobs.remove(note.id)?.cancel()
+        _pendingDeleteIds.value = _pendingDeleteIds.value - note.id
         _pendingDelete.value = null
     }
 

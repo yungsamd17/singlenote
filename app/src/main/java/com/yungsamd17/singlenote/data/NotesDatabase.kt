@@ -25,7 +25,7 @@ const val ACTION_NOTE_UPDATED = "com.yungsamd17.singlenote.NOTE_UPDATED"
 // file"). The room.schemaLocation arg in app/build.gradle.kts is already
 // in place, so flipping this back on is a one-line change once
 // app/schemas/2.json is generated and committed.
-@Database(entities = [Note::class], version = 2, exportSchema = false)
+@Database(entities = [Note::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
 
@@ -39,7 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "singlenote.db"
-                ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+                ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build().also { instance = it }
             }
     }
 }
@@ -63,6 +63,14 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN editedAt INTEGER")
+        db.execSQL("ALTER TABLE notes ADD COLUMN archivedAt INTEGER")
+        db.execSQL("UPDATE notes SET archivedAt = updatedAt WHERE state = ${Note.STATE_ARCHIVED}")
+    }
+}
+
 interface NoteStore {
     val activeNote: Flow<Note?>
     val pinned: Flow<Boolean>
@@ -71,6 +79,10 @@ interface NoteStore {
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
+    val dynamicColors: Flow<Boolean>
+    val amoled: Flow<Boolean>
+    val appFont: Flow<String>
+    val appIcon: Flow<String>
     val accentColor: Flow<String>
 
     suspend fun getActive(): Note?
@@ -83,6 +95,10 @@ interface NoteStore {
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
+    suspend fun setDynamicColors(value: Boolean)
+    suspend fun setAmoled(value: Boolean)
+    suspend fun setAppFont(value: String)
+    suspend fun setAppIcon(value: String)
     suspend fun setAccentColor(value: String)
 }
 
@@ -94,6 +110,9 @@ interface ArchiveStore {
     suspend fun swapWithActive(noteId: Long)
     suspend fun replaceActive(noteId: Long)
     suspend fun clearArchived()
+    suspend fun importArchived(notes: List<Note>)
+    suspend fun restoreWithUndo(noteId: Long, replace: Boolean): ArchiveRestoreUndo?
+    suspend fun undoRestore(undo: ArchiveRestoreUndo): Boolean
 }
 
 /**
@@ -150,6 +169,10 @@ class NoteRepository(
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
+    override val dynamicColors: Flow<Boolean> = preferences.dynamicColors
+    override val amoled: Flow<Boolean> = preferences.amoled
+    override val appFont: Flow<String> = preferences.appFont
+    override val appIcon: Flow<String> = preferences.appIcon
     override val accentColor: Flow<String> = preferences.accentColor
     override val archivedNotes: Flow<List<Note>> = dao.observeArchived()
 
@@ -192,7 +215,7 @@ class NoteRepository(
     }
 
     override suspend fun deleteArchived(noteId: Long) =
-        writeMutex.withLock { dao.deleteById(noteId) }
+        writeMutex.withLock { dao.deleteArchivedNote(noteId) }
 
     override suspend fun hasActiveNote(): Boolean = dao.getActive() != null
 
@@ -208,6 +231,23 @@ class NoteRepository(
         if (replaced) {
             notifyNow()
         }
+    }
+
+    override suspend fun importArchived(notes: List<Note>) {
+        writeMutex.withLock { dao.importArchived(notes) }
+        if (notes.isNotEmpty()) notifyNow()
+    }
+
+    override suspend fun restoreWithUndo(noteId: Long, replace: Boolean): ArchiveRestoreUndo? {
+        val undo = writeMutex.withLock { dao.restoreWithUndo(noteId, replace) }
+        if (undo != null) notifyNow()
+        return undo
+    }
+
+    override suspend fun undoRestore(undo: ArchiveRestoreUndo): Boolean {
+        val restored = writeMutex.withLock { dao.undoRestore(undo) }
+        if (restored) notifyNow()
+        return restored
     }
 
     override suspend fun clearArchived() {
@@ -236,6 +276,17 @@ class NoteRepository(
     override suspend fun setFontFamily(value: String) = preferences.setFontFamily(value)
 
     override suspend fun setTextSize(value: String) = preferences.setTextSize(value)
+
+    override suspend fun setDynamicColors(value: Boolean) {
+        preferences.setDynamicColors(value)
+        notifyNow()
+    }
+
+    override suspend fun setAmoled(value: Boolean) = preferences.setAmoled(value)
+
+    override suspend fun setAppFont(value: String) = preferences.setAppFont(value)
+
+    override suspend fun setAppIcon(value: String) = preferences.setAppIcon(value)
 
     override suspend fun setAccentColor(value: String) {
         preferences.setAccentColor(value)

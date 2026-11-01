@@ -19,25 +19,23 @@ abstract class NoteDao {
     @Query("SELECT * FROM notes WHERE state = ${Note.STATE_ARCHIVED} ORDER BY updatedAt DESC")
     abstract fun observeArchived(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE id = :id")
-    abstract suspend fun getById(id: Long): Note?
+    @Query("SELECT * FROM notes WHERE id = :id") abstract suspend fun getById(id: Long): Note?
 
-    @Insert
-    abstract suspend fun insert(note: Note): Long
+    @Insert abstract suspend fun insert(note: Note): Long
 
-    @Update
-    abstract suspend fun update(note: Note)
+    @Update abstract suspend fun update(note: Note)
 
     // Every state flip maintains activeSlot alongside state so the unique
     // index keeps enforcing a single ACTIVE row.
-    @Query("UPDATE notes SET state = ${Note.STATE_ARCHIVED}, activeSlot = NULL WHERE id = :id")
+    @Query("UPDATE notes SET state = ${Note.STATE_ARCHIVED}, activeSlot = NULL, editedAt = CASE WHEN archivedAt IS NULL THEN NULL ELSE editedAt END, archivedAt = CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER) WHERE id = :id")
     abstract suspend fun archive(id: Long)
 
-    @Query("UPDATE notes SET state = ${Note.STATE_ACTIVE}, activeSlot = ${Note.ACTIVE_SLOT} WHERE id = :id")
+    @Query(
+        "UPDATE notes SET state = ${Note.STATE_ACTIVE}, activeSlot = ${Note.ACTIVE_SLOT} WHERE id = :id"
+    )
     abstract suspend fun restore(id: Long)
 
-    @Query("DELETE FROM notes WHERE id = :id")
-    abstract suspend fun deleteById(id: Long)
+    @Query("DELETE FROM notes WHERE id = :id") abstract suspend fun deleteById(id: Long)
 
     @Query("DELETE FROM notes WHERE state = ${Note.STATE_ARCHIVED}")
     abstract suspend fun deleteArchived()
@@ -52,10 +50,8 @@ abstract class NoteDao {
         val existing = getActive()
         when {
             existing == null && content.isBlank() -> return false
-            existing == null ->
-                insert(Note(content = content, createdAt = now, updatedAt = now))
-            existing.content != content ->
-                update(existing.copy(content = content, updatedAt = now))
+            existing == null -> insert(Note(content = content, createdAt = now, updatedAt = now))
+            existing.content != content -> update(existing.copy(content = content, updatedAt = now, editedAt = if (existing.archivedAt != null) now else null))
             else -> return false
         }
         return true
@@ -106,6 +102,45 @@ abstract class NoteDao {
         if (archived.state != Note.STATE_ARCHIVED) return false
         getActive()?.let { deleteById(it.id) }
         restore(noteId)
+        return true
+    }
+
+    @Transaction
+    open suspend fun importArchived(notes: List<Note>) {
+        notes.forEach { insert(it.copy(id = 0, state = Note.STATE_ARCHIVED, activeSlot = null)) }
+    }
+
+    @Transaction
+    open suspend fun deleteArchivedNote(noteId: Long) {
+        // A captured archive deletion may commit after an Undo has restored this row.
+        if (getById(noteId)?.state == Note.STATE_ARCHIVED) deleteById(noteId)
+    }
+
+    @Transaction
+    open suspend fun restoreWithUndo(noteId: Long, replace: Boolean): ArchiveRestoreUndo? {
+        val incoming = getById(noteId)?.takeIf { it.state == Note.STATE_ARCHIVED } ?: return null
+        val previous = getActive() ?: return null
+        if (replace) deleteById(previous.id) else archive(previous.id)
+        restore(incoming.id)
+        return ArchiveRestoreUndo(incoming.id, previous, replace)
+    }
+
+    @Transaction
+    open suspend fun undoRestore(undo: ArchiveRestoreUndo): Boolean {
+        if (getActive()?.id != undo.restoredNoteId) return false
+        val previous = getById(undo.previousActive.id)
+        if (undo.replaced) {
+            if (previous != null) return false
+        } else if (previous?.state != Note.STATE_ARCHIVED) return false
+        // Archive first to free the unique active slot. Keep any edits to the incoming note.
+        archive(undo.restoredNoteId)
+        if (undo.replaced) {
+            insert(
+                undo.previousActive.copy(state = Note.STATE_ACTIVE, activeSlot = Note.ACTIVE_SLOT)
+            )
+        } else {
+            restore(undo.previousActive.id)
+        }
         return true
     }
 }

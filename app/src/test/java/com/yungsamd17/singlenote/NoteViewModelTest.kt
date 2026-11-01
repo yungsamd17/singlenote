@@ -28,6 +28,14 @@ import org.junit.Test
 class NoteViewModelTest {
 
     private class FakeNoteStore : NoteStore {
+        override val appIcon = MutableStateFlow("default")
+        override suspend fun setAppIcon(value: String) { appIcon.value = value }
+        override val appFont = MutableStateFlow("system")
+        override suspend fun setAppFont(value: String) { appFont.value = value }
+        override val amoled = MutableStateFlow(false)
+        override suspend fun setAmoled(value: Boolean) { amoled.value = value }
+        override val dynamicColors = MutableStateFlow(false)
+        override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override val activeNote = MutableStateFlow<Note?>(null)
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
