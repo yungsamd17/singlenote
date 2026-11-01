@@ -87,14 +87,11 @@ class MainActivity : ComponentActivity() {
         // theme (and corrects the bars) as soon as it emits.
         val startDark = isSystemDark()
         lastDarkTheme = startDark
-        window.setBackgroundDrawable(
-            ColorDrawable(
-                ContextCompat.getColor(
-                    this,
-                    if (startDark) R.color.launch_background_dark else R.color.launch_background
-                )
-            )
-        )
+        val launchDynamic = getSharedPreferences("launch_theme", Context.MODE_PRIVATE).getBoolean("dynamic", false)
+        val launchColor = if (launchDynamic && Build.VERSION.SDK_INT >= 31) {
+            (if (startDark) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)).background.toArgb()
+        } else ContextCompat.getColor(this, if (startDark) R.color.launch_background_dark else R.color.launch_background)
+        window.setBackgroundDrawable(ColorDrawable(launchColor))
         enableEdgeToEdge()
         // Status/navigation icon colors must follow the app theme, not the
         // system: enableEdgeToEdge() defaults to the system, leaving
@@ -116,6 +113,12 @@ class MainActivity : ComponentActivity() {
                     NotePreferences.get(applicationContext).accentColor.collect { value = it }
                 }
             )
+            val preferences = NotePreferences.get(applicationContext)
+            val dynamic by produceState<Boolean?>(null) { preferences.dynamicColors.collect { value = it } }
+            val amoled by produceState<Boolean?>(null) { preferences.amoled.collect { value = it } }
+            val appFont by produceState<String?>(null) { preferences.appFont.collect { value = it } }
+            val appIcon by produceState<String?>(null) { preferences.appIcon.collect { value = it } }
+            if (dynamic == null || amoled == null || appFont == null || appIcon == null) return@setContent
             // Paint nothing until the stored theme arrives: falling back to
             // the system theme/default accent first would flash a wrong-theme
             // frame over the matched launch window (see onCreate) on every
@@ -125,6 +128,12 @@ class MainActivity : ComponentActivity() {
             // can't be smart-cast), so re-assert non-null here.
             val theme: String = themeMode ?: return@setContent
             val accentKey: String = accent ?: return@setContent
+            var iconInitialized by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+            LaunchedEffect(appIcon, accentKey) {
+                val changed = com.yungsamd17.singlenote.util.AppIcon.apply(this@MainActivity, appIcon ?: "default", accentKey)
+                if (iconInitialized && changed) finishAndRemoveTask()
+                iconInitialized = true
+            }
             val darkTheme = when (theme) {
                 NotePreferences.THEME_DARK -> true
                 NotePreferences.THEME_LIGHT -> false
@@ -137,17 +146,15 @@ class MainActivity : ComponentActivity() {
                 lastDarkTheme = darkTheme
                 applyBarAppearance(darkTheme)
             }
+            val baseScheme = if (dynamic == true && Build.VERSION.SDK_INT >= 31) {
+                if (darkTheme) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)
+            } else accentScheme(accentKey, darkTheme)
             MaterialTheme(
-                // Material You follows the wallpaper on Android 12+; older
-                // releases (and every tuned accent) use the app's schemes.
-                colorScheme = if (accentKey == NotePreferences.ACCENT_SYSTEM &&
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                ) {
-                    if (darkTheme) dynamicDarkColorScheme(this)
-                    else dynamicLightColorScheme(this)
-                } else {
-                    accentScheme(accentKey, darkTheme)
-                }
+                typography = com.yungsamd17.singlenote.ui.appTypography(appFont == "flex"),
+                colorScheme = if (amoled == true && darkTheme) baseScheme.copy(
+                    background = androidx.compose.ui.graphics.Color.Black,
+                    surface = androidx.compose.ui.graphics.Color.Black
+                ) else baseScheme
             ) {
                 val background = MaterialTheme.colorScheme.background.toArgb()
                 SideEffect {
@@ -217,7 +224,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = archiveViewModel,
                                 onBack = { navController.popBackStack() },
                                 onRestored = {
-                                    noteViewModel.consumePendingUndo()
+                                    noteViewModel.onArchiveRestored(archiveViewModel.takeRestoreUndo())
                                     navController.popBackStack()
                                 }
                             )
@@ -226,10 +233,16 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 viewModel = settingsViewModel,
                                 onBack = { navController.popBackStack() },
-                                onOpenAbout = { navController.navigate("about") }
+                                onOpenScreen = { navController.navigate("settings/$it") }
                             )
                         }
-                        composable("about") {
+                        listOf("appearance", "typography", "language", "notifications").forEach { screen ->
+                            composable("settings/$screen") {
+                                SettingsScreen(settingsViewModel, { navController.popBackStack() },
+                                    { navController.navigate("settings/$it") }, screen)
+                            }
+                        }
+                        composable("settings/about") {
                             AboutScreen(
                                 onBack = { navController.popBackStack() },
                                 onOpenTerms = { navController.navigate("terms") },

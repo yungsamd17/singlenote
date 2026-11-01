@@ -34,11 +34,49 @@
             android:screenOrientation="portrait"
             android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
+
+        <activity-alias android:name=".launcher.Default" android:targetActivity=".MainActivity"
+            android:enabled="true" android:exported="true"
+            android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Dynamic" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_dynamic" android:roundIcon="@mipmap/ic_launcher_dynamic" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.AccentDefault" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_accentdefault" android:roundIcon="@mipmap/ic_launcher_accentdefault" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Blue" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_blue" android:roundIcon="@mipmap/ic_launcher_blue" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Teal" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_teal" android:roundIcon="@mipmap/ic_launcher_teal" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Green" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_green" android:roundIcon="@mipmap/ic_launcher_green" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Orange" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_orange" android:roundIcon="@mipmap/ic_launcher_orange" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
+        <activity-alias android:name=".launcher.Pink" android:targetActivity=".MainActivity"
+            android:enabled="false" android:exported="true"
+            android:icon="@mipmap/ic_launcher_pink" android:roundIcon="@mipmap/ic_launcher_pink" android:label="${appLabel}">
+            <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+        </activity-alias>
 
         <activity
             android:name=".widget.WidgetConfigurationActivity"

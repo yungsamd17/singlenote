@@ -47,6 +47,34 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    val dynamicColors: StateFlow<Boolean> = store.dynamicColors
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setDynamicColors(value: Boolean) {
+        viewModelScope.launch { store.setDynamicColors(value) }
+    }
+
+    val amoled: StateFlow<Boolean> = store.amoled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setAmoled(value: Boolean) {
+        viewModelScope.launch { store.setAmoled(value) }
+    }
+
+    val appFont: StateFlow<String> = store.appFont
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
+
+    fun setAppFont(value: String) {
+        viewModelScope.launch { store.setAppFont(value) }
+    }
+
+    val appIcon: StateFlow<String> = store.appIcon
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "default")
+
+    fun setAppIcon(value: String) {
+        viewModelScope.launch { store.setAppIcon(value) }
+    }
+
     init {
         viewModelScope.launch {
             // Raw store flows, not the stateIn'd ones above (those start
@@ -61,6 +89,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             // Separate first: the typed combine overloads stop at five
             // flows, so the new pref is awaited on its own.
             store.lockscreenVisible.first()
+            store.dynamicColors.first()
+            store.amoled.first()
+            store.appFont.first()
+            store.appIcon.first()
             _ready.value = true
         }
     }
