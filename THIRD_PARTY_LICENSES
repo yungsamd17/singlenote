@@ -109,3 +109,9 @@ not listed here.
     Copyright (c) 2011-2026 The Bootstrap Authors.
     Licensed under the MIT License. See https://icons.getbootstrap.com
     for the full license text.
+
+Google Sans Flex
+Source: https://github.com/google/fonts/tree/main/ofl/googlesansflex
+License: SIL Open Font License 1.1
+Bundled font: app/src/main/res/font/google_sans_flex.ttf
+Full license: app/src/main/assets/licenses/GoogleSansFlex-OFL.txt
