@@ -21,11 +21,10 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 ## Features
 
-This list describes the current development workspace. Features marked Unreleased
-in the [changelog](CHANGELOGS.md) are not yet included in v0.4.1.
+See the [changelog](CHANGELOGS.md) for release history and pending changes.
 
 - **One active note** — automatic saving as you type, flushed when you leave the app
-- **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action in the current development version
+- **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action
 - **Pinned notification** — keeps your note visible in the notification shade
 - **Quick settings tile** — open the editor for a new note, archiving the current note first
 - **Archive** — restore, delete, sort, and export notes, or import a Singlenote JSON archive
@@ -40,7 +39,7 @@ in the [changelog](CHANGELOGS.md) are not yet included in v0.4.1.
 
 ## Languages
 
-In the current development version (pending the next release), Singlenote supports English and Slovak
+Singlenote supports English and Slovak
 (Slovenčina). Open **Settings → Language** to select either language. The app
 initially follows the system language, falling back to English for unsupported
 languages; choosing a language saves an app-specific preference. Language changes
@@ -48,7 +47,7 @@ crossfade in place without restarting the screen.
 
 ## Roadmap
 
-`v0.4.1` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
+`v0.4.2` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 
