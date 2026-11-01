@@ -99,10 +99,6 @@ scratch for Android by [yungsamd17](https://github.com/yungsamd17).
 - Settings and action glyphs, including `license` and `format_paint`: [Material Symbols](https://fonts.google.com/icons)
   by Google (Apache License 2.0)
 
-## License
-
-[MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_LICENSES)
-
 ## Settings and behavior
 
 Settings has separate Appearance, Typography, Language, Notifications, and About
@@ -121,23 +117,9 @@ See [translation instructions](docs/TRANSLATE-APP.md) and the
 
 ## Documentation
 
-| Guide | Contents |
-|---|---|
-| [Contributing](CONTRIBUTING.md) | Setup, code conventions, tests and pull requests |
-| [Documentation index](docs/README.md) | All project guides |
-| [Changelog](CHANGELOGS.md) | Unreleased changes and release history |
-| [Archive and backups](docs/ARCHIVE.md) | Sorting, restore, Undo, and archive import/export |
-| [Translation guide](docs/TRANSLATE-APP.md) | Language shortcuts, resource examples and translation PRs |
-| [Build and preview guide](docs/BUILDING.md) | SDK setup, side-by-side preview APKs and troubleshooting |
-| [Architecture](docs/ARCHITECTURE.md) | Data flow, storage, locale and external surfaces |
-| [Editor and settings](docs/EDITOR-AND-SETTINGS.md) | Scrolling, keyboard and settings/widget behavior |
-| [Release guide](docs/RELEASES.md) | Signing, version tags and publication |
-| [Privacy policy](docs/PRIVACY.md) | Storage, permissions and on-demand network use |
-| [Terms and conditions](docs/TERMS.md) | Usage terms |
-| [Stable-release plan](docs/V1.0.0-PLAN.md) | First stable-release checklist |
-| [Review backlog](docs/TODO.md) | Follow-up tasks |
-| [Agent instructions](AGENTS.md) | Repository-specific automation conventions |
+Find setup, contribution, translation, archive, release, and project guides in
+the [documentation index](docs/README.md).
 
-Contribution templates: [pull request](.github/PULL_REQUEST_TEMPLATE.md),
-[bug report](.github/ISSUE_TEMPLATE/BUG_REPORT.md), and
-[feature request](.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md).
+## License
+
+[MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_LICENSES)

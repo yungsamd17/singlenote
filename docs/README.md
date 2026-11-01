@@ -16,6 +16,11 @@ Start with the [project README](../README.md) for features and downloads, or
 | [Terms](TERMS.md) | Terms and conditions |
 | [Stable-release plan](V1.0.0-PLAN.md) | First-stable checklist |
 | [Review backlog](TODO.md) | Correctness, privacy, accessibility and repository follow-up work |
+| [Contributing](../CONTRIBUTING.md) | Contribution workflow, setup, and review guidelines |
+| [Agent instructions](../AGENTS.md) | Repository-specific guidance for coding agents |
+| [Pull request template](../.github/PULL_REQUEST_TEMPLATE.md) | Pull request structure and evidence |
+| [Bug report template](../.github/ISSUE_TEMPLATE/BUG_REPORT.md) | Details to include in a bug report |
+| [Feature request template](../.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md) | Details to include in a feature request |
 
 [AGENTS.md](../AGENTS.md) documents repository conventions for coding agents.
 The [MIT license](../LICENSE) and [third-party notices](../THIRD_PARTY_LICENSES)
