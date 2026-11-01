@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shared styling hook used by Glance 1.1.1 ListView templates on all API levels. -->
+    <style name="Glance.AppWidget.List" parent="">
+        <item name="android:scrollbars">none</item>
+        <item name="android:scrollIndicators">none</item>
+        <item name="android:fastScrollEnabled">false</item>
+        <item name="android:overScrollMode">never</item>
+    </style>
+</resources>

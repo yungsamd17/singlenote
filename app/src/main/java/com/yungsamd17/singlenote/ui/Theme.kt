@@ -129,3 +129,30 @@ fun accentScheme(accent: String, dark: Boolean): ColorScheme {
         )
     }
 }
+
+/** Uses only bundled resources; never requests a downloadable font. */
+fun appTypography(useFlex: Boolean): androidx.compose.material3.Typography {
+    val base = androidx.compose.material3.Typography()
+    if (!useFlex) return base
+    val family =
+        androidx.compose.ui.text.font.FontFamily(
+            androidx.compose.ui.text.font.Font(com.yungsamd17.singlenote.R.font.google_sans_flex)
+        )
+    return base.copy(
+        displayLarge = base.displayLarge.copy(fontFamily = family),
+        displayMedium = base.displayMedium.copy(fontFamily = family),
+        displaySmall = base.displaySmall.copy(fontFamily = family),
+        headlineLarge = base.headlineLarge.copy(fontFamily = family),
+        headlineMedium = base.headlineMedium.copy(fontFamily = family),
+        headlineSmall = base.headlineSmall.copy(fontFamily = family),
+        titleLarge = base.titleLarge.copy(fontFamily = family),
+        titleMedium = base.titleMedium.copy(fontFamily = family),
+        titleSmall = base.titleSmall.copy(fontFamily = family),
+        bodyLarge = base.bodyLarge.copy(fontFamily = family),
+        bodyMedium = base.bodyMedium.copy(fontFamily = family),
+        bodySmall = base.bodySmall.copy(fontFamily = family),
+        labelLarge = base.labelLarge.copy(fontFamily = family),
+        labelMedium = base.labelMedium.copy(fontFamily = family),
+        labelSmall = base.labelSmall.copy(fontFamily = family),
+    )
+}

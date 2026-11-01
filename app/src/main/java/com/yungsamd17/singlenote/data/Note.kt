@@ -10,13 +10,15 @@ import androidx.room.PrimaryKey
     // SQLite treats NULLs as distinct, so archived rows (NULL) never
     // collide — only a second ACTIVE row violates the index. Every DAO
     // write keeps the slot in sync with `state`; see NotesDatabase.
-    indices = [Index(value = ["activeSlot"], unique = true)]
+    indices = [Index(value = ["activeSlot"], unique = true)],
 )
 data class Note(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val content: String,
     val createdAt: Long,
     val updatedAt: Long,
+    val editedAt: Long? = null,
+    val archivedAt: Long? = null,
     val state: Int = STATE_ACTIVE,
     val activeSlot: Int? = if (state == STATE_ACTIVE) ACTIVE_SLOT else null,
 ) {
@@ -26,3 +28,11 @@ data class Note(
         const val ACTIVE_SLOT = 1
     }
 }
+
+/** Snapshot needed to reverse an archive Swap or Replace without losing either note. */
+data class ArchiveRestoreUndo(
+    val restoredNoteId: Long,
+    val previousActive: Note,
+    val replaced: Boolean,
+    val createdAtMs: Long = System.currentTimeMillis(),
+)

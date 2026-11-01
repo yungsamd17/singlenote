@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote.data
 
+import android.os.Build
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -11,8 +12,8 @@ import kotlinx.coroutines.flow.map
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 /**
- * Preferences surface the repository depends on. The app wires the real
- * [NotePreferences] singleton; unit tests wire a fake with no DataStore.
+ * Preferences surface the repository depends on. The app wires the real [NotePreferences]
+ * singleton; unit tests wire a fake with no DataStore.
  */
 interface PreferencesStore {
     val pinned: Flow<Boolean>
@@ -21,23 +22,81 @@ interface PreferencesStore {
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
+    val dynamicColors: Flow<Boolean>
+    val amoled: Flow<Boolean>
+    val appFont: Flow<String>
+    val appIcon: Flow<String>
     val accentColor: Flow<String>
 
     suspend fun setPinned(value: Boolean)
+
     suspend fun setNotificationsEnabled(value: Boolean)
+
     suspend fun setLockscreenVisible(value: Boolean)
+
     suspend fun setThemeMode(value: String)
+
     suspend fun setFontFamily(value: String)
+
     suspend fun setTextSize(value: String)
+
+    suspend fun setDynamicColors(value: Boolean)
+
+    suspend fun setAmoled(value: Boolean)
+
+    suspend fun setAppFont(value: String)
+
+    suspend fun setAppIcon(value: String)
+
     suspend fun setAccentColor(value: String)
 }
 
 /**
- * App-scoped preferences holder. Use [get] everywhere instead of
- * constructing instances per call site: N wrappers on one DataStore file
- * contend on the same file and obscure the single source of truth.
+ * App-scoped preferences holder. Use [get] everywhere instead of constructing instances per call
+ * site: N wrappers on one DataStore file contend on the same file and obscure the single source of
+ * truth.
  */
 class NotePreferences private constructor(private val context: Context) : PreferencesStore {
+
+    val archiveSort: Flow<String> = context.settingsDataStore.data.map { it[stringPreferencesKey("archive_sort")] ?: "changed" }
+    val archiveOrder: Flow<String> = context.settingsDataStore.data.map { it[stringPreferencesKey("archive_order")] ?: "descending" }
+    suspend fun setArchiveSort(value: String) { context.settingsDataStore.edit { it[stringPreferencesKey("archive_sort")] = value } }
+    suspend fun setArchiveOrder(value: String) { context.settingsDataStore.edit { it[stringPreferencesKey("archive_order")] = value } }
+
+    override val dynamicColors: Flow<Boolean> =
+        context.settingsDataStore.data.map {
+            resolveDynamicColors(it[KEY_DYNAMIC_COLORS], it[KEY_ACCENT], Build.VERSION.SDK_INT >= 31).also { enabled ->
+                context.getSharedPreferences("launch_theme", Context.MODE_PRIVATE).edit().putBoolean("dynamic", enabled).apply()
+            }
+        }
+
+    override suspend fun setDynamicColors(value: Boolean) {
+        context.settingsDataStore.edit {
+            if (it[KEY_ACCENT] == ACCENT_SYSTEM) it[KEY_ACCENT] = ACCENT_DEFAULT
+            it[KEY_DYNAMIC_COLORS] = value
+        }
+    }
+
+    override val amoled: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_AMOLED] ?: false }
+
+    override suspend fun setAmoled(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_AMOLED] = value }
+    }
+
+    override val appFont: Flow<String> =
+        context.settingsDataStore.data.map { it[KEY_APP_FONT] ?: "system" }
+
+    override suspend fun setAppFont(value: String) {
+        context.settingsDataStore.edit { it[KEY_APP_FONT] = value }
+    }
+
+    override val appIcon: Flow<String> =
+        context.settingsDataStore.data.map { it[KEY_APP_ICON] ?: "default" }
+
+    override suspend fun setAppIcon(value: String) {
+        context.settingsDataStore.edit { it[KEY_APP_ICON] = value }
+    }
 
     override val pinned: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
@@ -54,7 +113,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
     override val textSize: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_TEXT_SIZE] ?: SIZE_MEDIUM }
     override val accentColor: Flow<String> =
-        context.settingsDataStore.data.map { it[KEY_ACCENT] ?: ACCENT_DEFAULT }
+        context.settingsDataStore.data.map { resolveAccentColor(it[KEY_ACCENT]) }
 
     override suspend fun setPinned(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_PINNED] = value }
@@ -85,20 +144,24 @@ class NotePreferences private constructor(private val context: Context) : Prefer
     }
 
     companion object {
-        @Volatile
-        private var instance: NotePreferences? = null
+        @Volatile private var instance: NotePreferences? = null
 
         /**
-         * Single app-scoped instance (holds the application context, never
-         * an activity). Mirrors [AppDatabase.get].
+         * Single app-scoped instance (holds the application context, never an activity). Mirrors
+         * [AppDatabase.get].
          */
         fun get(context: Context): NotePreferences =
-            instance ?: synchronized(this) {
-                instance ?: NotePreferences(context.applicationContext).also { instance = it }
-            }
+            instance
+                ?: synchronized(this) {
+                    instance ?: NotePreferences(context.applicationContext).also { instance = it }
+                }
 
         const val KEY_PINNED_NAME = "pin_current_note"
 
+        val KEY_DYNAMIC_COLORS = booleanPreferencesKey("dynamic_colors")
+        val KEY_AMOLED = booleanPreferencesKey("amoled")
+        val KEY_APP_FONT = stringPreferencesKey("app_font")
+        val KEY_APP_ICON = stringPreferencesKey("app_icon")
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
@@ -127,13 +190,25 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         const val ACCENT_PINK = "pink"
         const val ACCENT_SYSTEM = "system"
 
+        // Preserve legacy wallpaper colors through the dedicated toggle, without offering
+        // a second, hidden way to enable them through the accent picker.
+        fun resolveAccentColor(stored: String?): String =
+            if (stored == null || stored == ACCENT_SYSTEM) ACCENT_DEFAULT else stored
+
+        fun resolveDynamicColors(stored: Boolean?, legacyAccent: String?, supported: Boolean = true): Boolean =
+            supported && (stored ?: (legacyAccent == ACCENT_SYSTEM))
+
         val THEMES = listOf(THEME_SYSTEM, THEME_LIGHT, THEME_DARK)
         val FONTS = listOf(FONT_DEFAULT, FONT_MONO, FONT_SERIF)
         val SIZES = listOf(SIZE_SMALL, SIZE_MEDIUM, SIZE_LARGE)
         val ACCENTS =
             listOf(
-                ACCENT_DEFAULT, ACCENT_BLUE, ACCENT_TEAL, ACCENT_GREEN, ACCENT_ORANGE, ACCENT_PINK,
-                ACCENT_SYSTEM
+                ACCENT_DEFAULT,
+                ACCENT_BLUE,
+                ACCENT_TEAL,
+                ACCENT_GREEN,
+                ACCENT_ORANGE,
+                ACCENT_PINK,
             )
     }
 }

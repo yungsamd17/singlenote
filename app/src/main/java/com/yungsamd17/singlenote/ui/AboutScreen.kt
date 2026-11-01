@@ -11,12 +11,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -25,23 +25,24 @@ import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.NorthEast
 import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -96,19 +99,22 @@ fun AboutScreen(
                 val installed = BuildConfig.VERSION_NAME
                 // Only this install's notes: match vX.Y.Z or plain X.Y.Z,
                 // fall back to the newest release on dev builds.
-                val picked = releases.firstOrNull {
-                    it.tag.equals("v$installed", ignoreCase = true) ||
-                        it.tag.equals(installed, ignoreCase = true)
-                } ?: releases.firstOrNull()
+                val picked =
+                    releases.firstOrNull {
+                        it.tag.equals("v$installed", ignoreCase = true) ||
+                            it.tag.equals(installed, ignoreCase = true)
+                    } ?: releases.firstOrNull()
                 // The sheet title already carries the version: drop the
                 // duplicate leading line from the notes themselves.
                 val core = (picked?.tag ?: installed).trimStart('v', 'V')
-                changelogRelease = picked?.copy(
-                    body = stripLeadingVersionHeading(
-                        picked.body,
-                        listOf(picked.tag, core, "v$core")
+                changelogRelease =
+                    picked?.copy(
+                        body =
+                            stripLeadingVersionHeading(
+                                picked.body,
+                                listOf(picked.tag, core, "v$core"),
+                            )
                     )
-                )
                 if (changelogRelease == null) changelogFailed = true
             } catch (_: Exception) {
                 changelogFailed = true
@@ -124,10 +130,11 @@ fun AboutScreen(
                 if (latest == null) {
                     snackbarHostState.showSnackbar(context.getString(R.string.update_check_failed))
                 } else if (GithubReleases.isNewerTag(latest.tag, BuildConfig.VERSION_NAME)) {
-                    val result = snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.update_available, latest.tag),
-                        actionLabel = context.getString(R.string.action_download)
-                    )
+                    val result =
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.update_available, latest.tag),
+                            actionLabel = context.getString(R.string.action_download),
+                        )
                     if (result == SnackbarResult.ActionPerformed) {
                         // Release page, never a raw APK: no SHA-256 pinning,
                         // so the user verifies the asset in the browser.
@@ -143,189 +150,229 @@ fun AboutScreen(
             }
         }
     }
+    val scroll = rememberSettingsScrollState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
+        state = scroll.appBar,
+        canScroll = { scroll.overflows },
+    )
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
         topBar = {
-            CenterAlignedTopAppBar(
+            LargeTopAppBar(
+                scrollBehavior = scrollBehavior.takeIf { !scroll.measured || scroll.overflows },
                 title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
-                            contentDescription = stringResource(R.string.cd_back)
+                            contentDescription = stringResource(R.string.cd_back),
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(innerPadding)
+                    .onSizeChanged { scroll.viewportHeight = it.height }
+                    .verticalScroll(scroll.content, enabled = scroll.overflows)
+                    .wrapContentHeight(align = Alignment.Top)
+                    .onSizeChanged { scroll.contentHeight = it.height }
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        // Dedicated header mark (sticky-fill, same glyph as
-                        // the launcher): tinted to match the app-name text.
-                        painter = painterResource(R.drawable.ic_about_logo),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp)
-                    ) {
-                        BrandText(style = MaterialTheme.typography.titleLarge)
+            SettingsGroup(
+                listOf(
+                    {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                // Dedicated header mark (sticky-fill, same glyph as
+                                // the launcher): tinted to match the app-name text.
+                                painter = painterResource(R.drawable.ic_about_logo),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(56.dp),
+                            )
+                            Column(modifier = Modifier.weight(1f).padding(start = 16.dp)) {
+                                BrandText(style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    text =
+                                        stringResource(
+                                            R.string.about_version_line,
+                                            BuildConfig.VERSION_NAME,
+                                            BuildConfig.VERSION_CODE,
+                                        ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                            IconButton(onClick = ::checkForUpdates, enabled = !checkingUpdate) {
+                                Icon(
+                                    Icons.Outlined.Refresh,
+                                    contentDescription = stringResource(R.string.cd_check_updates),
+                                )
+                            }
+                        }
+                    },
+                    {
                         Text(
-                            text = stringResource(
-                                R.string.about_version_line,
-                                BuildConfig.VERSION_NAME,
-                                BuildConfig.VERSION_CODE
-                            ),
-                            style = MaterialTheme.typography.bodyMedium
+                            text = stringResource(R.string.about_privacy_blurb),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp),
                         )
-                    }
-                    IconButton(
-                        onClick = ::checkForUpdates,
-                        enabled = !checkingUpdate
-                    ) {
-                        Icon(
-                            Icons.Outlined.Refresh,
-                            contentDescription = stringResource(R.string.cd_check_updates)
+                    },
+                ),
+                colors = { index ->
+                    if (index == 0)
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         )
-                    }
-                }
-            }
-            Text(
-                text = stringResource(R.string.about_privacy_blurb),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+                    else
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        )
+                },
             )
-            AboutRow(
-                icon = Icons.Outlined.Description,
-                title = stringResource(R.string.terms_title),
-                subtitle = stringResource(R.string.terms_subtitle),
-                onClick = onOpenTerms
+            SettingsSectionHeader(stringResource(R.string.settings_legal))
+            SettingsGroup(
+                listOf(
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.Description,
+                            title = stringResource(R.string.terms_title),
+                            subtitle = stringResource(R.string.terms_subtitle),
+                            onClick = onOpenTerms,
+                        )
+                    },
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.PrivacyTip,
+                            title = stringResource(R.string.privacy_title),
+                            subtitle = stringResource(R.string.privacy_subtitle),
+                            onClick = onOpenPrivacy,
+                        )
+                    },
+                    {
+                        AboutRow(
+                            icon = painterResource(R.drawable.ic_license),
+                            title = stringResource(R.string.about_license),
+                            subtitle = stringResource(R.string.license_short),
+                            onClick = onOpenLicense,
+                        )
+                    },
+                )
             )
-            AboutRow(
-                icon = Icons.Outlined.PrivacyTip,
-                title = stringResource(R.string.privacy_title),
-                subtitle = stringResource(R.string.privacy_subtitle),
-                onClick = onOpenPrivacy
-            )
-            AboutRow(
-                icon = painterResource(R.drawable.ic_license),
-                title = stringResource(R.string.about_license),
-                subtitle = stringResource(R.string.license_short),
-                onClick = onOpenLicense
-            )
-            AboutRow(
-                icon = Icons.Outlined.Code,
-                title = stringResource(R.string.source_title),
-                subtitle = stringResource(R.string.source_subtitle),
-                onClick = { openUrl(context, GITHUB_URL) }
-            )
-            AboutRow(
-                icon = Icons.Outlined.BugReport,
-                title = stringResource(R.string.issue_title),
-                subtitle = stringResource(R.string.issue_subtitle),
-                onClick = { openUrl(context, ISSUES_URL) }
-            )
-            AboutRow(
-                icon = Icons.Outlined.History,
-                title = stringResource(R.string.changelog_title),
-                subtitle = stringResource(R.string.changelog_subtitle),
-                onClick = ::openChangelog
-            )
-            AboutRow(
-                icon = Icons.Outlined.Email,
-                title = stringResource(R.string.email_title),
-                subtitle = email,
-                onClick = { openUrl(context, "mailto:$email") }
+            SettingsSectionHeader(stringResource(R.string.settings_support))
+            SettingsGroup(
+                listOf(
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.Code,
+                            title = stringResource(R.string.source_title),
+                            subtitle = stringResource(R.string.source_subtitle),
+                            external = true,
+                            onClick = { openUrl(context, GITHUB_URL) },
+                        )
+                    },
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.BugReport,
+                            title = stringResource(R.string.issue_title),
+                            subtitle = stringResource(R.string.issue_subtitle),
+                            external = true,
+                            onClick = { openUrl(context, ISSUES_URL) },
+                        )
+                    },
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.Email,
+                            title = stringResource(R.string.email_title),
+                            subtitle = email,
+                            external = true,
+                            onClick = { openUrl(context, "mailto:$email") },
+                        )
+                    },
+                    {
+                        AboutRow(
+                            icon = Icons.Outlined.History,
+                            title = stringResource(R.string.changelog_title),
+                            subtitle = stringResource(R.string.changelog_subtitle),
+                            onClick = ::openChangelog,
+                        )
+                    },
+                )
             )
         }
     }
 
     if (showChangelog) {
-        ModalBottomSheet(onDismissRequest = { showChangelog = false }) {
+        ModalBottomSheet(onDismissRequest = { showChangelog = false }, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
             val release = changelogRelease
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier =
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = stringResource(
-                        R.string.changelog_version_title,
-                        release?.tag?.trimStart('v', 'V') ?: BuildConfig.VERSION_NAME
-                    ),
-                    style = MaterialTheme.typography.headlineSmall
+                    text =
+                        stringResource(
+                            R.string.changelog_version_title,
+                            release?.tag?.trimStart('v', 'V') ?: BuildConfig.VERSION_NAME,
+                        ),
+                    style = MaterialTheme.typography.headlineSmall,
                 )
                 when {
-                    changelogFailed -> Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = stringResource(R.string.changelog_error),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Button(
-                            onClick = ::openChangelog,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
+                    changelogFailed ->
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(stringResource(R.string.action_retry))
+                            Text(
+                                text = stringResource(R.string.changelog_error),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Button(
+                                onClick = ::openChangelog,
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                            ) {
+                                Text(stringResource(R.string.action_retry))
+                            }
                         }
-                    }
                     // Blank while the notes load: no spinner flash for a
                     // fetch that usually resolves in a beat.
-                    release == null -> Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp)
-                    ) { }
-                    else -> MarkdownText(
-                        markdown = release.body.ifBlank {
-                            context.getString(R.string.changelog_empty_notes)
-                        },
-                        bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.verticalScroll(rememberScrollState())
-                    )
+                    release == null ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                        ) {}
+                    else ->
+                        MarkdownText(
+                            markdown =
+                                release.body.ifBlank {
+                                    context.getString(R.string.changelog_empty_notes)
+                                },
+                            bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                        )
                 }
                 Button(
                     onClick = { showChangelog = false },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .height(56.dp)
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp),
                 ) {
                     Text(stringResource(R.string.action_ok))
                 }
@@ -378,6 +425,7 @@ fun LicenseScreen(onBack: () -> Unit) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
+                .padding(bottom = 32.dp)
         ) {
             Text(
                 text = stringResource(R.string.license_mit_body),
@@ -404,6 +452,7 @@ fun LicenseScreen(onBack: () -> Unit) {
             LicenseRow(R.string.license_coroutines)
             LicenseRow(R.string.license_symbols)
             LicenseRow(R.string.license_bootstrap)
+            LicenseRow(R.string.license_google_flex)
             LinkedText(
                 text = stringResource(R.string.license_third_party),
                 style = MaterialTheme.typography.bodyMedium,
@@ -443,6 +492,7 @@ private fun LegalScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(bottom = 32.dp)
         )
     }
 }
@@ -452,13 +502,15 @@ private fun AboutRow(
     icon: ImageVector,
     title: String,
     subtitle: String? = null,
+    external: Boolean = false,
     onClick: () -> Unit,
 ) {
     AboutRow(
         icon = rememberVectorPainter(icon),
         title = title,
         subtitle = subtitle,
-        onClick = onClick
+        external = external,
+        onClick = onClick,
     )
 }
 
@@ -467,39 +519,44 @@ private fun AboutRow(
     icon: Painter,
     title: String,
     subtitle: String? = null,
+    external: Boolean = false,
     onClick: () -> Unit,
 ) {
-    Card(shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
                 .clickable(role = Role.Button, onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Column(modifier = Modifier.weight(1f).padding(start = 20.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Column(modifier = Modifier.padding(start = 20.dp)) {
+            if (subtitle != null) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
+        if (external)
+            Icon(
+                Icons.Outlined.NorthEast,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
     }
 }
 

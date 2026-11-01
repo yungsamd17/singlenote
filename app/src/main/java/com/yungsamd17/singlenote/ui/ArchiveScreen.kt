@@ -2,6 +2,9 @@ package com.yungsamd17.singlenote.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,13 +17,30 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.runtime.DisposableEffect
+import com.yungsamd17.singlenote.data.NotePreferences
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Sort
+import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -48,8 +68,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -60,7 +80,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ArchiveScreen(
     viewModel: ArchiveViewModel,
@@ -68,21 +88,47 @@ fun ArchiveScreen(
     onRestored: () -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val preferences = remember { NotePreferences.get(context.applicationContext) }
+    val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = "")
+    val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = "")
+    val listState = rememberLazyListState()
+    var entered by rememberSaveable { mutableStateOf(false) }
+    var lastSort by rememberSaveable { mutableStateOf("") }
+    var showSort by remember { mutableStateOf(false) }
+    var showExport by remember { mutableStateOf(false) }
+    var showImport by remember { mutableStateOf(false) }
+    var exportJson by remember { mutableStateOf(true) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var now by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
+    val owner = LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) now = System.currentTimeMillis() }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(sort, order) {
+        if (sort.isEmpty() || order.isEmpty()) return@LaunchedEffect
+        val key = "$sort:$order"
+        if (!entered || (lastSort.isNotEmpty() && lastSort != key)) listState.scrollToItem(0)
+        entered = true
+        lastSort = key
+    }
     val pendingDelete by viewModel.pendingDelete.collectAsStateWithLifecycle()
+    val pendingDeleteIds by viewModel.pendingDeleteIds.collectAsStateWithLifecycle()
     val pendingClear by viewModel.pendingClear.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     // Hoisted: creating formatters during scroll composition is needlessly heavy.
     val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val undoLabel = stringResource(R.string.action_undo)
     val deletedLabel = stringResource(R.string.archived_note_deleted)
     val clearedLabel = stringResource(R.string.archive_cleared)
     val exportSuccess = stringResource(R.string.archive_export_success)
     val exportFailure = stringResource(R.string.archive_export_failed)
     val scope = rememberCoroutineScope()
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
         val snapshot = viewModel.pendingExport
         viewModel.pendingExport = null
         if (uri != null) {
@@ -102,15 +148,41 @@ fun ArchiveScreen(
         }
     }
 
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val imported = withContext(Dispatchers.IO) {
+                try {
+                    val raw = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("empty")
+                    val root = org.json.JSONObject(raw)
+                    require(root.getString("format") == "singlenote-archive" && root.getInt("version") == 1)
+                    val array = root.getJSONArray("notes")
+                    val notes = (0 until array.length()).map { index ->
+                        val obj = array.getJSONObject(index)
+                        Note(content = obj.getString("content"), createdAt = obj.getLong("createdAt"), updatedAt = obj.getLong("updatedAt"),
+                            editedAt = if (obj.isNull("editedAt")) null else obj.getLong("editedAt"),
+                            archivedAt = if (obj.isNull("archivedAt")) null else obj.getLong("archivedAt"), state = Note.STATE_ARCHIVED)
+                    }
+                    viewModel.importArchived(notes)
+                    true
+                } catch (_: Exception) { false }
+            }
+            snackbarHostState.showSnackbar(context.getString(if (imported) R.string.archive_import_success else R.string.archive_import_failed))
+        }
+    }
+
     // Optimistic hiding: pending rows vanish at once while the DB write
     // waits out the Undo window. Survives rotation via the ViewModel.
     val pendingClearIds = remember(pendingClear) {
         pendingClear?.map { it.id }?.toSet() ?: emptySet()
     }
-    val visibleNotes = remember(notes, pendingDelete, pendingClearIds) {
-        notes.filter { note ->
-            note.id != pendingDelete?.id && !pendingClearIds.contains(note.id)
+    val visibleNotes = remember(notes, pendingDeleteIds, pendingClearIds, sort, order) {
+        val filtered = notes.filter { !pendingDeleteIds.contains(it.id) && !pendingClearIds.contains(it.id) }
+        val sorted = when (sort) {
+            "title" -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.content.trim() })
+            "archived" -> filtered.sortedBy { it.archivedAt ?: it.updatedAt }
+            else -> filtered.sortedBy { it.editedAt ?: it.archivedAt ?: it.updatedAt }
         }
+        if (order == "descending" && sort != "title" || order == "ascending" && sort == "title") sorted.reversed() else sorted
     }
 
     LaunchedEffect(pendingDelete) {
@@ -164,18 +236,18 @@ fun ArchiveScreen(
                     }
                 },
                 actions = {
-                    if (visibleNotes.isNotEmpty()) {
-                        IconButton(onClick = {
-                            viewModel.pendingExport = visibleNotes.joinToString("\n\n---\n\n") { it.content }
-                            exportLauncher.launch("singlenote-archive.txt")
-                        }) {
-                            Icon(Icons.Outlined.SaveAlt, contentDescription = stringResource(R.string.export_archive))
-                        }
-                        IconButton(onClick = { showClearDialog = true }) {
-                            Icon(
-                                Icons.Outlined.Delete,
-                                contentDescription = stringResource(R.string.clear_archive)
-                            )
+                    Box {
+                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.archive_more)) }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false },
+                            shape = RoundedCornerShape(28.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            shadowElevation = 8.dp, tonalElevation = 0.dp, modifier = Modifier.widthIn(min = 220.dp)) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.archive_sort)) }, trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_sort), null) }, onClick = { menuOpen = false; showSort = true })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.export_archive)) }, enabled = visibleNotes.isNotEmpty(), trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_upload), null) }, onClick = {
+                                menuOpen = false
+                                showExport = true
+                            })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.archive_import)) }, trailingIcon = { Icon(Icons.Outlined.SaveAlt, null) }, onClick = { menuOpen = false; showImport = true })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.clear_archive)) }, enabled = visibleNotes.isNotEmpty(), trailingIcon = { Icon(Icons.Outlined.Delete, null) }, onClick = { menuOpen = false; showClearDialog = true })
                         }
                     }
                 },
@@ -211,24 +283,68 @@ fun ArchiveScreen(
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(visibleNotes, key = { it.id }) { note ->
+                    androidx.compose.animation.AnimatedContent(targetState = archiveHeader(context, note, sort, now), modifier = Modifier.animateItem(), label = "archive timestamp") { header ->
                     ArchivedNoteItem(
                         note = note,
-                        date = dateFormat.format(Date(note.updatedAt)),
+                        date = header,
                         onRestore = { viewModel.restore(note) },
                         onDelete = { noteToDelete = note }
                     )
+                    }
                 }
             }
         }
     }
 
+    if (showExport) {
+        AlertDialog(onDismissRequest = { showExport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.export_archive)) }, text = {
+            Column {
+                Text(stringResource(R.string.archive_export_description))
+                listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { exportJson = json }) {
+                        RadioButton(selected = exportJson == json, onClick = { exportJson = json }); Text(stringResource(label))
+                    }
+                }
+            }
+        }, confirmButton = { TextButton(onClick = {
+            showExport = false
+            viewModel.pendingExport = if (exportJson) archiveJson(visibleNotes) else visibleNotes.joinToString("\n\n---\n\n") { it.content }
+            exportLauncher.launch(if (exportJson) "singlenote-archive.json" else "singlenote-archive.txt")
+        }) { Text(stringResource(R.string.export_archive)) } }, dismissButton = { TextButton(onClick = { showExport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
+    }
+    if (showImport) {
+        AlertDialog(onDismissRequest = { showImport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_import)) },
+            text = { Text(stringResource(R.string.archive_import_description)) },
+            confirmButton = { TextButton(onClick = { showImport = false; importLauncher.launch(arrayOf("application/json", "application/octet-stream")) }) { Text(stringResource(R.string.archive_import)) } },
+            dismissButton = { TextButton(onClick = { showImport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
+    }
+    if (showSort) {
+        AlertDialog(onDismissRequest = { showSort = false }, icon = { Icon(painterResource(R.drawable.ic_symbol_sort), null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_sort_title)) }, text = {
+            Column {
+                listOf("changed" to R.string.archive_sort_changed, "archived" to R.string.archive_sort_archived, "title" to R.string.archive_sort_name).forEach { (key, label) ->
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { scope.launch { preferences.setArchiveSort(key) } }) {
+                        RadioButton(selected = sort == key, onClick = { scope.launch { preferences.setArchiveSort(key) } })
+                        Text(stringResource(label))
+                    }
+                }
+                Text(stringResource(R.string.archive_order))
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    listOf("descending", "ascending").forEachIndexed { index, key ->
+                        val label = if (sort == "title") { if (index == 0) R.string.archive_order_az else R.string.archive_order_za } else { if (index == 0) R.string.archive_order_newest else R.string.archive_order_oldest }
+                        SegmentedButton(selected = order == key, onClick = { scope.launch { preferences.setArchiveOrder(key) } }, shape = SegmentedButtonDefaults.itemShape(index, 2)) { Text(stringResource(label)) }
+                    }
+                }
+            }
+        }, confirmButton = { TextButton(onClick = { showSort = false }) { Text(stringResource(R.string.action_done)) } })
+    }
     viewModel.restoreConflict?.let { note ->
         AlertDialog(
             onDismissRequest = { viewModel.dismissRestoreConflict() },
@@ -240,32 +356,22 @@ fun ArchiveScreen(
             },
             title = { Text(stringResource(R.string.restore_conflict_title)) },
             text = { Text(stringResource(R.string.restore_conflict_message)) },
-            // One action per slot: three buttons in a single row overflow at
-            // large font scales and announce in the wrong order. Cancel
-            // dismisses, Swap/Replace confirm — Material 3 has no neutral
-            // slot, so both choices share confirmButton where they wrap
-            // below Cancel instead of beside it.
-            dismissButton = {
-                TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
-                    Text(stringResource(R.string.cancel))
-                }
-            },
             confirmButton = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Keep the requested reading order, wrapping rather than clipping at large text sizes.
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 ) {
+                    TextButton(onClick = { viewModel.dismissRestoreConflict() }) {
+                        Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     TextButton(onClick = { viewModel.swap(note) }) {
                         Text(stringResource(R.string.action_swap))
                     }
                     TextButton(
                         onClick = { viewModel.replace(note) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text(stringResource(R.string.action_replace))
-                    }
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) { Text(stringResource(R.string.action_replace)) }
                 }
             }
         )
@@ -298,7 +404,7 @@ fun ArchiveScreen(
             },
             dismissButton = {
                 TextButton(onClick = { noteToDelete = null }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -331,7 +437,7 @@ fun ArchiveScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         )
@@ -346,22 +452,12 @@ private fun ArchivedNoteItem(
     onDelete: () -> Unit,
 ) {
     Card(
-        shape = RoundedCornerShape(24.dp),
+        shape = AppCardShape,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) },
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = date,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+            Text(text = date, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 8.dp))
+            Text(text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) }, style = MaterialTheme.typography.bodyLarge)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -403,4 +499,34 @@ private fun ArchivedNoteItem(
             }
         }
     }
+}
+
+private fun archiveHeader(context: android.content.Context, note: Note, sort: String, now: Long): String {
+    val edited = sort != "archived" && note.editedAt != null
+    val timestamp = if (edited) note.editedAt!! else note.archivedAt ?: note.updatedAt
+    val elapsed = (now - timestamp).coerceAtLeast(0)
+    val time = when {
+        elapsed < 60_000 -> context.getString(R.string.archive_just_now)
+        elapsed < 3_600_000 -> context.resources.getQuantityString(R.plurals.archive_minutes_ago, (elapsed / 60_000).toInt(), (elapsed / 60_000).toInt())
+        elapsed < 86_400_000 -> context.resources.getQuantityString(R.plurals.archive_hours_ago, (elapsed / 3_600_000).toInt(), (elapsed / 3_600_000).toInt())
+        elapsed < 7 * 86_400_000L -> context.resources.getQuantityString(R.plurals.archive_days_ago, (elapsed / 86_400_000).toInt(), (elapsed / 86_400_000).toInt())
+        else -> {
+            val current = java.util.Calendar.getInstance().apply { timeInMillis = now }
+            val then = java.util.Calendar.getInstance().apply { timeInMillis = timestamp }
+            val flags = android.text.format.DateUtils.FORMAT_SHOW_DATE or android.text.format.DateUtils.FORMAT_ABBREV_MONTH or if (current.get(java.util.Calendar.YEAR) != then.get(java.util.Calendar.YEAR)) android.text.format.DateUtils.FORMAT_SHOW_YEAR else android.text.format.DateUtils.FORMAT_NO_YEAR
+            android.text.format.DateUtils.formatDateTime(context, timestamp, flags)
+        }
+    }
+    return context.getString(if (edited) R.string.archive_edited_time else R.string.archive_archived_time, time)
+}
+
+private fun archiveJson(notes: List<Note>): String {
+    val items = org.json.JSONArray()
+    notes.forEach { note ->
+        items.put(org.json.JSONObject().put("title", note.content.lineSequence().firstOrNull().orEmpty())
+            .put("content", note.content).put("createdAt", note.createdAt).put("updatedAt", note.updatedAt)
+            .put("editedAt", note.editedAt ?: org.json.JSONObject.NULL)
+            .put("archivedAt", note.archivedAt ?: org.json.JSONObject.NULL))
+    }
+    return org.json.JSONObject().put("format", "singlenote-archive").put("version", 1).put("notes", items).toString(2)
 }

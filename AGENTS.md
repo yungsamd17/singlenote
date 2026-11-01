@@ -20,7 +20,7 @@ Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widge
 ./gradlew lintDebug              # Android lint
 ```
 
-- CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest lintDebug` on every push/PR, and publishes APKs to a GitHub Release on `v*` tags.
+- CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest lintDebug` on every push/PR. The separate `.github/workflows/release.yml` validates `v*` tags against main and the app version, then builds and publishes APKs.
 - Batch merges are cheap by design: rapid merges to `main` cancel the superseded in-flight main builds (concurrency cancel), so only the last build of the batch runs to completion and covers everything. Per-PR builds still gate every PR — never merge on a stale green.
 - Every non-tag build also uploads the `singlenote-debug-apk` artifact — fetch it with `gh run download <run-id> -n singlenote-debug-apk` to verify on-device when no ADB connection exists.
 - Local sandboxes often lack the Android SDK/JDK — if Gradle can't run, rely on careful code review and let CI verify. Never skip updating tests when changing shared interfaces.
@@ -29,7 +29,7 @@ Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widge
 
 ```
 app/src/main/java/com/yungsamd17/singlenote/
-  MainActivity.kt      # Compose NavHost: note / archive / settings / about / terms / privacy / license, theme from DataStore
+  MainActivity.kt      # Compose NavHost: note / archive / settings / settings/* / terms / privacy / license, theme from DataStore
   data/
     Note.kt            # Room entity
     NoteDao.kt         # queries (active note + archive)
@@ -63,7 +63,8 @@ Key patterns:
 
 - The edge-to-edge editor uses `adjustResize` and `imePadding` to follow keyboard movement. Keep the input connection focused while dismissing the keyboard; clear focus only after it is fully closed and settled. Clearing it earlier can flash a different keyboard layout/number row and shift Done upward. A quick reopen must cancel pending focus clearing. The Done-to-Pinned visual transition starts during the final 64dp of dismissal, independently of focus clearing (240ms fade in / 200ms fade out).
 
-- Material 3 only. Settings follow the card-per-row style: one rounded `Card` (16dp corners) per row, 8dp gaps between cards, section labels in `colorScheme.primary`, switches use `thumbContent` check/close icons.
+- Material 3 only. Settings use shared `SettingsGroup` segmented cards with 28dp outer corners, 4dp connecting corners and 2dp gaps, with 16dp between headerless groups. Category headers use `SettingsSectionHeader` in `colorScheme.primary`; switches use `thumbContent` check/close icons. Pages that fit beneath the expanded large top bar must not scroll or collapse. Measure overflow against the expanded viewport so a collapsed bar can still expand.
+- The note card grows with content up to the available viewport. Keep the active caret line visible while typing and when the keyboard resizes the viewport, without overriding manual scrolling between edits. Preserve selection/composition and existing save/limit behavior.
 - Top bar: icon `IconButton`s wrapped in `TooltipIconButton` (tooltip helper in `NoteScreen.kt`).
 - Overflow menu: text `DropdownMenuItem`s with trailing icons (`onSurfaceVariant`), 28dp sheet shape, 56dp min row height, 220dp min menu width.
 - Dialogs always provide a Cancel/close `TextButton` in `confirmButton`.

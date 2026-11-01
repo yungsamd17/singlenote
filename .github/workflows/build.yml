@@ -3,7 +3,6 @@ name: Build
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -15,12 +14,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref == 'refs/heads/main' }}
 
-# Least privilege by default: the `build` job only reads the repo.
-# The tag-only `release` job below escalates to `contents: write` —
-# the minimum softprops/action-gh-release needs to create the GitHub
-# Release and upload assets (plus attestations/id-token for build
-# provenance). Keeping write off the build job limits what a compromised
-# build step could do.
+# App validation needs read access only. Release publishing lives in release.yml.
 permissions:
   contents: read
 
@@ -151,72 +145,3 @@ jobs:
           # builds). A debug APK is reproducible from its commit, so it only
           # has to survive long enough to be downloaded.
           retention-days: 1
-
-      # Tag builds hand the two versioned APKs to the `release` job
-      # instead of publishing from here, so this job needs no write scope.
-      # No checksum files: releases ship exactly debug + release APKs.
-      - name: Name APKs for release job
-        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has-signing == 'true'
-        run: |
-          cp app/build/outputs/apk/debug/app-debug.apk "singlenote-${{ github.ref_name }}-debug.apk"
-          cp app/build/outputs/apk/release/app-release.apk "singlenote-${{ github.ref_name }}-release.apk"
-          # v1.0.0 plan: log the release hash in the workflow output.
-          sha256sum "singlenote-${{ github.ref_name }}-debug.apk" "singlenote-${{ github.ref_name }}-release.apk"
-
-      - name: Upload APKs for release job
-        if: startsWith(github.ref, 'refs/tags/v') && steps.signing.outputs.has-signing == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: singlenote-apks
-          path: |
-            singlenote-${{ github.ref_name }}-debug.apk
-            singlenote-${{ github.ref_name }}-release.apk
-          # Hand-off to the `release` job below, which downloads this within
-          # the same run and attaches it to the GitHub Release. The Release
-          # is the durable copy; this needs to outlive the download and
-          # nothing more.
-          retention-days: 1
-
-  release:
-    # Tags only — and only with signing secrets, so a fork's own tags
-    # skip instead of failing on APKs that were never signed.
-    if: startsWith(github.ref, 'refs/tags/v') && needs.build.outputs.has-signing == 'true'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      # Minimum for softprops/action-gh-release: create the Release and
-      # upload assets. attestations/id-token feed build provenance below.
-      contents: write
-      attestations: write
-      id-token: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Download APKs from build job
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: singlenote-apks
-          path: dist
-
-      # Sideloaded APKs get Sigstore build provenance, verifiable from
-      # the release page. Runs here (not on forks) so it can't break them.
-      - name: Attest APK provenance
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: |
-            dist/singlenote-${{ github.ref_name }}-debug.apk
-            dist/singlenote-${{ github.ref_name }}-release.apk
-
-      - name: Release APKs on tag
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
-        with:
-          # Versioned names (e.g. singlenote-v0.3.3-release.apk) so assets
-          # are identifiable without opening the release. Exactly two
-          # assets, nothing else: debug + release APKs, no checksums.
-          files: |
-            dist/singlenote-${{ github.ref_name }}-debug.apk
-            dist/singlenote-${{ github.ref_name }}-release.apk
-          generate_release_notes: true

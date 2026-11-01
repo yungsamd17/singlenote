@@ -81,7 +81,7 @@ object AppLanguage {
             preferences(context).edit().putString(LANGUAGE_KEY, languageTag).apply()
             val activity = context.findActivity() ?: return
             val configuration = Configuration(activity.resources.configuration).apply {
-                setLocales(LocaleList.forLanguageTags(languageTag))
+                setLocales(if (languageTag.isBlank()) android.content.res.Resources.getSystem().configuration.locales else LocaleList.forLanguageTags(languageTag))
             }
             // Older Android versions have no app-locale manager. Update the
             // existing activity and dispatch the same configuration callback
@@ -99,7 +99,7 @@ object AppLanguage {
         if (languageTag.isBlank()) return context
 
         val configuration = Configuration(context.resources.configuration).apply {
-            setLocales(LocaleList.forLanguageTags(languageTag))
+            setLocales(if (languageTag.isBlank()) android.content.res.Resources.getSystem().configuration.locales else LocaleList.forLanguageTags(languageTag))
         }
         return context.createConfigurationContext(configuration)
     }
