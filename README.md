@@ -21,14 +21,17 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 ## Features
 
+This list describes the current development workspace. Features marked Unreleased
+in the [changelog](CHANGELOGS.md) are not yet included in v0.4.1.
+
 - **One active note** — automatic saving as you type, flushed when you leave the app
-- **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action are on `main` for the next release
+- **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action in the current development version
 - **Pinned notification** — keeps your note visible in the notification shade
-- **Quick settings tile** — one swipe away
-- **Archive** — archive the current note, restore it later, or delete it permanently
+- **Quick settings tile** — open the editor for a new note, archiving the current note first
+- **Archive** — restore, delete, sort, and export notes, or import a Singlenote JSON archive
 - **Share & copy** — straight from the top bar, with confirmation
-- **Theming** — light / dark / system, Material 3 design with per-accent palettes
-- **Typography** — default / monospace / serif fonts, three text sizes
+- **Theming** — light / dark / system, accent palettes, dynamic colors and AMOLED
+- **Typography** — system or bundled Google Sans Flex app font, default / monospace / serif note styles, three text sizes
 - **Changelog & updates** — per-version release notes and update checks in About
 - **Privacy first** — offline-first; no accounts, no analytics, no tracking.
   Notes and settings are stored unencrypted in the app's private storage.
@@ -37,7 +40,7 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 ## Languages
 
-On `main` (pending the next release), Singlenote supports English and Slovak
+In the current development version (pending the next release), Singlenote supports English and Slovak
 (Slovenčina). Open **Settings → Language** to select either language. The app
 initially follows the system language, falling back to English for unsupported
 languages; choosing a language saves an app-specific preference. Language changes
@@ -45,7 +48,7 @@ crossfade in place without restarting the screen.
 
 ## Roadmap
 
-`v0.4.1` is the current release. Track the checklist for the first stable release in [`docs/v1.0.0-plan.md`](docs/v1.0.0-plan.md) — features, improvements, fixes and release steps for `v1.0.0`.
+`v0.4.1` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 
@@ -93,9 +96,48 @@ scratch for Android by [yungsamd17](https://github.com/yungsamd17).
 
 - Launcher glyph: [Bootstrap Icons](https://icons.getbootstrap.com) (`sticky-fill`, MIT),
   composed with [s17 Labs Icon Maker](https://s17labs.github.io/tools/icon-maker)
-- `license` / `format_paint` glyphs: [Material Symbols](https://fonts.google.com/icons)
+- Settings and action glyphs, including `license` and `format_paint`: [Material Symbols](https://fonts.google.com/icons)
   by Google (Apache License 2.0)
 
 ## License
 
 [MIT License](LICENSE) · [Third-party notices](THIRD_PARTY_LICENSES)
+
+## Settings and behavior
+
+Settings has separate Appearance, Typography, Language, Notifications, and About
+screens. Google Sans Flex is bundled for offline use under the SIL OFL 1.1.
+Dynamic colors require Android 12 or later. Launcher icons can use the default,
+the selected preset accent, or a wallpaper-derived color on Android 12+. Changing
+the selected icon closes the app; reopen it from the launcher. Icon refresh timing
+depends on the launcher, which also controls themed monochrome icons.
+
+Long notes expand the editor within the available screen and scroll inside it.
+The widget scrolls long notes; its outer size is controlled by the launcher and
+can be resized manually.
+
+See [translation instructions](docs/TRANSLATE-APP.md) and the
+[release workflow](docs/RELEASES.md).
+
+## Documentation
+
+| Guide | Contents |
+|---|---|
+| [Contributing](CONTRIBUTING.md) | Setup, code conventions, tests and pull requests |
+| [Documentation index](docs/README.md) | All project guides |
+| [Changelog](CHANGELOGS.md) | Unreleased changes and release history |
+| [Archive and backups](docs/ARCHIVE.md) | Sorting, restore, Undo, and archive import/export |
+| [Translation guide](docs/TRANSLATE-APP.md) | Language shortcuts, resource examples and translation PRs |
+| [Build and preview guide](docs/BUILDING.md) | SDK setup, side-by-side preview APKs and troubleshooting |
+| [Architecture](docs/ARCHITECTURE.md) | Data flow, storage, locale and external surfaces |
+| [Editor and settings](docs/EDITOR-AND-SETTINGS.md) | Scrolling, keyboard and settings/widget behavior |
+| [Release guide](docs/RELEASES.md) | Signing, version tags and publication |
+| [Privacy policy](docs/PRIVACY.md) | Storage, permissions and on-demand network use |
+| [Terms and conditions](docs/TERMS.md) | Usage terms |
+| [Stable-release plan](docs/V1.0.0-PLAN.md) | First stable-release checklist |
+| [Review backlog](docs/TODO.md) | Follow-up tasks |
+| [Agent instructions](AGENTS.md) | Repository-specific automation conventions |
+
+Contribution templates: [pull request](.github/PULL_REQUEST_TEMPLATE.md),
+[bug report](.github/ISSUE_TEMPLATE/BUG_REPORT.md), and
+[feature request](.github/ISSUE_TEMPLATE/FEATURE_REQUEST.md).
