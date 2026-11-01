@@ -52,6 +52,8 @@ class NoteTileService : TileService() {
     override fun onClick() {
         super.onClick()
         val launchIntent = Intent(this, MainActivity::class.java)
+            .putExtra(MainActivity.EXTRA_WIDGET_ACTION, "archive")
+            .putExtra(com.yungsamd17.singlenote.widget.WidgetActionSecurity.EXTRA_TOKEN, com.yungsamd17.singlenote.widget.WidgetActionSecurity.token(this))
         val pendingIntent = PendingIntent.getActivity(
             this,
             REQUEST_CODE_OPEN_APP,
