@@ -18,7 +18,6 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -45,9 +44,6 @@ import com.yungsamd17.singlenote.ui.accentScheme
 import kotlinx.coroutines.flow.first
 
 class SinglenoteWidget : GlanceAppWidget() {
-    // Each host-reported size gets a full-height clickable row, including after resizing.
-    override val sizeMode = SizeMode.Exact
-
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val dao = AppDatabase.get(context).noteDao()
         val initialNote = dao.getActive()
