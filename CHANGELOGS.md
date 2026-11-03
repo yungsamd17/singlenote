@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [0.4.3] - 2026-11-03
+
+### Bug Fixes
+
+- Stop the home screen widget from getting stuck on the loading spinner after the v0.4.2 widget rewrite.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v0.4.3) · [Changes since v0.4.2](https://github.com/yungsamd17/singlenote/compare/v0.4.2...v0.4.3)
+
 ## [0.4.2] - 2026-11-01
 
 ### Added
