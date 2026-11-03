@@ -41,43 +41,65 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.util.Diagnostics
 import kotlinx.coroutines.flow.first
 
 class SinglenoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val dao = AppDatabase.get(context).noteDao()
-        val initialNote = dao.getActive()
-        val activeNote = dao.observeActive()
-        val appAccent = NotePreferences.get(context).accentColor
-        val initialAccent = appAccent.first()
-        val appDynamic = NotePreferences.get(context).dynamicColors
-        val initialDynamic = appDynamic.first()
-        val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
-        val initialStyle = WidgetStyleStore.get(context, widgetId)
-        val widgetStyle = WidgetStyleStore.observe(context, widgetId)
-        val fallbackHint = context.getString(R.string.hint_write_one_thing)
-        val actionToken = WidgetActionSecurity.token(context)
-        provideContent {
-            val note by activeNote.collectAsState(initial = initialNote)
-            val style by widgetStyle.collectAsState(initial = initialStyle)
-            val selectedAppAccent by appAccent.collectAsState(initial = initialAccent)
-            val selectedDynamic by appDynamic.collectAsState(initial = initialDynamic)
-            val openIntent =
-                Intent(context, MainActivity::class.java)
-                    .setData(android.net.Uri.parse("singlenote://widget/$widgetId"))
-                    .putExtra(MainActivity.EXTRA_WIDGET_ACTION, style.action)
-                    .putExtra(WidgetActionSecurity.EXTRA_TOKEN, actionToken)
-            WidgetContent(
-                openIntent = openIntent,
-                content = note?.content.orEmpty(),
-                fallbackHint = fallbackHint,
-                style = style,
-                appAccent = selectedAppAccent,
-                context = context,
-                brand = context.getString(R.string.app_name),
-                appDynamicColors = selectedDynamic,
+        Diagnostics.event(LOG_TAG, "provideGlance start id=$id")
+        try {
+            val dao = AppDatabase.get(context).noteDao()
+            val initialNote = dao.getActive()
+            val activeNote = dao.observeActive()
+            Diagnostics.event(LOG_TAG, "note loaded active=${initialNote != null}")
+            val appAccent = NotePreferences.get(context).accentColor
+            val initialAccent = appAccent.first()
+            val appDynamic = NotePreferences.get(context).dynamicColors
+            val initialDynamic = appDynamic.first()
+            val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
+            val initialStyle = WidgetStyleStore.get(context, widgetId)
+            val widgetStyle = WidgetStyleStore.observe(context, widgetId)
+            val fallbackHint = context.getString(R.string.hint_write_one_thing)
+            val actionToken = WidgetActionSecurity.token(context)
+            Diagnostics.event(
+                LOG_TAG,
+                "prefs ready widgetId=$widgetId accent=$initialAccent dynamic=$initialDynamic " +
+                    "theme=${initialStyle.theme} size=${initialStyle.size}",
             )
+            provideContent {
+                val note by activeNote.collectAsState(initial = initialNote)
+                val style by widgetStyle.collectAsState(initial = initialStyle)
+                val selectedAppAccent by appAccent.collectAsState(initial = initialAccent)
+                val selectedDynamic by appDynamic.collectAsState(initial = initialDynamic)
+                val openIntent =
+                    Intent(context, MainActivity::class.java)
+                        .setData(android.net.Uri.parse("singlenote://widget/$widgetId"))
+                        .putExtra(MainActivity.EXTRA_WIDGET_ACTION, style.action)
+                        .putExtra(WidgetActionSecurity.EXTRA_TOKEN, actionToken)
+                WidgetContent(
+                    openIntent = openIntent,
+                    content = note?.content.orEmpty(),
+                    fallbackHint = fallbackHint,
+                    style = style,
+                    appAccent = selectedAppAccent,
+                    context = context,
+                    brand = context.getString(R.string.app_name),
+                    appDynamicColors = selectedDynamic,
+                )
+            }
+            Diagnostics.event(LOG_TAG, "content published id=$id")
+        } catch (error: kotlinx.coroutines.CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            // Glance swallows this and leaves the loading layout up, so record it
+            // where the diagnostics dialog can show it on a release install.
+            Diagnostics.failure(LOG_TAG, error)
+            throw error
         }
+    }
+
+    private companion object {
+        const val LOG_TAG = "widget"
     }
 }
 
