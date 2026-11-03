@@ -110,7 +110,6 @@ object Diagnostics {
             "locale: ${Locale.getDefault()}, " +
                 "resources: ${context.resources.configuration.locales[0]}"
         )
-        appendLine("process uptime: ${android.os.Process.getUptime()} ms")
     }
 
     private fun widgetSection(context: Context): String = buildString {
