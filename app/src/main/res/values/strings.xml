@@ -200,4 +200,13 @@
     <string name="archive_export_text">Plain text (notes only)</string>
     <string name="accent_icon_restart_notice">Changing the accent also changes the app icon and closes Singlenote. Reopen it from your launcher.</string>
     <string name="settings_icon_dynamic">Dynamic wallpaper color</string>
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_collecting">Collecting…</string>
+    <string name="diagnostics_copy">Copy</string>
+    <string name="diagnostics_share">Share</string>
+    <string name="diagnostics_close">Close</string>
+    <string name="diagnostics_copied">Diagnostics copied</string>
+    <string name="diagnostics_widget_update">Force widget update</string>
+    <string name="diagnostics_widget_update_requested">Widget update requested</string>
+    <string name="diagnostics_widget_update_failed">Widget update failed: %1$s</string>
 </resources>

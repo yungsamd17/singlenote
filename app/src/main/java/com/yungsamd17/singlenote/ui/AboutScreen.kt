@@ -4,8 +4,10 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +47,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -89,6 +93,10 @@ fun AboutScreen(
     var showChangelog by remember { mutableStateOf(false) }
     var changelogRelease by remember { mutableStateOf<GithubReleases.Release?>(null) }
     var changelogFailed by remember { mutableStateOf(false) }
+    var showDiagnostics by remember { mutableStateOf(false) }
+    // Hidden unlock: five quick taps on the version line open Diagnostics.
+    var versionTaps by remember { mutableIntStateOf(0) }
+    var lastVersionTap by remember { mutableLongStateOf(0L) }
     fun openChangelog() {
         showChangelog = true
         changelogRelease = null
@@ -211,6 +219,21 @@ fun AboutScreen(
                                             BuildConfig.VERSION_CODE,
                                         ),
                                     style = MaterialTheme.typography.bodyMedium,
+                                    modifier =
+                                        Modifier.clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null,
+                                        ) {
+                                            val now = SystemClock.elapsedRealtime()
+                                            versionTaps =
+                                                if (now - lastVersionTap > 2_000) 1
+                                                else versionTaps + 1
+                                            lastVersionTap = now
+                                            if (versionTaps >= 5) {
+                                                versionTaps = 0
+                                                showDiagnostics = true
+                                            }
+                                        },
                                 )
                             }
                             IconButton(onClick = ::checkForUpdates, enabled = !checkingUpdate) {
@@ -312,6 +335,10 @@ fun AboutScreen(
                 )
             )
         }
+    }
+
+    if (showDiagnostics) {
+        DiagnosticsDialog(onDismiss = { showDiagnostics = false })
     }
 
     if (showChangelog) {

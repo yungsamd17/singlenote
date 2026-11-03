@@ -8,6 +8,7 @@ import android.util.Log
 import com.yungsamd17.singlenote.data.ACTION_NOTE_UPDATED
 import com.yungsamd17.singlenote.notify.PinNotification
 import com.yungsamd17.singlenote.tile.NoteTileService
+import com.yungsamd17.singlenote.util.Diagnostics
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ class NoteChangedReceiver : BroadcastReceiver() {
                 PinNotification.refresh(appContext)
                 TileService.requestListeningState(appContext, NoteTileService.componentName(appContext))
             } catch (e: Exception) {
+                Diagnostics.failure("widget", e)
                 Log.e(TAG, "handling note update failed", e)
             } finally {
                 pendingResult.finish()
