@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [0.4.4] - 2026-11-04
+
+### Added
+
+- Hidden diagnostics screen: tap the version line five times in About to copy build, device, widget and crash details, so a broken release install can be reported without a debugger.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v0.4.4) · [Changes since v0.4.3](https://github.com/yungsamd17/singlenote/compare/v0.4.3...v0.4.4)
+
 ## [0.4.3] - 2026-11-03
 
 ### Bug Fixes
