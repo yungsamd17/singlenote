@@ -327,6 +327,16 @@ run_stage() {
     return 0
   fi
 
+  # The CPU pinning can fail when the machine changes its CPU set while the
+  # build runs: retry the stage once without it.
+  if grep -q "affinity" "$stage_log" 2>/dev/null && [ "${GRADLE_CMD[0]}" = "taskset" ]; then
+    log "the CPU pinning failed, retrying the stage without it"
+    GRADLE_CMD=(./gradlew)
+    if gradle_run "$heap" "${tasks[@]}" 2>&1 | tee "$stage_log.retry"; then
+      return 0
+    fi
+  fi
+
   if grep -q "Daemon startup failed" "$stage_log" 2>/dev/null; then
     log "the aapt2 daemon failed to start; retrying the stage once"
     if [ -n "$AAPT2_OVERRIDE" ] && ! aapt2_override_works "$AAPT2_OVERRIDE"; then
