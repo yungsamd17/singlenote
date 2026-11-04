@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [0.4.5] - 2026-11-04
+
+### Fixed
+
+- Home-screen widget no longer stays stuck on the loading spinner. On some phones the app process was reclaimed before the widget could render, which left the widget loading forever; the widget session is now re-established when the app is opened (and after a reboot or app update), so a stuck widget recovers on its own.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v0.4.5) · [Changes since v0.4.4](https://github.com/yungsamd17/singlenote/compare/v0.4.4...v0.4.5)
+
 ## [0.4.4] - 2026-11-04
 
 ### Added
