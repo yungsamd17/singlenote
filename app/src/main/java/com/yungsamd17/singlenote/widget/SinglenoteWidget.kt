@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -420,6 +421,25 @@ internal fun WidgetContent(
 class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = SinglenoteWidget()
 
+    /**
+     * Glance's update hooks call `goAsync()` as well, and a receiver can
+     * only hold one pending result: the second call returns null, and Glance
+     * finishes that null result -> crash. So the update is driven from
+     * [onReceive], where the pending result belongs to this class.
+     */
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) = Unit
+
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle,
+    ) = Unit
+
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         appWidgetIds.forEach { WidgetStyleStore.remove(context, it) }
         super.onDeleted(context, appWidgetIds)
@@ -438,6 +458,11 @@ class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
      * Rendering here fills the widget right away, without the job scheduler.
      */
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_DELETED) {
+            // Glance cleans up after itself here and takes the pending result.
+            super.onReceive(context, intent)
+            return
+        }
         // The system may kill the app right after the broadcast, so the
         // process has to stay alive until the widget is rendered.
         val pendingResult = goAsync()
@@ -446,18 +471,24 @@ class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
             super.onReceive(context, intent)
             delivered = true
         } finally {
-            if (!delivered) pendingResult.finish()
+            if (!delivered) pendingResult?.finish()
         }
         val appContext = context.applicationContext
         receiverScope.launch {
             try {
                 renderSinglenoteWidgetsInProcess(appContext)
+                // Glance gets its own update as well, so devices where its
+                // worker runs keep the regular behaviour (there, and below
+                // Android 12, it is the only path that renders the widget).
+                withTimeoutOrNull(GLANCE_UPDATE_TIMEOUT_MS) {
+                    withContext(Dispatchers.IO) { SinglenoteWidget().updateAll(appContext) }
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Throwable) {
                 Diagnostics.failure(LOG_TAG, error)
             } finally {
-                pendingResult.finish()
+                pendingResult?.finish()
             }
         }
     }
