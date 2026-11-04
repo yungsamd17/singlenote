@@ -30,10 +30,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.appwidget.updateAll
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.Diagnostics
-import com.yungsamd17.singlenote.widget.SinglenoteWidget
+import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
 import kotlinx.coroutines.launch
 
 /**
@@ -81,7 +80,7 @@ fun DiagnosticsDialog(onDismiss: () -> Unit) {
                             refreshing = true
                             scope.launch {
                                 val error =
-                                    runCatching { SinglenoteWidget().updateAll(context) }
+                                    runCatching { refreshSinglenoteWidgets(context) }
                                         .exceptionOrNull()
                                 if (error != null) Diagnostics.failure("widget", error)
                                 report = Diagnostics.report(context)

@@ -320,7 +320,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
                                 context = this@WidgetConfigurationActivity,
                                 brand = brand,
                                 appDynamicColors = dynamic,
-                                preview = true,
+                                scrollable = false,
                             )
                         }
                         .remoteViews
