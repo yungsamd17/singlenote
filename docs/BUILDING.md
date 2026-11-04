@@ -37,6 +37,40 @@ A normal debug build uses `com.yungsamd17.singlenote`, the same application ID a
 the release. Its debug signature may differ from an installed release signature.
 Use a preview to test alongside your regular app.
 
+## Run the CI checks locally
+
+`scripts/ci-local-build.sh` runs the same task list as the Build workflow
+(`clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease`):
+
+```bash
+scripts/ci-local-build.sh
+```
+
+It installs the missing SDK packages, creates the debug keystore the way the
+workflow creates it, and signs the release build with a local test key. A
+locally built release APK has a different signature than the published one, so
+Android refuses to install it over the released app: uninstall the released app
+first, which clears its data, or build a preview instead.
+
+Single tasks work as well:
+
+```bash
+scripts/ci-local-build.sh assembleDebug
+```
+
+| Variable | Purpose |
+|---|---|
+| `ANDROID_HOME` | SDK location (default `~/.android-sdk`) |
+| `GRADLE_HEAP` / `GRADLE_HEAP_SMALL` | Gradle daemon heap per stage |
+| `CI_LOCAL_STAGED` | Run every task in its own Gradle invocation, so the heap is released between them (default on machines with less than 4 GB of RAM) |
+| `CI_LOCAL_CPUS` | Pin the build to a few CPUs, for example `0,1` |
+| `CI_LOCAL_CLEAN` | Run `clean` before the other tasks |
+| `CI_LOCAL_LOG_DIR` | Where the per-stage logs are written |
+
+On an ARM64 Linux host the script runs the x86-64-only build tools through
+qemu-user with a small amd64 sysroot, and points AGP at the wrapped aapt2 with
+`android.aapt2FromMavenOverride`.
+
 ## Build a separate preview
 
 ```bash
