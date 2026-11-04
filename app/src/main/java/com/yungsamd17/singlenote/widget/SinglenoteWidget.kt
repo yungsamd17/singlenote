@@ -1,5 +1,7 @@
 package com.yungsamd17.singlenote.widget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -22,6 +24,7 @@ import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -42,7 +45,9 @@ import com.yungsamd17.singlenote.data.AppDatabase
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.util.Diagnostics
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class SinglenoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -100,6 +105,37 @@ class SinglenoteWidget : GlanceAppWidget() {
 
     private companion object {
         const val LOG_TAG = "widget"
+    }
+}
+
+/**
+ * Re-establishes the widget sessions from a live process.
+ *
+ * Glance 1.1.1 renders each widget in a WorkManager worker (unique work
+ * "appWidget-<id>") that must find the in-memory render session of the
+ * process that enqueued the update. When the OS reclaims that process before
+ * the worker starts (aggressive background reaping, e.g. MIUI on release
+ * installs), the worker's first attempt fails with "No session available for
+ * key" and its retry only logs a warning and no-ops, so the widget is stuck on
+ * the initial loading layout forever — nothing is logged and no later update
+ * can recover it.
+ *
+ * Re-enqueueing the update from a process that stays alive fixes it: Glance
+ * enqueues with ExistingWorkPolicy.REPLACE, so the stuck work is replaced and
+ * the new worker renders in the live process, where the session exists. The
+ * rendered widget then keeps its content even if a later session is lost.
+ */
+internal suspend fun refreshSinglenoteWidgets(context: Context) {
+    val appContext = context.applicationContext
+    val widgetIds = withContext(Dispatchers.IO) {
+        val ids = AppWidgetManager.getInstance(appContext)
+            .getAppWidgetIds(ComponentName(appContext, SinglenoteWidgetReceiver::class.java))
+        if (ids.isEmpty()) return@withContext null
+        SinglenoteWidget().updateAll(appContext)
+        ids
+    } ?: return
+    widgetIds.forEach { id ->
+        Diagnostics.event("widget", "widget session re-established (id=$id)")
     }
 }
 

@@ -48,13 +48,22 @@ import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.util.AppLanguage
+import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.widget.WidgetActionSecurity
+import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    companion object { const val EXTRA_WIDGET_ACTION = "widget_action" }
+    companion object {
+        // Debounce (ms) before re-establishing the widget session on resume.
+        private const val WIDGET_REFRESH_DEBOUNCE = 5_000L
+        const val EXTRA_WIDGET_ACTION = "widget_action"
+    }
     private var widgetAction by mutableStateOf<String?>(null)
 
     private fun receiveWidgetAction(intent: Intent?) {
@@ -269,8 +278,28 @@ class MainActivity : ComponentActivity() {
     // prefs emit). Lets onResume re-apply the bars without disk I/O.
     private var lastDarkTheme: Boolean? = null
 
+    // Debounced so fast resume churn (rotation, re-entry from recents) doesn't
+    // schedule a widget update per blip.
+    private var widgetRefreshJob: Job? = null
+
     override fun onResume() {
         super.onResume()
+        // Glance renders each widget in a WorkManager worker that must find
+        // the in-memory session of the process that enqueued the update. When
+        // the OS reclaims that process first (aggressive background reaping,
+        // e.g. MIUI), the worker sees no session and its retries no-op,
+        // leaving the widget stuck on the loading layout forever. Re-establish
+        // the session from this live foreground process so a stuck widget
+        // heals itself on the next app open (or widget tap, which lands here).
+        widgetRefreshJob?.cancel()
+        widgetRefreshJob = lifecycleScope.launch(Dispatchers.IO) {
+            delay(WIDGET_REFRESH_DEBOUNCE)
+            try {
+                refreshSinglenoteWidgets(applicationContext)
+            } catch (e: Exception) {
+                Diagnostics.failure("widget", e)
+            }
+        }
         // Re-apply on return (e.g. from recents): the system styling, not
         // the app theme, may have driven the bars while away. Synchronous
         // from the cache — never a blocking store read on the main thread.
