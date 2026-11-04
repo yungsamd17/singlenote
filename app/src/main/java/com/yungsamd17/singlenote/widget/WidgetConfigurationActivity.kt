@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceRemoteViews
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -456,12 +455,13 @@ class WidgetConfigurationActivity : ComponentActivity() {
                                     options,
                                 )
                                 lifecycleScope.launch {
-                                    SinglenoteWidget()
-                                        .update(
-                                            this@WidgetConfigurationActivity,
-                                            GlanceAppWidgetManager(this@WidgetConfigurationActivity)
-                                                .getGlanceIdBy(widgetId),
-                                        )
+                                    // The new style has to reach the widget now.
+                                    // Glance's own update needs a worker that
+                                    // some devices never run, so the widget is
+                                    // rendered here, where the style is known.
+                                    refreshSinglenoteWidgets(
+                                        this@WidgetConfigurationActivity
+                                    )
                                     setResult(
                                         Activity.RESULT_OK,
                                         Intent()

@@ -52,9 +52,13 @@ import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.util.Diagnostics
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class SinglenoteWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -128,33 +132,66 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
  * process that requested the update. Two things go wrong on some devices
  * (MIUI on release installs):
  *
- *  - The worker never runs. The job scheduler never starts it, so the widget
+ *  - The worker never finds the session. The launcher places the widget and
+ *    the system reaps the app right afterwards, so the worker starts in a
+ *    fresh process where the session is gone: the work fails and the widget
  *    stays on the initial loading layout, no matter how often an update is
  *    requested.
  *  - The worker is stuck in the queue while its session is still open. Glance
  *    then believes the session is running and drops every later update
  *    silently, so the widget stays on the loading layout forever.
  *
- * So this clears a stuck worker, asks Glance for a normal update and renders
- * the widget right here when no worker is running. The in-process render does
- * not depend on the job scheduler at all.
+ * So this renders the widget right here, where the update was requested: that
+ * path does not depend on the job scheduler at all. Glance is asked for an
+ * update afterwards, so devices where its worker runs keep the regular
+ * behaviour.
  */
 internal suspend fun refreshSinglenoteWidgets(context: Context) {
     val appContext = context.applicationContext
-    val widgetIds =
-        withContext(Dispatchers.IO) {
-            AppWidgetManager.getInstance(appContext)
-                .getAppWidgetIds(ComponentName(appContext, SinglenoteWidgetReceiver::class.java))
-        }
+    val widgetIds = widgetIdsOf(appContext)
     if (widgetIds.isEmpty()) return
     widgetIds.forEach { id -> clearStuckGlanceSession(appContext, id) }
-    withContext(Dispatchers.IO) { SinglenoteWidget().updateAll(appContext) }
-    widgetIds.forEach { id ->
-        if (!isGlanceWorkerRunning(appContext, id)) {
-            renderWidgetInProcess(appContext, id)
-        }
+    // Render first: this path needs no worker, while the Glance request can
+    // take a while (or never finish) on a device that reaps the app right
+    // after the broadcast that asked for the update.
+    if (canRenderListInProcess) {
+        widgetIds.forEach { id -> renderWidgetInProcess(appContext, id, trigger = "refresh") }
+    }
+    // Then ask Glance for its own update, so devices where its worker runs
+    // keep the regular behaviour. The request is bounded: it must not hold
+    // up the caller (the widget is already up to date at this point).
+    withTimeoutOrNull(GLANCE_UPDATE_TIMEOUT_MS) {
+        withContext(Dispatchers.IO) { SinglenoteWidget().updateAll(appContext) }
     }
 }
+
+/** Renders the widgets in the process the launcher asked for them in. */
+internal suspend fun renderSinglenoteWidgetsInProcess(context: Context) {
+    if (!canRenderListInProcess) return
+    val appContext = context.applicationContext
+    widgetIdsOf(appContext).forEach { id ->
+        renderWidgetInProcess(appContext, id, trigger = "receiver")
+    }
+}
+
+/** The ids of the Singlenote widgets on the home screen. */
+private suspend fun widgetIdsOf(context: Context): IntArray =
+    withContext(Dispatchers.IO) {
+        AppWidgetManager.getInstance(context)
+            .getAppWidgetIds(ComponentName(context, SinglenoteWidgetReceiver::class.java))
+    }
+
+/**
+ * From Android 12 on, a one-shot render is the same as Glance's: the list
+ * items travel with the RemoteViews, so the widget scrolls like the one
+ * Glance renders.
+ *
+ * Below that a lazy list needs a bound collection service, which only the
+ * Glance session has: a one-shot render would draw the note as one text
+ * block, without scrolling. There Glance's own render is kept.
+ */
+private val canRenderListInProcess: Boolean
+    get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
 /**
  * Cancels the worker of a widget that is queued but never started.
@@ -180,10 +217,6 @@ private suspend fun clearStuckGlanceSession(context: Context, appWidgetId: Int) 
     }
 }
 
-/** True while Glance's worker for this widget is rendering. */
-private suspend fun isGlanceWorkerRunning(context: Context, appWidgetId: Int): Boolean =
-    glanceWorkStates(context, appWidgetId).any { it == WorkInfo.State.RUNNING }
-
 /** The states of the worker Glance enqueued for this widget. */
 private suspend fun glanceWorkStates(context: Context, appWidgetId: Int): List<WorkInfo.State> =
     withContext(Dispatchers.IO) {
@@ -201,13 +234,18 @@ private fun glanceWorkName(appWidgetId: Int): String = "appWidget-$appWidgetId"
 /**
  * Renders the widget in this process and publishes it right away.
  *
- * Glance normally renders widgets in a WorkManager worker. When the job
- * scheduler never runs that worker, the widget keeps the loading layout even
- * though the app is in the foreground and asked for an update. Composing the
- * same content here does not depend on the job scheduler at all.
+ * Glance normally renders widgets in a WorkManager worker. When that worker
+ * cannot find the session of the process that asked for the update, the
+ * widget keeps the loading layout even though the app is in the foreground
+ * and asked for an update. Composing the same content here does not depend
+ * on the job scheduler at all.
  */
 @OptIn(ExperimentalGlanceRemoteViewsApi::class)
-private suspend fun renderWidgetInProcess(context: Context, appWidgetId: Int): Boolean =
+private suspend fun renderWidgetInProcess(
+    context: Context,
+    appWidgetId: Int,
+    trigger: String,
+): Boolean =
     try {
         val dao = AppDatabase.get(context).noteDao()
         val note = dao.getActive()?.content.orEmpty()
@@ -244,13 +282,13 @@ private suspend fun renderWidgetInProcess(context: Context, appWidgetId: Int): B
                             // Glance renders. Older versions need a bound
                             // collection service, which a one-shot render
                             // cannot provide: there the note is one text block.
-                            scrollable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+                            scrollable = canRenderListInProcess,
                         )
                     }
                     .remoteViews
             }
         AppWidgetManager.getInstance(context).updateAppWidget(appWidgetId, views)
-        Diagnostics.event("widget", "widget rendered in-process (id=$appWidgetId)")
+        Diagnostics.event("widget", "widget rendered in-process (id=$appWidgetId, trigger=$trigger)")
         true
     } catch (error: CancellationException) {
         throw error
@@ -268,6 +306,7 @@ private fun widgetSize(context: Context, appWidgetId: Int): DpSize {
 }
 
 private const val WORK_TIMEOUT_SECONDS = 5L
+private const val GLANCE_UPDATE_TIMEOUT_MS = 5_000L
 
 @Composable
 internal fun WidgetContent(
@@ -385,7 +424,47 @@ class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
         appWidgetIds.forEach { WidgetStyleStore.remove(context, it) }
         super.onDeleted(context, appWidgetIds)
     }
+
+    /**
+     * Renders the widgets in the process that receives the broadcast.
+     *
+     * This is the path the launcher takes when a widget is added, resized or
+     * refreshed. Glance answers such a broadcast by queueing a worker that
+     * has to find the in-memory session of this process. When the system
+     * reaps the app right after the launcher placed the widget, the worker
+     * starts in a fresh process, finds no session and fails: the widget keeps
+     * its loading layout until something else updates it.
+     *
+     * Rendering here fills the widget right away, without the job scheduler.
+     */
+    override fun onReceive(context: Context, intent: Intent) {
+        // The system may kill the app right after the broadcast, so the
+        // process has to stay alive until the widget is rendered.
+        val pendingResult = goAsync()
+        var delivered = false
+        try {
+            super.onReceive(context, intent)
+            delivered = true
+        } finally {
+            if (!delivered) pendingResult.finish()
+        }
+        val appContext = context.applicationContext
+        receiverScope.launch {
+            try {
+                renderSinglenoteWidgetsInProcess(appContext)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Throwable) {
+                Diagnostics.failure(LOG_TAG, error)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
 }
+
+/** The receiver's renders outlive the broadcast, but not the process. */
+private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
 internal fun widgetFontSize(size: String): Int =
     when (size) {
