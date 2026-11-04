@@ -355,11 +355,13 @@ if [ "${CI_LOCAL_STAGED:-auto}" = "1" ] || { [ "${CI_LOCAL_STAGED:-auto}" = "aut
     fi
     # The release build comes first: it is the one a device test needs, and it
     # is the heaviest step (R8). The rest of the list follows the workflow order.
+    # The debug build gets the full heap as well: merging the debug dex files
+    # without shrinking needs more memory than the unit tests.
     run_stage "$GRADLE_HEAP" assembleRelease
     run_stage "$GRADLE_HEAP_SMALL" testDebugUnitTest
     run_stage "$GRADLE_HEAP" lintDebug
     run_stage "$GRADLE_HEAP" lintRelease
-    run_stage "$GRADLE_HEAP_SMALL" assembleDebug
+    run_stage "$GRADLE_HEAP" assembleDebug
   fi
 else
   log "gradle tasks: ${TASKS[*]}"
