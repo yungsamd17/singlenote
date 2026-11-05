@@ -8,6 +8,16 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [0.4.6] - 2026-11-05
+
+### Fixed
+
+- Home-screen widget no longer stays stuck on the loading spinner. The widget is now rendered by the app itself instead of a background job that some phones never ran, so it fills in as soon as you add it — no app start needed.
+- Widget style changes (theme, accent, size, opacity) now apply right away when you press "Update widget", instead of waiting for the next app start.
+- Fixed a crash when adding a widget to the home screen, and when changing the app language.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v0.4.6) · [Changes since v0.4.5](https://github.com/yungsamd17/singlenote/compare/v0.4.5...v0.4.6)
+
 ## [0.4.5] - 2026-11-04
 
 ### Fixed
