@@ -439,28 +439,30 @@ class SinglenoteWidgetReceiver : GlanceAppWidgetReceiver() {
      * Rendering here fills the widget right away, without the job scheduler.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        when (intent.action) {
-            // Glance's own update hooks (onUpdate, onAppWidgetOptionsChanged,
-            // onDeleted) call goAsync() as well, and a receiver can hold only
-            // one pending result: the second call returns null and Glance
-            // finishes that null result -> crash. So the update is driven
-            // from here, where the pending result belongs to this class.
-            AppWidgetManager.ACTION_APPWIDGET_UPDATE,
-            AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED,
-            // AppWidgetProvider.onRestored calls onUpdate, so this one would
-            // reach Glance's hook as well.
-            AppWidgetManager.ACTION_APPWIDGET_RESTORED,
-            -> renderFromReceiver(context, goAsync())
+        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_DELETED) {
             // Glance cleans up after itself here and takes the pending result.
-            AppWidgetManager.ACTION_APPWIDGET_DELETED -> super.onReceive(context, intent)
-            // Everything else (a locale change, a Glance action): Glance
-            // handles it, and the widgets are rendered here as well.
-            else -> {
-                val pendingResult = goAsync()
-                super.onReceive(context, intent)
-                renderFromReceiver(context, pendingResult)
-            }
+            super.onReceive(context, intent)
+            return
         }
+        // Everything else is handled here.
+        //
+        // Glance's own hooks (onUpdate, onAppWidgetOptionsChanged,
+        // onDeleted), its locale handling and its action handling call
+        // goAsync() as well, and a receiver can hold only one pending
+        // result: the second call returns null, and Glance finishes that
+        // null result -> the app crashes. So the update is driven from here,
+        // where the pending result belongs to this class.
+        //
+        // The broadcasts that reach this branch:
+        // - APPWIDGET_UPDATE: the launcher adds, resizes or refreshes a widget
+        // - APPWIDGET_OPTIONS_CHANGED: a widget was resized
+        // - APPWIDGET_RESTORED: the launcher restored a widget (it reaches
+        //   Glance's onUpdate, because AppWidgetProvider restores a widget
+        //   by updating it)
+        // - LOCALE_CHANGED: the app language changed (Glance renders on a
+        //   locale change as well)
+        // - Glance's own debug update
+        renderFromReceiver(context, goAsync())
     }
 }
 
