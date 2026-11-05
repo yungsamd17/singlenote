@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.os.Build
+import androidx.work.WorkManager
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.widget.SinglenoteWidgetReceiver
@@ -74,6 +75,9 @@ object Diagnostics {
             appendLine("[WIDGET]")
             appendLine(widgetSection(context))
             appendLine()
+            appendLine("[GLANCE WORK]")
+            appendLine(glanceWorkSection(context))
+            appendLine()
             appendLine("[SETTINGS]")
             appendLine(settingsSection(context))
             appendLine()
@@ -132,6 +136,36 @@ object Diagnostics {
         }
     }
 
+    /**
+     * The state of the workers Glance queued for the widgets.
+     *
+     * Glance renders every widget in a WorkManager worker named
+     * "appWidget-<id>". A worker that stays enqueued never renders, and a
+     * worker that failed lost its in-memory session, so this is what tells
+     * the two apart.
+     */
+    private suspend fun glanceWorkSection(context: Context): String = withContext(Dispatchers.IO) {
+        val ids =
+            runCatching {
+                AppWidgetManager.getInstance(context)
+                    .getAppWidgetIds(ComponentName(context, SinglenoteWidgetReceiver::class.java))
+            }.getOrElse { intArrayOf() }
+        if (ids.isEmpty()) return@withContext "no widgets"
+        buildString {
+            ids.sorted().forEach { id ->
+                val states =
+                    runCatching {
+                        WorkManager.getInstance(context)
+                            .getWorkInfosForUniqueWork("appWidget-$id")
+                            .get(5, TimeUnit.SECONDS)
+                            .joinToString(", ") { "${it.state} attempt=${it.runAttemptCount}" }
+                            .ifEmpty { "no work" }
+                    }.getOrElse { "unavailable (${it.javaClass.simpleName})" }
+                appendLine("  id $id: $states")
+            }
+        }
+    }
+
     /** DataStore reads are guarded: a broken store must not hang the report. */
     private suspend fun settingsSection(context: Context): String {
         val prefs = NotePreferences.get(context)
@@ -162,7 +196,21 @@ object Diagnostics {
         val packageName = context.packageName
         val lines =
             output.lineSequence()
-                .filter { packageName in it || "GlanceAppWidget" in it || "AndroidRuntime" in it }
+                // The widget renders in a WorkManager worker, so the worker and
+                // job scheduler logs decide whether it ever runs. The input
+                // event spam is dropped: it fills the report without saying
+                // anything about the widget.
+                .filter {
+                    packageName in it ||
+                        "GlanceAppWidget" in it ||
+                        "AndroidRuntime" in it ||
+                        "GlanceSession" in it ||
+                        "GlanceAppWidgetSession" in it ||
+                        "WM-" in it ||
+                        "JobScheduler" in it ||
+                        "WorkManager" in it
+                }
+                .filterNot { "MIUIInput" in it || "InputDispatcher" in it }
                 .toList()
         if (lines.isEmpty()) return "no entries for $packageName"
         return lines.takeLast(MAX_LOGCAT_LINES).joinToString("\n")

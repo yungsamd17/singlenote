@@ -9,7 +9,6 @@ import com.yungsamd17.singlenote.data.ACTION_NOTE_UPDATED
 import com.yungsamd17.singlenote.notify.PinNotification
 import com.yungsamd17.singlenote.tile.NoteTileService
 import com.yungsamd17.singlenote.util.Diagnostics
-import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -24,7 +23,7 @@ class NoteChangedReceiver : BroadcastReceiver() {
         // and the silent catch-all made dead updates undebuggable.
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                SinglenoteWidget().updateAll(appContext)
+                refreshSinglenoteWidgets(appContext)
                 PinNotification.refresh(appContext)
                 TileService.requestListeningState(appContext, NoteTileService.componentName(appContext))
             } catch (e: Exception) {

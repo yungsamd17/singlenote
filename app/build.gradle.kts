@@ -104,6 +104,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.glance.appwidget)
+    // Glance only pulls WorkManager in at runtime, but the widget recovery
+    // needs its API to inspect and clear the stuck "appWidget-<id>" work.
+    implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
 
