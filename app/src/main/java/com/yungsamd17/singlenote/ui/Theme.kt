@@ -130,6 +130,58 @@ fun accentScheme(accent: String, dark: Boolean): ColorScheme {
     }
 }
 
+/**
+ * Luma-weighted grayscale of a color. Perceptual luminance keeps the
+ * perceived brightness of the original tone, so a colored surface turns
+ * into a neutral one instead of a darker or brighter one.
+ */
+fun Color.toGray(): Color {
+    val luma = 0.2126f * red + 0.7152f * green + 0.0722f * blue
+    return Color(luma, luma, luma, alpha)
+}
+
+/**
+ * Monochrome variant of a scheme: every role becomes a shade of gray, so
+ * the accent (or the wallpaper colors) no longer tints the interface.
+ *
+ * The error family keeps its hue on purpose: destructive actions and the
+ * character limit must still read as a warning, not as another gray.
+ */
+fun ColorScheme.toMonochrome(): ColorScheme = copy(
+    primary = primary.toGray(),
+    onPrimary = onPrimary.toGray(),
+    primaryContainer = primaryContainer.toGray(),
+    onPrimaryContainer = onPrimaryContainer.toGray(),
+    inversePrimary = inversePrimary.toGray(),
+    secondary = secondary.toGray(),
+    onSecondary = onSecondary.toGray(),
+    secondaryContainer = secondaryContainer.toGray(),
+    onSecondaryContainer = onSecondaryContainer.toGray(),
+    tertiary = tertiary.toGray(),
+    onTertiary = onTertiary.toGray(),
+    tertiaryContainer = tertiaryContainer.toGray(),
+    onTertiaryContainer = onTertiaryContainer.toGray(),
+    background = background.toGray(),
+    onBackground = onBackground.toGray(),
+    surface = surface.toGray(),
+    onSurface = onSurface.toGray(),
+    surfaceVariant = surfaceVariant.toGray(),
+    onSurfaceVariant = onSurfaceVariant.toGray(),
+    surfaceTint = surfaceTint.toGray(),
+    inverseSurface = inverseSurface.toGray(),
+    inverseOnSurface = inverseOnSurface.toGray(),
+    outline = outline.toGray(),
+    outlineVariant = outlineVariant.toGray(),
+    scrim = scrim.toGray(),
+    surfaceBright = surfaceBright.toGray(),
+    surfaceDim = surfaceDim.toGray(),
+    surfaceContainer = surfaceContainer.toGray(),
+    surfaceContainerHigh = surfaceContainerHigh.toGray(),
+    surfaceContainerHighest = surfaceContainerHighest.toGray(),
+    surfaceContainerLow = surfaceContainerLow.toGray(),
+    surfaceContainerLowest = surfaceContainerLowest.toGray(),
+)
+
 /** Uses only bundled resources; never requests a downloadable font. */
 fun appTypography(useFlex: Boolean): androidx.compose.material3.Typography {
     val base = androidx.compose.material3.Typography()

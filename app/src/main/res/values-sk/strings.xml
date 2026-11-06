@@ -96,6 +96,8 @@
     <string name="setting_show_notifications_desc">Povoľte pripnutie aktuálnej poznámky ako trvalého upozornenia</string>
     <string name="setting_lockscreen_visible">Zobrazovať poznámku na uzamknutej obrazovke</string>
     <string name="setting_lockscreen_visible_desc">Ak je možnosť vypnutá, obsah poznámky sa na uzamknutej obrazovke skryje</string>
+    <string name="setting_notification_title_first_line">Zobrazovať prvý riadok poznámky v názve</string>
+    <string name="setting_notification_title_first_line_desc">Použiť prvý riadok poznámky ako názov pripnutého upozornenia</string>
     <string name="change">Zmeniť</string>
     <string name="about_title">O aplikácii</string>
     <string name="about_subtitle">Verzia, podmienky, súkromie a ďalšie</string>
@@ -152,6 +154,8 @@
     <string name="settings_dynamic_summary">Použiť farby tapety</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Použiť čisto čiernu v tmavom motíve</string>
+    <string name="settings_monochrome">Monochromatický</string>
+    <string name="settings_monochrome_summary">Zmeniť všetky farby na odtiene sivej</string>
     <string name="settings_app_icon">Ikona aplikácie</string>
     <string name="settings_icon_accent">Použiť farbu zvýraznenia</string>
     <string name="settings_app_font">Písmo aplikácie</string>
@@ -199,6 +203,7 @@
     <string name="archive_export_json">JSON (s názvami a dátumami)</string>
     <string name="archive_export_text">Obyčajný text (iba poznámky)</string>
     <string name="accent_icon_restart_notice">Zmena farby zmení aj ikonu a zavrie Singlenote. Znova ho otvorte zo spúšťača.</string>
+    <string name="app_icon_restart_notice">Zmena ikony aplikácie zavrie Singlenote. Znova ho otvorte zo spúšťača.</string>
     <string name="settings_icon_dynamic">Dynamická farba tapety</string>
     <string name="diagnostics_title">Diagnostika</string>
     <string name="diagnostics_collecting">Zbieram údaje…</string>

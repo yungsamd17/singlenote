@@ -19,11 +19,13 @@ interface PreferencesStore {
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
+    val notificationTitleFirstLine: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
+    val monochrome: Flow<Boolean>
     val appFont: Flow<String>
     val appIcon: Flow<String>
     val accentColor: Flow<String>
@@ -34,6 +36,8 @@ interface PreferencesStore {
 
     suspend fun setLockscreenVisible(value: Boolean)
 
+    suspend fun setNotificationTitleFirstLine(value: Boolean)
+
     suspend fun setThemeMode(value: String)
 
     suspend fun setFontFamily(value: String)
@@ -43,6 +47,8 @@ interface PreferencesStore {
     suspend fun setDynamicColors(value: Boolean)
 
     suspend fun setAmoled(value: Boolean)
+
+    suspend fun setMonochrome(value: Boolean)
 
     suspend fun setAppFont(value: String)
 
@@ -84,6 +90,21 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.edit { it[KEY_AMOLED] = value }
     }
 
+    // Off by default: the app keeps its accent colors until the user asks
+    // for a grayscale interface.
+    override val monochrome: Flow<Boolean> =
+        context.settingsDataStore.data.map {
+            (it[KEY_MONOCHROME] ?: false).also { enabled ->
+                // The launch window is painted before the first frame: keep
+                // the flag there so it can match the gray scheme.
+                context.getSharedPreferences("launch_theme", Context.MODE_PRIVATE).edit().putBoolean("monochrome", enabled).apply()
+            }
+        }
+
+    override suspend fun setMonochrome(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_MONOCHROME] = value }
+    }
+
     override val appFont: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_APP_FONT] ?: "system" }
 
@@ -106,6 +127,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
     // and the toggle stays one tap away in Settings for opting out.
     override val lockscreenVisible: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: true }
+    // Off by default: the pinned notification keeps its own title until the
+    // user asks for the note's first line to take its place.
+    override val notificationTitleFirstLine: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] ?: false }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
@@ -125,6 +150,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setLockscreenVisible(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_LOCKSCREEN_VISIBLE] = value }
+    }
+
+    override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] = value }
     }
 
     override suspend fun setThemeMode(value: String) {
@@ -160,11 +189,13 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
         val KEY_DYNAMIC_COLORS = booleanPreferencesKey("dynamic_colors")
         val KEY_AMOLED = booleanPreferencesKey("amoled")
+        val KEY_MONOCHROME = booleanPreferencesKey("monochrome")
         val KEY_APP_FONT = stringPreferencesKey("app_font")
         val KEY_APP_ICON = stringPreferencesKey("app_icon")
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
+        val KEY_NOTIFICATION_TITLE_FIRST_LINE = booleanPreferencesKey("notification_title_first_line")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")

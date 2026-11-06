@@ -34,12 +34,15 @@ class NoteViewModelTest {
         override suspend fun setAppFont(value: String) { appFont.value = value }
         override val amoled = MutableStateFlow(false)
         override suspend fun setAmoled(value: Boolean) { amoled.value = value }
+        override val monochrome = MutableStateFlow(false)
+        override suspend fun setMonochrome(value: Boolean) { monochrome.value = value }
         override val dynamicColors = MutableStateFlow(false)
         override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override val activeNote = MutableStateFlow<Note?>(null)
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
+        override val notificationTitleFirstLine = MutableStateFlow(false)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -82,6 +85,10 @@ class NoteViewModelTest {
 
         override suspend fun setLockscreenVisible(value: Boolean) {
             lockscreenVisible.value = value
+        }
+
+        override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+            notificationTitleFirstLine.value = value
         }
 
         override suspend fun setThemeMode(value: String) {}

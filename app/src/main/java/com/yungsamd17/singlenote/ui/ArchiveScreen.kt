@@ -3,6 +3,9 @@ package com.yungsamd17.singlenote.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +52,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -228,7 +230,10 @@ fun ArchiveScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.archive_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    TooltipIconButton(
+                        onClick = onBack,
+                        tooltip = stringResource(R.string.cd_back),
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back)
@@ -237,7 +242,12 @@ fun ArchiveScreen(
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.archive_more)) }
+                        TooltipIconButton(
+                            onClick = { menuOpen = true },
+                            tooltip = stringResource(R.string.archive_more),
+                        ) {
+                            Icon(Icons.Outlined.MoreVert, contentDescription = stringResource(R.string.archive_more))
+                        }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false },
                             shape = RoundedCornerShape(28.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             shadowElevation = 8.dp, tonalElevation = 0.dp, modifier = Modifier.widthIn(min = 220.dp)) {
@@ -290,8 +300,18 @@ fun ArchiveScreen(
                 contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(visibleNotes, key = { it.id }) { note ->
-                    androidx.compose.animation.AnimatedContent(targetState = archiveHeader(context, note, sort, now), modifier = Modifier.animateItem(), label = "archive timestamp") { header ->
+                items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
+                    androidx.compose.animation.AnimatedContent(
+                        targetState = archiveHeader(context, note, sort, now),
+                        modifier = Modifier.animateItem(),
+                        // Fade only: a size transform would make every row
+                        // jump when its timestamp changes.
+                        transitionSpec = {
+                            fadeIn(motionSpec(AppMotion.FAST_MS)) togetherWith
+                                fadeOut(motionSpec(AppMotion.FAST_MS))
+                        },
+                        label = "archive timestamp",
+                    ) { header ->
                     ArchivedNoteItem(
                         note = note,
                         date = header,

@@ -96,6 +96,8 @@
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
     <string name="setting_lockscreen_visible">Show note on lock screen</string>
     <string name="setting_lockscreen_visible_desc">Off hides the note content on the lock screen</string>
+    <string name="setting_notification_title_first_line">Show first line of note in title</string>
+    <string name="setting_notification_title_first_line_desc">Use the first line of your note as the pinned notification title</string>
     <string name="change">Change</string>
     <string name="about_title">About app</string>
     <string name="about_subtitle">Version, terms, privacy, and more</string>
@@ -152,6 +154,8 @@
     <string name="settings_dynamic_summary">Use wallpaper colors</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Use pure black in dark theme</string>
+    <string name="settings_monochrome">Monochrome</string>
+    <string name="settings_monochrome_summary">Turn every color into a shade of gray</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_icon_accent">Use accent color</string>
     <string name="settings_app_font">App font</string>
@@ -199,6 +203,7 @@
     <string name="archive_export_json">JSON (with titles and dates)</string>
     <string name="archive_export_text">Plain text (notes only)</string>
     <string name="accent_icon_restart_notice">Changing the accent also changes the app icon and closes Singlenote. Reopen it from your launcher.</string>
+    <string name="app_icon_restart_notice">Changing the app icon closes Singlenote. Reopen it from your launcher.</string>
     <string name="settings_icon_dynamic">Dynamic wallpaper color</string>
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_collecting">Collecting…</string>

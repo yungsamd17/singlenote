@@ -12,6 +12,8 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 import kotlinx.coroutines.flow.first
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.util.notificationBody
+import com.yungsamd17.singlenote.util.notificationTitle
 
 object PinNotification {
 
@@ -57,6 +59,7 @@ object PinNotification {
         val notificationsEnabled = prefs.notificationsEnabled.first()
         val pinned = prefs.pinned.first()
         val lockscreenVisible = prefs.lockscreenVisible.first()
+        val titleFirstLine = prefs.notificationTitleFirstLine.first()
         val note = AppDatabase.get(context).noteDao().getActive()
 
         if (!notificationsEnabled || !pinned || note == null || note.content.isBlank()) {
@@ -78,11 +81,25 @@ object PinNotification {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // The title is the note's first line when the user asked for it, and
+        // the app's own label otherwise.
+        val title = if (titleFirstLine) {
+            notificationTitle(note.content).ifEmpty {
+                context.getString(R.string.notification_pinned_title)
+            }
+        } else {
+            context.getString(R.string.notification_pinned_title)
+        }
+
+        // The title already carries the first line, so the body starts at
+        // the second one instead of repeating it.
+        val body = if (titleFirstLine) notificationBody(note.content) else note.content
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notification_pinned_title))
-            .setContentText(note.content)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Private by default: full content only on the lock screen when
             // the user opts in via Settings. Ongoing and silent on every

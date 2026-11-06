@@ -50,6 +50,7 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.ui.toMonochrome
 import com.yungsamd17.singlenote.util.Diagnostics
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CancellationException
@@ -92,6 +93,8 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
     val initialAccent = appAccent.first()
     val appDynamic = NotePreferences.get(context).dynamicColors
     val initialDynamic = appDynamic.first()
+    val appMonochrome = NotePreferences.get(context).monochrome
+    val initialMonochrome = appMonochrome.first()
     val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
     val initialStyle = WidgetStyleStore.get(context, widgetId)
     val widgetStyle = WidgetStyleStore.observe(context, widgetId)
@@ -107,6 +110,7 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
         val style by widgetStyle.collectAsState(initial = initialStyle)
         val selectedAppAccent by appAccent.collectAsState(initial = initialAccent)
         val selectedDynamic by appDynamic.collectAsState(initial = initialDynamic)
+        val selectedMonochrome by appMonochrome.collectAsState(initial = initialMonochrome)
         val openIntent =
             Intent(context, MainActivity::class.java)
                 .setData(android.net.Uri.parse("singlenote://widget/$widgetId"))
@@ -121,6 +125,7 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
             context = context,
             brand = context.getString(R.string.app_name),
             appDynamicColors = selectedDynamic,
+            appMonochrome = selectedMonochrome,
         )
     }
 }
@@ -253,6 +258,7 @@ private suspend fun renderWidgetInProcess(
         val style = WidgetStyleStore.get(context, appWidgetId)
         val appAccent = NotePreferences.get(context).accentColor.first()
         val appDynamic = NotePreferences.get(context).dynamicColors.first()
+        val appMonochrome = NotePreferences.get(context).monochrome.first()
         val fallbackHint = context.getString(R.string.hint_write_one_thing)
         val brand = context.getString(R.string.app_name)
         val openIntent =
@@ -278,6 +284,7 @@ private suspend fun renderWidgetInProcess(
                             context = context,
                             brand = brand,
                             appDynamicColors = appDynamic,
+                            appMonochrome = appMonochrome,
                             // From Android 12 on, the list items travel with the
                             // RemoteViews, so the widget scrolls like the one
                             // Glance renders. Older versions need a bound
@@ -319,6 +326,9 @@ internal fun WidgetContent(
     context: Context,
     brand: String,
     appDynamicColors: Boolean = false,
+    // The widget only follows the monochrome mode when it follows the app
+    // accent: a widget with its own accent keeps that accent.
+    appMonochrome: Boolean = false,
     // A lazy list is served by a bound collection service, which only has
     // items while the app process lives. Previews and the in-process render
     // use one text block instead, so the note stays visible either way.
@@ -326,10 +336,13 @@ internal fun WidgetContent(
 ) {
     val followApp = widgetAccentSetting(style.accent) == "app"
     val accentKey = if (followApp) appAccent else style.accent
+    val monochrome = followApp && appMonochrome
     val materialYou =
         followApp && appDynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val lightScheme = if (materialYou) dynamicLightColorScheme(context) else null
-    val darkScheme = if (materialYou) dynamicDarkColorScheme(context) else null
+    val dynamicLight = if (materialYou) dynamicLightColorScheme(context) else null
+    val dynamicDark = if (materialYou) dynamicDarkColorScheme(context) else null
+    val lightScheme = if (monochrome) dynamicLight?.toMonochrome() else dynamicLight
+    val darkScheme = if (monochrome) dynamicDark?.toMonochrome() else dynamicDark
     val opacity = style.opacity.coerceIn(0, 100) / 100f
     val lightBackground =
         (lightScheme?.surfaceContainerHigh ?: Color(0xFFECE6F0)).copy(alpha = opacity)
@@ -337,8 +350,8 @@ internal fun WidgetContent(
         (darkScheme?.surfaceContainerHigh ?: Color(0xFF2B2930)).copy(alpha = opacity)
     val lightText = lightScheme?.onSurface ?: Color(0xFF1D1B20)
     val darkText = darkScheme?.onSurface ?: Color(0xFFE6E0E9)
-    val lightAccent = widgetAccent(context, accentKey, false, materialYou)
-    val darkAccent = widgetAccent(context, accentKey, true, materialYou)
+    val lightAccent = widgetAccent(context, accentKey, false, materialYou, monochrome)
+    val darkAccent = widgetAccent(context, accentKey, true, materialYou, monochrome)
 
     fun colors(light: Color, dark: Color): ColorProvider =
         when (style.theme) {
@@ -507,11 +520,14 @@ internal fun widgetAccent(
     key: String,
     dark: Boolean,
     dynamic: Boolean = false,
-): Color =
-    if (dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (dark) dynamicDarkColorScheme(context).primary
-        else dynamicLightColorScheme(context).primary
-    } else accentScheme(key, dark).primary
+    monochrome: Boolean = false,
+): Color {
+    val scheme =
+        if (dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        } else accentScheme(key, dark)
+    return if (monochrome) scheme.toMonochrome().primary else scheme.primary
+}
 
 /**
  * Match the visible top and left edges when the note is the first line. Android TextView includes
