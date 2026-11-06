@@ -255,16 +255,6 @@ fun SettingsScreen(
                 SettingsGroup(
                     listOf(
                         {
-                            ToggleRow(
-                                painterResource(R.drawable.ic_symbol_monochrome),
-                                stringResource(R.string.settings_monochrome),
-                                stringResource(R.string.settings_monochrome_summary),
-                                monochrome,
-                                viewModel::setMonochrome,
-                                summaryAccent = true,
-                            )
-                        },
-                        {
                             ValueRow(
                                 Icons.Outlined.Palette,
                                 stringResource(R.string.settings_theme),
@@ -292,6 +282,16 @@ fun SettingsScreen(
                                 viewModel::setDynamicColors,
                                 summaryAccent = true,
                                 enabled = android.os.Build.VERSION.SDK_INT >= 31 && !monochrome,
+                            )
+                        },
+                        {
+                            ToggleRow(
+                                painterResource(R.drawable.ic_symbol_monochrome),
+                                stringResource(R.string.settings_monochrome),
+                                stringResource(R.string.settings_monochrome_summary),
+                                monochrome,
+                                viewModel::setMonochrome,
+                                summaryAccent = true,
                             )
                         },
                         {
