@@ -180,6 +180,7 @@ fun SettingsScreen(
     val titleFirstLine by viewModel.notificationTitleFirstLine.collectAsStateWithLifecycle()
     val dynamic by viewModel.dynamicColors.collectAsStateWithLifecycle()
     val amoled by viewModel.amoled.collectAsStateWithLifecycle()
+    val monochrome by viewModel.monochrome.collectAsStateWithLifecycle()
     val appFont by viewModel.appFont.collectAsStateWithLifecycle()
     val appIcon by viewModel.appIcon.collectAsStateWithLifecycle()
     val ready by viewModel.ready.collectAsStateWithLifecycle()
@@ -254,6 +255,16 @@ fun SettingsScreen(
                 SettingsGroup(
                     listOf(
                         {
+                            ToggleRow(
+                                painterResource(R.drawable.ic_symbol_monochrome),
+                                stringResource(R.string.settings_monochrome),
+                                stringResource(R.string.settings_monochrome_summary),
+                                monochrome,
+                                viewModel::setMonochrome,
+                                summaryAccent = true,
+                            )
+                        },
+                        {
                             ValueRow(
                                 Icons.Outlined.Palette,
                                 stringResource(R.string.settings_theme),
@@ -267,7 +278,9 @@ fun SettingsScreen(
                                 stringResource(R.string.settings_accent),
                                 accentLabel(accent),
                                 { dialog = "accent" },
-                                enabled = !dynamic,
+                                // Monochrome replaces every color: the accent
+                                // (and the wallpaper colors) no longer apply.
+                                enabled = !dynamic && !monochrome,
                             )
                         },
                         {
@@ -278,7 +291,7 @@ fun SettingsScreen(
                                 dynamic,
                                 viewModel::setDynamicColors,
                                 summaryAccent = true,
-                                enabled = android.os.Build.VERSION.SDK_INT >= 31,
+                                enabled = android.os.Build.VERSION.SDK_INT >= 31 && !monochrome,
                             )
                         },
                         {

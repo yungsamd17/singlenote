@@ -43,6 +43,7 @@ import com.yungsamd17.singlenote.ui.SettingsGroup
 import com.yungsamd17.singlenote.ui.SettingsSectionHeader
 import com.yungsamd17.singlenote.ui.ToggleRow
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.ui.toMonochrome
 import kotlin.math.roundToInt
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -269,6 +270,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val prefs = NotePreferences.get(applicationContext)
             val dynamic by prefs.dynamicColors.collectAsStateWithLifecycle(initialValue = false)
             val amoled by prefs.amoled.collectAsStateWithLifecycle(initialValue = false)
+            val monochrome by prefs.monochrome.collectAsStateWithLifecycle(initialValue = false)
             val appFont by prefs.appFont.collectAsStateWithLifecycle(initialValue = "system")
             val appDark =
                 when (appTheme) {
@@ -282,13 +284,15 @@ class WidgetConfigurationActivity : ComponentActivity() {
                 ) {
                     if (appDark) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)
                 } else accentScheme(appAccent, appDark)
+            // Monochrome wins over the accent and the wallpaper colors.
+            val colorScheme = if (monochrome) baseScheme.toMonochrome() else baseScheme
             val scheme =
                 if (amoled && appDark)
-                    baseScheme.copy(
+                    colorScheme.copy(
                         surface = androidx.compose.ui.graphics.Color.Black,
                         background = androidx.compose.ui.graphics.Color.Black,
                     )
-                else baseScheme
+                else colorScheme
             SideEffect {
                 WindowCompat.getInsetsController(window, window.decorView).apply {
                     isAppearanceLightStatusBars = !appDark
@@ -303,7 +307,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val brand = stringResource(R.string.app_name)
             val renderer = remember { GlanceRemoteViews() }
             var previewViews by remember { mutableStateOf<android.widget.RemoteViews?>(null) }
-            LaunchedEffect(options, appAccent, dynamic, previewText, brand) {
+            LaunchedEffect(options, appAccent, dynamic, monochrome, previewText, brand) {
                 previewViews =
                     renderer
                         .compose(
@@ -319,6 +323,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
                                 context = this@WidgetConfigurationActivity,
                                 brand = brand,
                                 appDynamicColors = dynamic,
+                                appMonochrome = monochrome,
                                 scrollable = false,
                             )
                         }

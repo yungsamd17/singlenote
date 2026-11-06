@@ -25,6 +25,7 @@ interface PreferencesStore {
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
+    val monochrome: Flow<Boolean>
     val appFont: Flow<String>
     val appIcon: Flow<String>
     val accentColor: Flow<String>
@@ -46,6 +47,8 @@ interface PreferencesStore {
     suspend fun setDynamicColors(value: Boolean)
 
     suspend fun setAmoled(value: Boolean)
+
+    suspend fun setMonochrome(value: Boolean)
 
     suspend fun setAppFont(value: String)
 
@@ -85,6 +88,21 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setAmoled(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_AMOLED] = value }
+    }
+
+    // Off by default: the app keeps its accent colors until the user asks
+    // for a grayscale interface.
+    override val monochrome: Flow<Boolean> =
+        context.settingsDataStore.data.map {
+            (it[KEY_MONOCHROME] ?: false).also { enabled ->
+                // The launch window is painted before the first frame: keep
+                // the flag there so it can match the gray scheme.
+                context.getSharedPreferences("launch_theme", Context.MODE_PRIVATE).edit().putBoolean("monochrome", enabled).apply()
+            }
+        }
+
+    override suspend fun setMonochrome(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_MONOCHROME] = value }
     }
 
     override val appFont: Flow<String> =
@@ -171,6 +189,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
         val KEY_DYNAMIC_COLORS = booleanPreferencesKey("dynamic_colors")
         val KEY_AMOLED = booleanPreferencesKey("amoled")
+        val KEY_MONOCHROME = booleanPreferencesKey("monochrome")
         val KEY_APP_FONT = stringPreferencesKey("app_font")
         val KEY_APP_ICON = stringPreferencesKey("app_icon")
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)

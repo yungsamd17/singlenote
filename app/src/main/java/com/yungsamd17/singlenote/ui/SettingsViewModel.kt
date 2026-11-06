@@ -70,6 +70,15 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
         viewModelScope.launch { store.setAmoled(value) }
     }
 
+    // Off by default: the interface keeps its colors until the user turns
+    // the grayscale mode on.
+    val monochrome: StateFlow<Boolean> = store.monochrome
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setMonochrome(value: Boolean) {
+        viewModelScope.launch { store.setMonochrome(value) }
+    }
+
     val appFont: StateFlow<String> = store.appFont
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
 
@@ -101,6 +110,7 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             store.notificationTitleFirstLine.first()
             store.dynamicColors.first()
             store.amoled.first()
+            store.monochrome.first()
             store.appFont.first()
             store.appIcon.first()
             _ready.value = true

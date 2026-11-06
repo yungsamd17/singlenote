@@ -154,6 +154,8 @@
     <string name="settings_dynamic_summary">Použiť farby tapety</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Použiť čisto čiernu v tmavom motíve</string>
+    <string name="settings_monochrome">Monochromatický režim</string>
+    <string name="settings_monochrome_summary">Zmeniť všetky farby na odtiene sivej</string>
     <string name="settings_app_icon">Ikona aplikácie</string>
     <string name="settings_icon_accent">Použiť farbu zvýraznenia</string>
     <string name="settings_app_font">Písmo aplikácie</string>

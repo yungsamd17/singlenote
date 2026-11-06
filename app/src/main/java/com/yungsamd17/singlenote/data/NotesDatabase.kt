@@ -82,6 +82,7 @@ interface NoteStore {
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
+    val monochrome: Flow<Boolean>
     val appFont: Flow<String>
     val appIcon: Flow<String>
     val accentColor: Flow<String>
@@ -99,6 +100,7 @@ interface NoteStore {
     suspend fun setTextSize(value: String)
     suspend fun setDynamicColors(value: Boolean)
     suspend fun setAmoled(value: Boolean)
+    suspend fun setMonochrome(value: Boolean)
     suspend fun setAppFont(value: String)
     suspend fun setAppIcon(value: String)
     suspend fun setAccentColor(value: String)
@@ -174,6 +176,7 @@ class NoteRepository(
     override val textSize: Flow<String> = preferences.textSize
     override val dynamicColors: Flow<Boolean> = preferences.dynamicColors
     override val amoled: Flow<Boolean> = preferences.amoled
+    override val monochrome: Flow<Boolean> = preferences.monochrome
     override val appFont: Flow<String> = preferences.appFont
     override val appIcon: Flow<String> = preferences.appIcon
     override val accentColor: Flow<String> = preferences.accentColor
@@ -293,6 +296,12 @@ class NoteRepository(
     }
 
     override suspend fun setAmoled(value: Boolean) = preferences.setAmoled(value)
+
+    override suspend fun setMonochrome(value: Boolean) {
+        preferences.setMonochrome(value)
+        // Widgets following the app colors have to repaint in gray too.
+        notifyNow()
+    }
 
     override suspend fun setAppFont(value: String) = preferences.setAppFont(value)
 
