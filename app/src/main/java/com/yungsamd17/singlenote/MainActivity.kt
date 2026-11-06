@@ -228,7 +228,42 @@ class MainActivity : ComponentActivity() {
                             ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
                         }
                     ) {
-                        composable("note") {
+                        composable(
+                            "note",
+                            // The archive is the one screen that comes from
+                            // the left, so the note slides to the right
+                            // while it opens. Every other page keeps the
+                            // default leftwards exit.
+                            exitTransition = {
+                                if (targetState.destination.route == "archive") {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                } else {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { -it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                }
+                            },
+                            // Closing the archive brings the note back from
+                            // the right; popping back from any other page
+                            // keeps the default leftwards entrance.
+                            popEnterTransition = {
+                                if (initialState.destination.route == "archive") {
+                                    slideInHorizontally(
+                                        initialOffsetX = { it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                } else {
+                                    slideInHorizontally(
+                                        initialOffsetX = { -it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                }
+                            },
+                        ) {
                             NoteScreen(
                                 viewModel = noteViewModel,
                                 widgetAction = widgetAction,
@@ -237,7 +272,23 @@ class MainActivity : ComponentActivity() {
                                 onOpenSettings = { navController.navigate("settings") }
                             )
                         }
-                        composable("archive") {
+                        composable(
+                            "archive",
+                            // The archive slides in from the left and leaves
+                            // to the left again, mirroring the note screen.
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { -it },
+                                    animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                            },
+                            popExitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                            },
+                        ) {
                             ArchiveScreen(
                                 viewModel = archiveViewModel,
                                 onBack = { navController.popBackStack() },
