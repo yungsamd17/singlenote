@@ -34,6 +34,8 @@ class NoteViewModelTest {
         override suspend fun setAppFont(value: String) { appFont.value = value }
         override val amoled = MutableStateFlow(false)
         override suspend fun setAmoled(value: Boolean) { amoled.value = value }
+        override val monochrome = MutableStateFlow(false)
+        override suspend fun setMonochrome(value: Boolean) { monochrome.value = value }
         override val dynamicColors = MutableStateFlow(false)
         override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override val activeNote = MutableStateFlow<Note?>(null)
