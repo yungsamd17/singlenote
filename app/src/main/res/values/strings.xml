@@ -199,6 +199,7 @@
     <string name="archive_export_json">JSON (with titles and dates)</string>
     <string name="archive_export_text">Plain text (notes only)</string>
     <string name="accent_icon_restart_notice">Changing the accent also changes the app icon and closes Singlenote. Reopen it from your launcher.</string>
+    <string name="app_icon_restart_notice">Changing the app icon closes Singlenote. Reopen it from your launcher.</string>
     <string name="settings_icon_dynamic">Dynamic wallpaper color</string>
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_collecting">Collecting…</string>

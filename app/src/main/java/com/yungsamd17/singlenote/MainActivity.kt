@@ -15,8 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.Surface
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -37,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.AboutScreen
+import com.yungsamd17.singlenote.ui.AppMotion
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
 import com.yungsamd17.singlenote.ui.LicenseScreen
@@ -47,6 +46,8 @@ import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.ui.motionSpec
+import com.yungsamd17.singlenote.ui.motionOffsetSpec
 import com.yungsamd17.singlenote.util.AppLanguage
 import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.widget.WidgetActionSecurity
@@ -197,26 +198,26 @@ class MainActivity : ComponentActivity() {
                         enterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         exitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { -it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         popEnterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { -it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         popExitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
                         }
                     ) {
                         composable("note") {
