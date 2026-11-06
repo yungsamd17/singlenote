@@ -220,6 +220,7 @@
     <string name="archive_export_json">JSON (s názvami a dátumami)</string>
     <string name="archive_export_text">Obyčajný text (iba poznámky)</string>
     <string name="accent_icon_restart_notice">Zmena farby zmení aj ikonu a zavrie Singlenote. Znova ho otvorte zo spúšťača.</string>
+    <string name="app_icon_restart_notice">Zmena ikony aplikácie zavrie Singlenote. Znova ho otvorte zo spúšťača.</string>
     <string name="settings_icon_dynamic">Dynamická farba tapety</string>
     <string name="diagnostics_title">Diagnostika</string>
     <string name="diagnostics_collecting">Zbieram údaje…</string>
