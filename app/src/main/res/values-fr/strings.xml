@@ -80,7 +80,7 @@
     <string name="region_russia">Russia</string>
     <string name="region_china">China</string>
     <string name="region_slovakia">Slovakia</string>
-    <string name="settings_accent">Couleur d'accent</string>
+    <string name="settings_accent">Couleur d\'accent</string>
     <string name="accent_default">Défaut</string>
     <string name="accent_blue">Bleu</string>
     <string name="accent_teal">Sarcelle</string>
@@ -118,7 +118,7 @@
     <string name="setting_lockscreen_visible">Afficher la note sur l\'écran de verrouillage</string>
     <string name="setting_lockscreen_visible_desc">Désactivé masque le contenu de la note sur l\'écran de verrouillage</string>
     <string name="change">Changer</string>
-    <string name="about_title">À propos de l'application</string>
+    <string name="about_title">À propos de l\'application</string>
     <string name="about_subtitle">Version, conditions, confidentialité et plus</string>
     <string name="about_version_line">v%1$s • %2$d</string>
     <string name="about_privacy_blurb">Singlenote fonctionne hors-ligne d\'abord. Votre note ne quitte jamais votre appareil — pas de comptes, pas d\'analyses, pas de suivi. Notes et paramètres sont stockés non chiffrés dans le stockage privé de l\'application.</string>
@@ -163,7 +163,7 @@
     <string name="license_third_party">Avis complets tiers : [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
     <string name="export_archive">Exporter les notes</string>
     <string name="archive_export_success">Archives enregistrées</string>
-    <string name="archive_export_failed">Impossible d'enregistrer les archives</string>
+    <string name="archive_export_failed">Impossible d\'enregistrer les archives</string>
     <string name="settings_typography">Typographie</string>
     <string name="settings_appearance_summary">Thèmes, couleurs d\'accent et icône de l\'application</string>
     <string name="settings_typography_summary">Police, style et taille</string>
@@ -173,9 +173,9 @@
     <string name="settings_dynamic_summary">Utiliser les couleurs du fond d'écran</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Utiliser du noir pur en thème sombre</string>
-    <string name="settings_app_icon">Icône de l'application</string>
-    <string name="settings_icon_accent">Utiliser la couleur d'accent</string>
-    <string name="settings_app_font">Police de l'application</string>
+    <string name="settings_app_icon">Icône de l\'application</string>
+    <string name="settings_icon_accent">Utiliser la couleur d\'accent</string>
+    <string name="settings_app_font">Police de l\'application</string>
     <string name="font_system">Police système</string>
     <string name="font_google_flex">Google Sans Flex</string>
     <string name="settings_font_category">Police</string>
@@ -184,7 +184,7 @@
     <string name="settings_contribute">Contribuer</string>
     <string name="settings_translate">Traduire cette application</string>
     <string name="settings_translate_summary">Contribuez en traduisant l\'application dans votre langue sur GitHub</string>
-    <string name="settings_app_language">Langue de l'application</string>
+    <string name="settings_app_language">Langue de l\'application</string>
     <string name="settings_device_language">Votre langue d'appareil</string>
     <string name="settings_legal">Mentions légales</string>
     <string name="settings_support">Projet et support</string>
@@ -195,7 +195,7 @@
     <string name="notification_settings_title">Activer les notifications</string>
     <string name="notification_settings_message">Activez les notifications pour Singlenote dans les paramètres Android pour épingler cette note.</string>
     <string name="notification_settings_open">Ouvrir les paramètres</string>
-    <string name="archive_more">Plus d'options</string>
+    <string name="archive_more">Plus d\'options</string>
     <string name="archive_sort">Trier les notes</string>
     <string name="archive_sort_title">Trier par</string>
     <string name="archive_sort_changed">Dernière modification</string>
@@ -215,7 +215,7 @@
     <string name="archive_import">Importer des notes</string>
     <string name="archive_import_description">Importez une archive JSON exportée par Singlenote. Les notes importées sont ajoutées à vos archives.</string>
     <string name="archive_import_success">Notes importées</string>
-    <string name="archive_import_failed">Impossible d'importer cette archive</string>
+    <string name="archive_import_failed">Impossible d\'importer cette archive</string>
     <string name="archive_export_description">JSON inclut titres et dates et peut être réimporté dans Singlenote. Texte brut contient seulement les notes.</string>
     <string name="archive_export_json">JSON (avec titres et dates)</string>
     <string name="archive_export_text">Texte brut (notes seulement)</string>
