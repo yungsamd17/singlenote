@@ -32,7 +32,7 @@
     <string name="notification_pinned_title">Singlenote épinglée</string>
     <string name="notification_action_open">Ouvrir</string>
     <string name="tile_label">Singlenote</string>
-    <string name="tile_no_note">Écrivez une note d'abord</string>
+    <string name="tile_no_note">Écrivez une note d\'abord</string>
     <string name="tile_content_desc">%1$s: %2$s</string>
     <string name="widget_config_update">Mettre à jour le widget</string>
     <string name="widget_follow_app">Suivre l\'accent de l\'app</string>
@@ -52,7 +52,7 @@
     <string name="widget_config_system">Système</string>
     <string name="widget_config_light">Clair</string>
     <string name="widget_config_dark">Sombre</string>
-    <string name="widget_preview_note">Votre note en un coup d'œil</string>
+    <string name="widget_preview_note">Votre note en un coup d\'oeil</string>
     <string name="widget_description">Affiche votre note actuelle</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_theme">Thème</string>
@@ -126,8 +126,8 @@
     <string name="license_short">Licence MIT</string>
     <string name="license_components_title">Composants open-source</string>
     <string name="license_full">Licence complète : [github.com/yungsamd17/singlenote/blob/main/LICENSE](https://github.com/yungsamd17/singlenote/blob/main/LICENSE)</string>
-    <string name="terms_title">Conditions d'utilisation</string>
-    <string name="terms_subtitle">Règles d'utilisation</string>
+    <string name="terms_title">Conditions d\'utilisation</string>
+    <string name="terms_subtitle">Règles d\'utilisation</string>
     <string name="privacy_subtitle">Reste sur votre appareil</string>
     <string name="source_title">Code source</string>
     <string name="source_subtitle">Dépôt GitHub</string>
@@ -170,7 +170,7 @@
     <string name="settings_notifications_summary">Note épinglée et écran de verrouillage</string>
     <string name="settings_app_looks">Apparence de l\'application</string>
     <string name="settings_dynamic">Couleurs dynamiques</string>
-    <string name="settings_dynamic_summary">Utiliser les couleurs du fond d'écran</string>
+    <string name="settings_dynamic_summary">Utiliser les couleurs du fond d\'écran</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Utiliser du noir pur en thème sombre</string>
     <string name="settings_app_icon">Icône de l\'application</string>
@@ -185,7 +185,7 @@
     <string name="settings_translate">Traduire cette application</string>
     <string name="settings_translate_summary">Contribuez en traduisant l\'application dans votre langue sur GitHub</string>
     <string name="settings_app_language">Langue de l\'application</string>
-    <string name="settings_device_language">Votre langue d'appareil</string>
+    <string name="settings_device_language">Votre langue d\'appareil</string>
     <string name="settings_legal">Mentions légales</string>
     <string name="settings_support">Projet et support</string>
     <string name="license_google_flex">Google Sans Flex — SIL Open Font License 1.1</string>
@@ -199,14 +199,14 @@
     <string name="archive_sort">Trier les notes</string>
     <string name="archive_sort_title">Trier par</string>
     <string name="archive_sort_changed">Dernière modification</string>
-    <string name="archive_sort_archived">Date d'archivage</string>
+    <string name="archive_sort_archived">Date d\'archivage</string>
     <string name="archive_sort_name">Titre</string>
     <string name="archive_order">Ordre</string>
     <string name="archive_order_az">A à Z</string>
     <string name="archive_order_za">Z à A</string>
-    <string name="archive_order_newest">Plus récent d'abord</string>
-    <string name="archive_order_oldest">Plus ancien d'abord</string>
-    <string name="archive_just_now">à l'instant</string>
+    <string name="archive_order_newest">Plus récent d\'abord</string>
+    <string name="archive_order_oldest">Plus ancien d\'abord</string>
+    <string name="archive_just_now">à l\'instant</string>
     <string name="archive_edited_time">Modifié %1$s</string>
     <string name="archive_archived_time">Archivé %1$s</string>
     <plurals name="archive_minutes_ago"><item quantity="one">il y a %d minute</item><item quantity="other">il y a %d minutes</item></plurals>
@@ -220,7 +220,7 @@
     <string name="archive_export_json">JSON (avec titres et dates)</string>
     <string name="archive_export_text">Texte brut (notes seulement)</string>
     <string name="accent_icon_restart_notice">Changer la couleur d\'accent change aussi l\'icône de l\'application et ferme Singlenote. Rouvrez-le depuis votre lanceur.</string>
-    <string name="settings_icon_dynamic">Couleur dynamique du fond d'écran</string>
+    <string name="settings_icon_dynamic">Couleur dynamique du fond d\'écran</string>
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_collecting">Collecte…</string>
     <string name="diagnostics_copy">Copier</string>
