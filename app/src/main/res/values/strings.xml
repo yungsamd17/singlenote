@@ -154,7 +154,7 @@
     <string name="settings_dynamic_summary">Use wallpaper colors</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Use pure black in dark theme</string>
-    <string name="settings_monochrome">Monochrome mode</string>
+    <string name="settings_monochrome">Monochrome</string>
     <string name="settings_monochrome_summary">Turn every color into a shade of gray</string>
     <string name="settings_app_icon">App icon</string>
     <string name="settings_icon_accent">Use accent color</string>
