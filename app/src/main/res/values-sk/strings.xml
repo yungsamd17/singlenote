@@ -96,6 +96,8 @@
     <string name="setting_show_notifications_desc">Povoľte pripnutie aktuálnej poznámky ako trvalého upozornenia</string>
     <string name="setting_lockscreen_visible">Zobrazovať poznámku na uzamknutej obrazovke</string>
     <string name="setting_lockscreen_visible_desc">Ak je možnosť vypnutá, obsah poznámky sa na uzamknutej obrazovke skryje</string>
+    <string name="setting_notification_title_first_line">Zobrazovať prvý riadok poznámky v názve</string>
+    <string name="setting_notification_title_first_line_desc">Použiť prvý riadok poznámky ako názov pripnutého upozornenia</string>
     <string name="change">Zmeniť</string>
     <string name="about_title">O aplikácii</string>
     <string name="about_subtitle">Verzia, podmienky, súkromie a ďalšie</string>

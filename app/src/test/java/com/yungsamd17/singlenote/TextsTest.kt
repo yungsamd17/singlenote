@@ -1,9 +1,11 @@
 package com.yungsamd17.singlenote
 
 import com.yungsamd17.singlenote.util.firstNonBlankLine
+import com.yungsamd17.singlenote.util.notificationTitle
 import com.yungsamd17.singlenote.util.truncate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TextsTest {
@@ -33,5 +35,30 @@ class TextsTest {
     @Test
     fun truncate_cutsLongText() {
         assertEquals("abc", truncate("abcdef", 3))
+    }
+
+    @Test
+    fun notificationTitle_usesFirstLine() {
+        assertEquals("hello", notificationTitle("hello\nworld"))
+        assertEquals("world", notificationTitle("\n \nworld"))
+    }
+
+    @Test
+    fun notificationTitle_keepsShortLines() {
+        assertEquals("hello", notificationTitle("hello"))
+    }
+
+    @Test
+    fun notificationTitle_cutsLongLinesWithEllipsis() {
+        val title = notificationTitle("0123456789012345678901234567890")
+        assertEquals(20, title.length)
+        assertTrue(title.endsWith("…"))
+        assertEquals("0123456789012345678…", title)
+    }
+
+    @Test
+    fun notificationTitle_blankNoteHasNoTitle() {
+        assertEquals("", notificationTitle(""))
+        assertEquals("", notificationTitle("\n  \n"))
     }
 }
