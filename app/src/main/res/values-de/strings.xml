@@ -138,7 +138,7 @@
     <string name="changelog_version_title">Änderungen in Version %1$s</string>
     <string name="action_ok">OK</string>
     <string name="changelog_error">Änderungsprotokoll konnte nicht geladen werden. Verbindung prüfen und erneut versuchen.</string>
-    <string name="changelog_empty_noties">Keine Notizen für dieses Release.</string>
+    <string name="changelog_empty_notes">Keine Notizen für dieses Release.</string>
     <string name="cd_check_updates">Nach Updates suchen</string>
     <string name="update_available">Neue Version %1$s verfügbar</string>
     <string name="action_download">Herunterladen</string>
