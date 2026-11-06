@@ -106,6 +106,7 @@ class NoteRepositoryTest {
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
+        override val notificationTitleFirstLine = MutableStateFlow(false)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -121,6 +122,10 @@ class NoteRepositoryTest {
 
         override suspend fun setLockscreenVisible(value: Boolean) {
             lockscreenVisible.value = value
+        }
+
+        override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+            notificationTitleFirstLine.value = value
         }
 
         override suspend fun setThemeMode(value: String) {

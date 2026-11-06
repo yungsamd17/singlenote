@@ -47,6 +47,15 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    // Off by default: the notification keeps its own title until the user
+    // asks for the note's first line instead.
+    val notificationTitleFirstLine: StateFlow<Boolean> = store.notificationTitleFirstLine
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setNotificationTitleFirstLine(value: Boolean) {
+        viewModelScope.launch { store.setNotificationTitleFirstLine(value) }
+    }
+
     val dynamicColors: StateFlow<Boolean> = store.dynamicColors
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -89,6 +98,7 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             // Separate first: the typed combine overloads stop at five
             // flows, so the new pref is awaited on its own.
             store.lockscreenVisible.first()
+            store.notificationTitleFirstLine.first()
             store.dynamicColors.first()
             store.amoled.first()
             store.appFont.first()

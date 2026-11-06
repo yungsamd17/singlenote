@@ -76,6 +76,7 @@ interface NoteStore {
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
+    val notificationTitleFirstLine: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -92,6 +93,7 @@ interface NoteStore {
     suspend fun setPinned(value: Boolean)
     suspend fun setNotificationsEnabled(value: Boolean)
     suspend fun setLockscreenVisible(value: Boolean)
+    suspend fun setNotificationTitleFirstLine(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
@@ -166,6 +168,7 @@ class NoteRepository(
     override val pinned: Flow<Boolean> = preferences.pinned
     override val notificationsEnabled: Flow<Boolean> = preferences.notificationsEnabled
     override val lockscreenVisible: Flow<Boolean> = preferences.lockscreenVisible
+    override val notificationTitleFirstLine: Flow<Boolean> = preferences.notificationTitleFirstLine
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
@@ -268,6 +271,13 @@ class NoteRepository(
 
     override suspend fun setLockscreenVisible(value: Boolean) {
         preferences.setLockscreenVisible(value)
+        notifyNow()
+    }
+
+    override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+        preferences.setNotificationTitleFirstLine(value)
+        // The pinned notification carries the title: repaint it right away
+        // instead of waiting for the next note change.
         notifyNow()
     }
 

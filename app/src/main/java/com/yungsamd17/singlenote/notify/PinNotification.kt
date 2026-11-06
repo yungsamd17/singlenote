@@ -12,6 +12,7 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 import kotlinx.coroutines.flow.first
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.util.notificationTitle
 
 object PinNotification {
 
@@ -57,6 +58,7 @@ object PinNotification {
         val notificationsEnabled = prefs.notificationsEnabled.first()
         val pinned = prefs.pinned.first()
         val lockscreenVisible = prefs.lockscreenVisible.first()
+        val titleFirstLine = prefs.notificationTitleFirstLine.first()
         val note = AppDatabase.get(context).noteDao().getActive()
 
         if (!notificationsEnabled || !pinned || note == null || note.content.isBlank()) {
@@ -78,9 +80,19 @@ object PinNotification {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        // The title is the note's first line when the user asked for it, and
+        // the app's own label otherwise.
+        val title = if (titleFirstLine) {
+            notificationTitle(note.content).ifEmpty {
+                context.getString(R.string.notification_pinned_title)
+            }
+        } else {
+            context.getString(R.string.notification_pinned_title)
+        }
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notification_pinned_title))
+            .setContentTitle(title)
             .setContentText(note.content)
             .setStyle(NotificationCompat.BigTextStyle().bigText(note.content))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)

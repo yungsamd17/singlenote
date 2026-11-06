@@ -19,6 +19,7 @@ interface PreferencesStore {
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
+    val notificationTitleFirstLine: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -33,6 +34,8 @@ interface PreferencesStore {
     suspend fun setNotificationsEnabled(value: Boolean)
 
     suspend fun setLockscreenVisible(value: Boolean)
+
+    suspend fun setNotificationTitleFirstLine(value: Boolean)
 
     suspend fun setThemeMode(value: String)
 
@@ -106,6 +109,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
     // and the toggle stays one tap away in Settings for opting out.
     override val lockscreenVisible: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: true }
+    // Off by default: the pinned notification keeps its own title until the
+    // user asks for the note's first line to take its place.
+    override val notificationTitleFirstLine: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] ?: false }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
@@ -125,6 +132,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setLockscreenVisible(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_LOCKSCREEN_VISIBLE] = value }
+    }
+
+    override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] = value }
     }
 
     override suspend fun setThemeMode(value: String) {
@@ -165,6 +176,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         val KEY_PINNED = booleanPreferencesKey(KEY_PINNED_NAME)
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
+        val KEY_NOTIFICATION_TITLE_FIRST_LINE = booleanPreferencesKey("notification_title_first_line")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -176,6 +177,7 @@ fun SettingsScreen(
     val size by viewModel.textSize.collectAsStateWithLifecycle()
     val notifications by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val lockscreen by viewModel.lockscreenVisible.collectAsStateWithLifecycle()
+    val titleFirstLine by viewModel.notificationTitleFirstLine.collectAsStateWithLifecycle()
     val dynamic by viewModel.dynamicColors.collectAsStateWithLifecycle()
     val amoled by viewModel.amoled.collectAsStateWithLifecycle()
     val appFont by viewModel.appFont.collectAsStateWithLifecycle()
@@ -362,6 +364,16 @@ fun SettingsScreen(
                                 stringResource(R.string.setting_lockscreen_visible_desc),
                                 lockscreen,
                                 viewModel::setLockscreenVisible,
+                                enabled = notifications,
+                            )
+                        },
+                        {
+                            ToggleRow(
+                                Icons.Outlined.Title,
+                                stringResource(R.string.setting_notification_title_first_line),
+                                stringResource(R.string.setting_notification_title_first_line_desc),
+                                titleFirstLine,
+                                viewModel::setNotificationTitleFirstLine,
                                 enabled = notifications,
                             )
                         },

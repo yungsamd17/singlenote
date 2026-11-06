@@ -96,6 +96,8 @@
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
     <string name="setting_lockscreen_visible">Show note on lock screen</string>
     <string name="setting_lockscreen_visible_desc">Off hides the note content on the lock screen</string>
+    <string name="setting_notification_title_first_line">Show first line of note in title</string>
+    <string name="setting_notification_title_first_line_desc">Use the first line of your note as the pinned notification title</string>
     <string name="change">Change</string>
     <string name="about_title">About app</string>
     <string name="about_subtitle">Version, terms, privacy, and more</string>
