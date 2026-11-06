@@ -20,3 +20,16 @@ fun notificationTitle(text: String, maxChars: Int = NOTIFICATION_TITLE_MAX_CHARS
     // The ellipsis is part of the budget, so the title never grows past it.
     return line.take((maxChars - 1).coerceAtLeast(1)).trimEnd() + "…"
 }
+
+/**
+ * The note's text without its first non-blank line.
+ *
+ * When the notification title already shows that first line, the body picks
+ * up at the second one, so the notification does not repeat itself.
+ */
+fun notificationBody(text: String): String {
+    val lines = text.lines()
+    val first = lines.indexOfFirst { it.isNotBlank() }
+    if (first < 0) return ""
+    return lines.drop(first + 1).joinToString("\n").trim()
+}

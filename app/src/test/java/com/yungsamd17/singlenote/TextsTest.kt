@@ -1,6 +1,7 @@
 package com.yungsamd17.singlenote
 
 import com.yungsamd17.singlenote.util.firstNonBlankLine
+import com.yungsamd17.singlenote.util.notificationBody
 import com.yungsamd17.singlenote.util.notificationTitle
 import com.yungsamd17.singlenote.util.truncate
 import org.junit.Assert.assertEquals
@@ -60,5 +61,22 @@ class TextsTest {
     fun notificationTitle_blankNoteHasNoTitle() {
         assertEquals("", notificationTitle(""))
         assertEquals("", notificationTitle("\n  \n"))
+    }
+
+    @Test
+    fun notificationBody_startsAtTheSecondLine() {
+        assertEquals("world", notificationBody("hello\nworld"))
+        assertEquals("world", notificationBody("\n \nhello\nworld"))
+    }
+
+    @Test
+    fun notificationBody_keepsTheRemainingLines() {
+        assertEquals("world\nagain", notificationBody("hello\nworld\nagain"))
+    }
+
+    @Test
+    fun notificationBody_isEmptyForSingleLineNotes() {
+        assertEquals("", notificationBody("hello"))
+        assertEquals("", notificationBody(""))
     }
 }
