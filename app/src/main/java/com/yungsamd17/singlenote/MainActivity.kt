@@ -15,8 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.Surface
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -37,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.AboutScreen
+import com.yungsamd17.singlenote.ui.AppMotion
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
 import com.yungsamd17.singlenote.ui.LicenseScreen
@@ -47,6 +46,10 @@ import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.accentScheme
+import com.yungsamd17.singlenote.ui.motionSpec
+import com.yungsamd17.singlenote.ui.motionOffsetSpec
+import com.yungsamd17.singlenote.ui.toGray
+import com.yungsamd17.singlenote.ui.toMonochrome
 import com.yungsamd17.singlenote.util.AppLanguage
 import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.widget.WidgetActionSecurity
@@ -97,8 +100,10 @@ class MainActivity : ComponentActivity() {
         val startDark = isSystemDark()
         lastDarkTheme = startDark
         val launchDynamic = getSharedPreferences("launch_theme", Context.MODE_PRIVATE).getBoolean("dynamic", false)
+        val launchMonochrome = getSharedPreferences("launch_theme", Context.MODE_PRIVATE).getBoolean("monochrome", false)
         val launchColor = if (launchDynamic && Build.VERSION.SDK_INT >= 31) {
-            (if (startDark) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)).background.toArgb()
+            val background = (if (startDark) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)).background
+            (if (launchMonochrome) background.toGray() else background).toArgb()
         } else ContextCompat.getColor(this, if (startDark) R.color.launch_background_dark else R.color.launch_background)
         window.setBackgroundDrawable(ColorDrawable(launchColor))
         enableEdgeToEdge()
@@ -125,9 +130,10 @@ class MainActivity : ComponentActivity() {
             val preferences = NotePreferences.get(applicationContext)
             val dynamic by produceState<Boolean?>(null) { preferences.dynamicColors.collect { value = it } }
             val amoled by produceState<Boolean?>(null) { preferences.amoled.collect { value = it } }
+            val monochrome by produceState<Boolean?>(null) { preferences.monochrome.collect { value = it } }
             val appFont by produceState<String?>(null) { preferences.appFont.collect { value = it } }
             val appIcon by produceState<String?>(null) { preferences.appIcon.collect { value = it } }
-            if (dynamic == null || amoled == null || appFont == null || appIcon == null) return@setContent
+            if (dynamic == null || amoled == null || monochrome == null || appFont == null || appIcon == null) return@setContent
             // Paint nothing until the stored theme arrives: falling back to
             // the system theme/default accent first would flash a wrong-theme
             // frame over the matched launch window (see onCreate) on every
@@ -158,12 +164,15 @@ class MainActivity : ComponentActivity() {
             val baseScheme = if (dynamic == true && Build.VERSION.SDK_INT >= 31) {
                 if (darkTheme) dynamicDarkColorScheme(this) else dynamicLightColorScheme(this)
             } else accentScheme(accentKey, darkTheme)
+            // Monochrome replaces every color role with a shade of gray, so
+            // it wins over both the accent and the wallpaper colors.
+            val colorScheme = if (monochrome == true) baseScheme.toMonochrome() else baseScheme
             MaterialTheme(
                 typography = com.yungsamd17.singlenote.ui.appTypography(appFont == "flex"),
-                colorScheme = if (amoled == true && darkTheme) baseScheme.copy(
+                colorScheme = if (amoled == true && darkTheme) colorScheme.copy(
                     background = androidx.compose.ui.graphics.Color.Black,
                     surface = androidx.compose.ui.graphics.Color.Black
-                ) else baseScheme
+                ) else colorScheme
             ) {
                 val background = MaterialTheme.colorScheme.background.toArgb()
                 SideEffect {
@@ -197,29 +206,64 @@ class MainActivity : ComponentActivity() {
                         enterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         exitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { -it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         popEnterTransition = {
                             slideInHorizontally(
                                 initialOffsetX = { -it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeIn(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
                         },
                         popExitTransition = {
                             slideOutHorizontally(
                                 targetOffsetX = { it },
-                                animationSpec = tween(250, easing = FastOutSlowInEasing)
-                            ) + fadeOut(animationSpec = tween(200))
+                                animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                            ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
                         }
                     ) {
-                        composable("note") {
+                        composable(
+                            "note",
+                            // The archive is the one screen that comes from
+                            // the left, so the note slides to the right
+                            // while it opens. Every other page keeps the
+                            // default leftwards exit.
+                            exitTransition = {
+                                if (targetState.destination.route == "archive") {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                } else {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { -it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                }
+                            },
+                            // Closing the archive brings the note back from
+                            // the right; popping back from any other page
+                            // keeps the default leftwards entrance.
+                            popEnterTransition = {
+                                if (initialState.destination.route == "archive") {
+                                    slideInHorizontally(
+                                        initialOffsetX = { it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                } else {
+                                    slideInHorizontally(
+                                        initialOffsetX = { -it },
+                                        animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                    ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                                }
+                            },
+                        ) {
                             NoteScreen(
                                 viewModel = noteViewModel,
                                 widgetAction = widgetAction,
@@ -228,7 +272,23 @@ class MainActivity : ComponentActivity() {
                                 onOpenSettings = { navController.navigate("settings") }
                             )
                         }
-                        composable("archive") {
+                        composable(
+                            "archive",
+                            // The archive slides in from the left and leaves
+                            // to the left again, mirroring the note screen.
+                            enterTransition = {
+                                slideInHorizontally(
+                                    initialOffsetX = { -it },
+                                    animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                ) + fadeIn(animationSpec = motionSpec(AppMotion.FAST_MS))
+                            },
+                            popExitTransition = {
+                                slideOutHorizontally(
+                                    targetOffsetX = { -it },
+                                    animationSpec = motionOffsetSpec(AppMotion.MEDIUM_MS)
+                                ) + fadeOut(animationSpec = motionSpec(AppMotion.FAST_MS))
+                            },
+                        ) {
                             ArchiveScreen(
                                 viewModel = archiveViewModel,
                                 onBack = { navController.popBackStack() },

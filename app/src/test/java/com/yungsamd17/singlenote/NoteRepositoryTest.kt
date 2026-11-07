@@ -101,11 +101,14 @@ class NoteRepositoryTest {
         override suspend fun setAppFont(value: String) { appFont.value = value }
         override val amoled = MutableStateFlow(false)
         override suspend fun setAmoled(value: Boolean) { amoled.value = value }
+        override val monochrome = MutableStateFlow(false)
+        override suspend fun setMonochrome(value: Boolean) { monochrome.value = value }
         override val dynamicColors = MutableStateFlow(false)
         override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override val pinned = MutableStateFlow(false)
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
+        override val notificationTitleFirstLine = MutableStateFlow(false)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -121,6 +124,10 @@ class NoteRepositoryTest {
 
         override suspend fun setLockscreenVisible(value: Boolean) {
             lockscreenVisible.value = value
+        }
+
+        override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+            notificationTitleFirstLine.value = value
         }
 
         override suspend fun setThemeMode(value: String) {
@@ -298,6 +305,24 @@ class NoteRepositoryTest {
         }
 
     @Test
+    fun monochromeChangesRefreshWidgetFollowers() =
+        runTest(UnconfinedTestDispatcher()) {
+            val prefs = FakePrefs()
+            var broadcasts = 0
+            val repo =
+                NoteRepository(FakeDao(), prefs, { broadcasts++ }, notifyScope = backgroundScope)
+            repo.setMonochrome(true)
+            advanceUntilIdle()
+            assertTrue(prefs.monochrome.value)
+            assertTrue(repo.monochrome.first())
+            assertEquals(1, broadcasts)
+            repo.setMonochrome(false)
+            advanceUntilIdle()
+            assertFalse(prefs.monochrome.value)
+            assertEquals(2, broadcasts)
+        }
+
+    @Test
     fun appearancePreferences_surviveRepositoryRecreationWithoutChangingExistingSettings() =
         runTest {
             val prefs = FakePrefs()
@@ -306,11 +331,13 @@ class NoteRepositoryTest {
             repo.saveActive("Keep my note")
             repo.setDynamicColors(true)
             repo.setAmoled(true)
+            repo.setMonochrome(true)
             repo.setAppFont("flex")
             repo.setAppIcon("accent")
             val restored = NoteRepository(dao, prefs, notifyScope = backgroundScope)
             assertTrue(restored.dynamicColors.first())
             assertTrue(restored.amoled.first())
+            assertTrue(restored.monochrome.first())
             assertEquals("flex", restored.appFont.first())
             assertEquals("accent", restored.appIcon.first())
             assertEquals(ACCENT_DEFAULT, restored.accentColor.first())

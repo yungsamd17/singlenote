@@ -13,10 +13,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -43,7 +48,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -67,13 +71,10 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -83,11 +84,8 @@ import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberSwipeToDismissBoxState
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
@@ -108,6 +106,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -140,8 +139,9 @@ private const val LIMIT_HINT_COOLDOWN_MS = 3000L
 // good, so this margin keeps reopens alive without a visible lag.
 private const val LANDING_SETTLE_MS = 75L
 
-// Post-gate entrance: fast and subtle, just enough to avoid a pop-in.
-private const val APPEAR_MS = 150
+// The character counter only shows up once the note is long enough to
+// need it - half of the smallest font budget.
+private const val LIMIT_INDICATOR_THRESHOLD = 500
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -430,7 +430,9 @@ fun NoteScreen(
     }
 
     Scaffold(
-        modifier = Modifier.offset { androidx.compose.ui.unit.IntOffset(limitShake.value.dp.roundToPx(), 0) },
+        // The limit shake is a pure visual nudge: translating in the draw
+        // phase keeps the whole screen from re-measuring on every frame.
+        modifier = Modifier.graphicsLayer { translationX = limitShake.value.dp.toPx() },
         // Lifted above the 88dp bottom bar (and the keyboard via
         // imePadding) so limit hints never cover Done or the actions.
         snackbarHost = {
@@ -583,8 +585,8 @@ fun NoteScreen(
         // rise so the card and bar arrive together instead of popping in.
         AnimatedVisibility(
             visible = true,
-            enter = fadeIn(tween(APPEAR_MS)) + slideInVertically(
-                tween(APPEAR_MS)
+            enter = fadeIn(motionSpec(AppMotion.FAST_MS)) + slideInVertically(
+                motionOffsetSpec(AppMotion.FAST_MS)
             ) { it / 16 },
             modifier = Modifier
                 .fillMaxSize()
@@ -625,20 +627,60 @@ fun NoteScreen(
                         remaining <= 20 -> androidx.compose.ui.graphics.Color(0xFFFFB300)
                         else -> MaterialTheme.colorScheme.primary
                     }
-                    if (text.length > 500) Box(
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp)
-                            .size(32.dp)
-                            .background(if (limitBlink) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f), androidx.compose.foundation.shape.CircleShape),
-                        contentAlignment = Alignment.Center,
+                    // The indicator only exists once the note is long enough
+                    // to need it: it grows and fades in instead of popping
+                    // over the text, and fades back out when it is not needed.
+                    AnimatedVisibilityBox(
+                        visible = text.length > LIMIT_INDICATOR_THRESHOLD,
+                        enter = fadeIn(motionSpec(AppMotion.FAST_MS)) +
+                            scaleIn(
+                                motionSpec(AppMotion.FAST_MS),
+                                initialScale = 0.7f,
+                            ),
+                        exit = fadeOut(motionSpec(AppMotion.FAST_MS)) +
+                            scaleOut(
+                                motionSpec(AppMotion.FAST_MS),
+                                targetScale = 0.7f,
+                            ),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp),
                     ) {
-                        androidx.compose.material3.CircularProgressIndicator(
-                            progress = { (text.length.toFloat() / noteMaxLength).coerceIn(0f, 1f) },
-                            modifier = Modifier.fillMaxSize(),
-                            color = indicatorColor,
-                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                            strokeWidth = 3.dp,
+                        // The blink is a color change: animating it keeps the
+                        // flash from snapping between two colors.
+                        val background by animateColorAsState(
+                            targetValue = if (limitBlink) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f)
+                            },
+                            animationSpec = motionColorSpec(AppMotion.FAST_MS),
+                            label = "limitIndicatorBackground",
                         )
-                        if (remaining <= 20) Text("$remaining", style = MaterialTheme.typography.labelSmall, color = if (limitBlink) MaterialTheme.colorScheme.surfaceContainerHighest else indicatorColor)
+                        val labelColor by animateColorAsState(
+                            targetValue = if (limitBlink) {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            } else {
+                                indicatorColor
+                            },
+                            animationSpec = motionColorSpec(AppMotion.FAST_MS),
+                            label = "limitIndicatorLabel",
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(background, androidx.compose.foundation.shape.CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                progress = { (text.length.toFloat() / noteMaxLength).coerceIn(0f, 1f) },
+                                modifier = Modifier.fillMaxSize(),
+                                color = indicatorColor,
+                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                                strokeWidth = 3.dp,
+                            )
+                            if (remaining <= 20) Text("$remaining", style = MaterialTheme.typography.labelSmall, color = labelColor)
+                        }
                     }
                     }
                 }
@@ -670,9 +712,11 @@ fun NoteScreen(
                         // — the swap dissolves in place, in the same
                         // accent-tinted container family both ways.
                         if (targetState) {
-                            fadeIn(tween(160)) togetherWith fadeOut(tween(120))
+                            fadeIn(motionSpec(AppMotion.MEDIUM_MS)) togetherWith
+                                fadeOut(motionSpec(AppMotion.FAST_MS))
                         } else {
-                            fadeIn(tween(240)) togetherWith fadeOut(tween(200))
+                            fadeIn(motionSpec(AppMotion.SLOW_MS)) togetherWith
+                                fadeOut(motionSpec(AppMotion.MEDIUM_MS))
                         }
                     },
                     // Fixed box: both bars are 56dp content + 16dp vertical
@@ -706,22 +750,31 @@ fun NoteScreen(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 16.dp)
                         ) {
-                            // FloatingActionButton has no enabled parameter: the
-                            // dimmed look plus disabled semantics carry the
-                            // state while the click guard blocks the action.
-                            FloatingActionButton(
-                                onClick = { if (hasContent) viewModel.archiveCurrent() },
+                            // The alignment lives on a plain box, not on the
+                            // tooltip: Material 3 nests the tooltip anchor
+                            // two layouts deep, so an `align` modifier handed
+                            // to the tooltip never reaches this parent box
+                            // and both buttons would stack on the same spot.
+                            Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterStart)
-                                    .alpha(if (hasContent) 1f else 0.38f)
-                                    .semantics { if (!hasContent) disabled() },
-                                shape = CircleShape,
-                                elevation = noShadowElevation()
+                                    .alpha(if (hasContent) 1f else 0.38f),
                             ) {
-                                Icon(
-                                    Icons.Outlined.Archive,
-                                    contentDescription = stringResource(R.string.cd_archive)
-                                )
+                                TooltipBubble(
+                                    tooltip = stringResource(R.string.cd_archive),
+                                ) {
+                                    FloatingActionButton(
+                                        onClick = { if (hasContent) viewModel.archiveCurrent() },
+                                        modifier = Modifier.semantics { if (!hasContent) disabled() },
+                                        shape = CircleShape,
+                                        elevation = noShadowElevation()
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Archive,
+                                            contentDescription = stringResource(R.string.cd_archive)
+                                        )
+                                    }
+                                }
                             }
 
                             if (notificationsEnabled) {
@@ -733,19 +786,26 @@ fun NoteScreen(
                                 )
                             }
 
-                            FloatingActionButton(
-                                onClick = { if (hasContent) showDeleteDialog = true },
+                            Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
-                                    .alpha(if (hasContent) 1f else 0.38f)
-                                    .semantics { if (!hasContent) disabled() },
-                                shape = CircleShape,
-                                elevation = noShadowElevation()
+                                    .alpha(if (hasContent) 1f else 0.38f),
                             ) {
-                                Icon(
-                                    Icons.Outlined.Delete,
-                                    contentDescription = stringResource(R.string.cd_delete)
-                                )
+                                TooltipBubble(
+                                    tooltip = stringResource(R.string.cd_delete),
+                                ) {
+                                    FloatingActionButton(
+                                        onClick = { if (hasContent) showDeleteDialog = true },
+                                        modifier = Modifier.semantics { if (!hasContent) disabled() },
+                                        shape = CircleShape,
+                                        elevation = noShadowElevation()
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Delete,
+                                            contentDescription = stringResource(R.string.cd_delete)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -963,8 +1023,9 @@ fun PinButton(
         AnimatedContent(
             targetState = pinned,
             transitionSpec = {
-                (fadeIn(tween(160)) togetherWith fadeOut(tween(120))) using
-                    SizeTransform(clip = true) { _, _ -> tween(240) }
+                (fadeIn(motionSpec(AppMotion.MEDIUM_MS)) togetherWith
+                    fadeOut(motionSpec(AppMotion.FAST_MS))) using
+                    SizeTransform(clip = true) { _, _ -> motionSizeSpec(AppMotion.SLOW_MS) }
             },
             contentAlignment = Alignment.Center,
             label = "pinButton",
@@ -984,35 +1045,38 @@ fun PinButton(
     }
 }
 
+/**
+ * Visibility animation without a layout scope.
+ *
+ * Material 3 ships scope-specific `AnimatedVisibility` overloads, and the
+ * note card sits inside two column scopes at once (the card content and the
+ * screen column), which makes the scoped overload ambiguous. This wrapper has
+ * no scope receiver, so it always resolves to the plain one.
+ */
+@Composable
+private fun AnimatedVisibilityBox(
+    visible: Boolean,
+    modifier: Modifier = Modifier,
+    enter: EnterTransition,
+    exit: ExitTransition,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        modifier = modifier,
+        enter = enter,
+        exit = exit,
+    ) {
+        content()
+    }
+}
+
 private fun shareNote(context: Context, text: String) {
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
     context.startActivity(Intent.createChooser(sendIntent, null))
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun TooltipIconButton(
-    tooltip: String,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit,
-) {
-    val tooltipState = rememberTooltipState()
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-        tooltip = { PlainTooltip { Text(tooltip) } },
-        state = tooltipState
-    ) {
-        IconButton(
-            onClick = onClick,
-            enabled = enabled
-        ) {
-            content()
-        }
-    }
 }
 
 /**

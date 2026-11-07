@@ -47,6 +47,15 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
+    // Off by default: the notification keeps its own title until the user
+    // asks for the note's first line instead.
+    val notificationTitleFirstLine: StateFlow<Boolean> = store.notificationTitleFirstLine
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setNotificationTitleFirstLine(value: Boolean) {
+        viewModelScope.launch { store.setNotificationTitleFirstLine(value) }
+    }
+
     val dynamicColors: StateFlow<Boolean> = store.dynamicColors
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -59,6 +68,15 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setAmoled(value: Boolean) {
         viewModelScope.launch { store.setAmoled(value) }
+    }
+
+    // Off by default: the interface keeps its colors until the user turns
+    // the grayscale mode on.
+    val monochrome: StateFlow<Boolean> = store.monochrome
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setMonochrome(value: Boolean) {
+        viewModelScope.launch { store.setMonochrome(value) }
     }
 
     val appFont: StateFlow<String> = store.appFont
@@ -89,8 +107,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             // Separate first: the typed combine overloads stop at five
             // flows, so the new pref is awaited on its own.
             store.lockscreenVisible.first()
+            store.notificationTitleFirstLine.first()
             store.dynamicColors.first()
             store.amoled.first()
+            store.monochrome.first()
             store.appFont.first()
             store.appIcon.first()
             _ready.value = true

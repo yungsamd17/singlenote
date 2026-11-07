@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">Zezwól na przypinanie aktualnej notatki jako trwałego powiadomienia</string>
     <string name="setting_lockscreen_visible">Pokaż notatkę na ekranie blokady</string>
     <string name="setting_lockscreen_visible_desc">Wyłączone ukrywa treść notatki na ekranie blokady</string>
+    <string name="setting_notification_title_first_line">Pokaż pierwszy wiersz notatki w tytule</string>
+    <string name="setting_notification_title_first_line_desc">Użyj pierwszego wiersza notatki jako tytułu przypiętego powiadomienia</string>
     <string name="change">Zmień</string>
     <string name="about_title">O aplikacji</string>
     <string name="about_subtitle">Wersja, warunki, prywatność i więcej</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">Używaj kolorów tapety</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Używaj czystej czerni w ciemnym motywie</string>
+    <string name="settings_monochrome">Tryb monochromatyczny</string>
+    <string name="settings_monochrome_summary">Zamień wszystkie kolory na odcienie szarości</string>
     <string name="settings_app_icon">Ikona aplikacji</string>
     <string name="settings_icon_accent">Użyj koloru akcentu</string>
     <string name="settings_app_font">Czcionka aplikacji</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (z tytułami i datami)</string>
     <string name="archive_export_text">Zwykły tekst (tylko notatki)</string>
     <string name="accent_icon_restart_notice">Zmiana koloru akcentu zmienia też ikonę aplikacji i zamyka Singlenote. Otwórz ponownie z launchera.</string>
+    <string name="app_icon_restart_notice">Zmiana ikony aplikacji zamyka Singlenote. Otwórz ją ponownie z ekranu głównego.</string>
     <string name="settings_icon_dynamic">Dynamiczny kolor tapety</string>
     <string name="diagnostics_title">Diagnostyka</string>
     <string name="diagnostics_collecting">Zbieram…</string>

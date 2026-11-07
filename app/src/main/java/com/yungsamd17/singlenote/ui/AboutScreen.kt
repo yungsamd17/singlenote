@@ -6,6 +6,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
 import android.widget.Toast
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -36,8 +41,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -46,6 +49,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -56,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -163,22 +168,55 @@ fun AboutScreen(
         state = scroll.appBar,
         canScroll = { scroll.overflows },
     )
+    // The update button spins while it checks: the request can take a
+    // moment, and a still icon reads as a dead button.
+    val updateSpin = remember { Animatable(0f) }
+    LaunchedEffect(checkingUpdate) {
+        if (checkingUpdate) {
+            updateSpin.snapTo(0f)
+            updateSpin.animateTo(
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing)),
+            )
+        } else {
+            // A cancelled spin must not leave the icon tilted: finish the
+            // turn it was on.
+            val remainder = updateSpin.value % 360f
+            if (remainder > 0.5f) {
+                updateSpin.animateTo(
+                    targetValue = updateSpin.value + (360f - remainder),
+                    animationSpec = tween(180, easing = FastOutSlowInEasing),
+                )
+            }
+        }
+    }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
         topBar = {
-            LargeTopAppBar(
+            // Centered like the note and archive toolbars, and opaque so the
+            // content scrolls under the title instead of through it.
+            CenterAlignedTopAppBar(
                 scrollBehavior = scrollBehavior.takeIf { !scroll.measured || scroll.overflows },
                 title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    TooltipIconButton(
+                        onClick = onBack,
+                        tooltip = stringResource(R.string.cd_back),
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back),
                         )
                     }
                 },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+                ),
             )
         },
     ) { innerPadding ->
@@ -236,10 +274,15 @@ fun AboutScreen(
                                         },
                                 )
                             }
-                            IconButton(onClick = ::checkForUpdates, enabled = !checkingUpdate) {
+                            TooltipIconButton(
+                                onClick = ::checkForUpdates,
+                                tooltip = stringResource(R.string.cd_check_updates),
+                                enabled = !checkingUpdate,
+                            ) {
                                 Icon(
                                     Icons.Outlined.Refresh,
                                     contentDescription = stringResource(R.string.cd_check_updates),
+                                    modifier = Modifier.graphicsLayer { rotationZ = updateSpin.value },
                                 )
                             }
                         }
@@ -436,7 +479,10 @@ fun LicenseScreen(onBack: () -> Unit) {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.about_license)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    TooltipIconButton(
+                        onClick = onBack,
+                        tooltip = stringResource(R.string.cd_back),
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back)
@@ -501,7 +547,10 @@ private fun LegalScreen(
             CenterAlignedTopAppBar(
                 title = { Text(title) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    TooltipIconButton(
+                        onClick = onBack,
+                        tooltip = stringResource(R.string.cd_back),
+                    ) {
                         Icon(
                             Icons.AutoMirrored.Outlined.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back)

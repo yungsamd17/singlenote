@@ -29,12 +29,13 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -121,7 +122,10 @@ fun SettingsPage(title: String, onBack: () -> Unit, content: @Composable () -> U
         modifier = Modifier.nestedScroll(behavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            LargeTopAppBar(
+            // Centered like the note and archive toolbars: the title sits in
+            // the middle, and the bar stays opaque so the content scrolls
+            // under it instead of through it.
+            CenterAlignedTopAppBar(
                 title = { Text(title) },
                 scrollBehavior = behavior.takeIf { !scroll.measured || scroll.overflows },
                 navigationIcon = {
@@ -135,6 +139,12 @@ fun SettingsPage(title: String, onBack: () -> Unit, content: @Composable () -> U
                         )
                     }
                 },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface,
+                ),
             )
         },
     ) { padding ->
@@ -168,8 +178,10 @@ fun SettingsScreen(
     val size by viewModel.textSize.collectAsStateWithLifecycle()
     val notifications by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val lockscreen by viewModel.lockscreenVisible.collectAsStateWithLifecycle()
+    val titleFirstLine by viewModel.notificationTitleFirstLine.collectAsStateWithLifecycle()
     val dynamic by viewModel.dynamicColors.collectAsStateWithLifecycle()
     val amoled by viewModel.amoled.collectAsStateWithLifecycle()
+    val monochrome by viewModel.monochrome.collectAsStateWithLifecycle()
     val appFont by viewModel.appFont.collectAsStateWithLifecycle()
     val appIcon by viewModel.appIcon.collectAsStateWithLifecycle()
     val ready by viewModel.ready.collectAsStateWithLifecycle()
@@ -257,7 +269,9 @@ fun SettingsScreen(
                                 stringResource(R.string.settings_accent),
                                 accentLabel(accent),
                                 { dialog = "accent" },
-                                enabled = !dynamic,
+                                // Monochrome replaces every color: the accent
+                                // (and the wallpaper colors) no longer apply.
+                                enabled = !dynamic && !monochrome,
                             )
                         },
                         {
@@ -268,7 +282,17 @@ fun SettingsScreen(
                                 dynamic,
                                 viewModel::setDynamicColors,
                                 summaryAccent = true,
-                                enabled = android.os.Build.VERSION.SDK_INT >= 31,
+                                enabled = android.os.Build.VERSION.SDK_INT >= 31 && !monochrome,
+                            )
+                        },
+                        {
+                            ToggleRow(
+                                painterResource(R.drawable.ic_symbol_monochrome),
+                                stringResource(R.string.settings_monochrome),
+                                stringResource(R.string.settings_monochrome_summary),
+                                monochrome,
+                                viewModel::setMonochrome,
+                                summaryAccent = true,
                             )
                         },
                         {
@@ -354,6 +378,16 @@ fun SettingsScreen(
                                 stringResource(R.string.setting_lockscreen_visible_desc),
                                 lockscreen,
                                 viewModel::setLockscreenVisible,
+                                enabled = notifications,
+                            )
+                        },
+                        {
+                            ToggleRow(
+                                Icons.Outlined.Title,
+                                stringResource(R.string.setting_notification_title_first_line),
+                                stringResource(R.string.setting_notification_title_first_line_desc),
+                                titleFirstLine,
+                                viewModel::setNotificationTitleFirstLine,
                                 enabled = notifications,
                             )
                         },
@@ -461,7 +495,18 @@ fun SettingsScreen(
                     }
                 ),
             options = options,
-            notice = if (dialog == "accent" && appIcon == "accent") stringResource(R.string.accent_icon_restart_notice) else null,
+            notice = when (dialog) {
+                // Changing the accent repaints the launcher icon as well, so
+                // both pickers warn that the app closes itself.
+                "accent" ->
+                    if (appIcon == "accent") {
+                        stringResource(R.string.accent_icon_restart_notice)
+                    } else {
+                        null
+                    }
+                "icon" -> stringResource(R.string.app_icon_restart_notice)
+                else -> null
+            },
             selected =
                 when (dialog) {
                     "theme" -> theme

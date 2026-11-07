@@ -76,11 +76,13 @@ interface NoteStore {
     val pinned: Flow<Boolean>
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
+    val notificationTitleFirstLine: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
+    val monochrome: Flow<Boolean>
     val appFont: Flow<String>
     val appIcon: Flow<String>
     val accentColor: Flow<String>
@@ -92,11 +94,13 @@ interface NoteStore {
     suspend fun setPinned(value: Boolean)
     suspend fun setNotificationsEnabled(value: Boolean)
     suspend fun setLockscreenVisible(value: Boolean)
+    suspend fun setNotificationTitleFirstLine(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
     suspend fun setDynamicColors(value: Boolean)
     suspend fun setAmoled(value: Boolean)
+    suspend fun setMonochrome(value: Boolean)
     suspend fun setAppFont(value: String)
     suspend fun setAppIcon(value: String)
     suspend fun setAccentColor(value: String)
@@ -166,11 +170,13 @@ class NoteRepository(
     override val pinned: Flow<Boolean> = preferences.pinned
     override val notificationsEnabled: Flow<Boolean> = preferences.notificationsEnabled
     override val lockscreenVisible: Flow<Boolean> = preferences.lockscreenVisible
+    override val notificationTitleFirstLine: Flow<Boolean> = preferences.notificationTitleFirstLine
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
     override val dynamicColors: Flow<Boolean> = preferences.dynamicColors
     override val amoled: Flow<Boolean> = preferences.amoled
+    override val monochrome: Flow<Boolean> = preferences.monochrome
     override val appFont: Flow<String> = preferences.appFont
     override val appIcon: Flow<String> = preferences.appIcon
     override val accentColor: Flow<String> = preferences.accentColor
@@ -271,6 +277,13 @@ class NoteRepository(
         notifyNow()
     }
 
+    override suspend fun setNotificationTitleFirstLine(value: Boolean) {
+        preferences.setNotificationTitleFirstLine(value)
+        // The pinned notification carries the title: repaint it right away
+        // instead of waiting for the next note change.
+        notifyNow()
+    }
+
     override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
 
     override suspend fun setFontFamily(value: String) = preferences.setFontFamily(value)
@@ -283,6 +296,12 @@ class NoteRepository(
     }
 
     override suspend fun setAmoled(value: Boolean) = preferences.setAmoled(value)
+
+    override suspend fun setMonochrome(value: Boolean) {
+        preferences.setMonochrome(value)
+        // Widgets following the app colors have to repaint in gray too.
+        notifyNow()
+    }
 
     override suspend fun setAppFont(value: String) = preferences.setAppFont(value)
 

@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">Разрешить закрепление текущей заметки как постоянного уведомления</string>
     <string name="setting_lockscreen_visible">Показывать заметку на экране блокировки</string>
     <string name="setting_lockscreen_visible_desc">Выкл. скрывает содержимое заметки на экране блокировки</string>
+    <string name="setting_notification_title_first_line">Показывать первую строку заметки в заголовке</string>
+    <string name="setting_notification_title_first_line_desc">Использовать первую строку заметки как заголовок закреплённого уведомления</string>
     <string name="change">Изменить</string>
     <string name="about_title">О приложении</string>
     <string name="about_subtitle">Версия, условия, конфиденциальность и др.</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">Использовать цвета обоев</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Использовать чистый чёрный в тёмной теме</string>
+    <string name="settings_monochrome">Монохромный режим</string>
+    <string name="settings_monochrome_summary">Превратить все цвета в оттенки серого</string>
     <string name="settings_app_icon">Иконка приложения</string>
     <string name="settings_icon_accent">Использовать цвет акцента</string>
     <string name="settings_app_font">Шрифт приложения</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (с заголовками и датами)</string>
     <string name="archive_export_text">Обычный текст (только заметки)</string>
     <string name="accent_icon_restart_notice">Смена цвета акцента также меняет иконку приложения и закрывает Singlenote. Откройте снова из лаунчера.</string>
+    <string name="app_icon_restart_notice">Смена значка приложения закроет Singlenote. Откройте его снова с главного экрана.</string>
     <string name="settings_icon_dynamic">Динамический цвет обоев</string>
     <string name="diagnostics_title">Диагностика</string>
     <string name="diagnostics_collecting">Сбор…</string>
