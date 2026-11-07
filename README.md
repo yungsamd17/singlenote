@@ -47,7 +47,7 @@ crossfade in place without restarting the screen.
 
 ## Roadmap
 
-`v0.4.6` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
+`v0.5.0` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 
