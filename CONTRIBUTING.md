@@ -72,7 +72,9 @@ Do not commit secrets, keystores, local SDK paths, APKs, or review-only media.
 ## Verify your change
 
 Run relevant JVM tests and Android lint; build the debug APK. Describe any check
-blocked by your environment. Never treat an unrun check as passed. For UI changes,
+blocked by your environment. Never treat an unrun check as passed.
+`scripts/ci-local-build.sh` runs the same checks as CI locally; see
+[BUILDING.md](docs/BUILDING.md). For UI changes,
 inspect English and Slovak, light/dark themes, small screens and large system text.
 For editing, check long notes, typing/pasting at different positions, selection,
 keyboard open/close/reopen, and the Done/Pinned transition. For widget changes,
