@@ -13,7 +13,7 @@ Changes for the next release will be listed here.
 ### Added
 
 - Six new languages — German, Spanish, French, Polish, Russian and Simplified Chinese — with a standard Android language picker and a per-app language entry.
-- Monochrome mode turns every colour into a shade of gray, overriding the accent and wallpaper colours while destructive actions and the character limit still read as warnings.
+- Monochrome mode turns every color into a shade of gray, overriding the accent and wallpaper colors while destructive actions and the character limit still read as warnings.
 - Optional first line of the note as the pinned notification title; the body then starts at the second line instead of repeating it.
 - Tooltips on every icon-only button, including the editor, archive, About and legal screens.
 - The character-limit indicator now fades and scales in instead of popping over the text.
@@ -28,7 +28,7 @@ Changes for the next release will be listed here.
 ### Fixed
 
 - The editor's archive and delete buttons no longer sit on top of each other, so archiving is reachable again.
-- The character-limit shake is drawn without re-laying out the screen, and its colours no longer snap.
+- The character-limit shake is drawn without re-laying out the screen, and its colors no longer snap.
 
 [Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v0.5.0) · [Changes since v0.4.6](https://github.com/yungsamd17/singlenote/compare/v0.4.6...v0.5.0)
 
