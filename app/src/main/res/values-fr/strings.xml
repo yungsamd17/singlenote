@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">Autoriser l\'épinglage de la note actuelle comme notification persistante</string>
     <string name="setting_lockscreen_visible">Afficher la note sur l\'écran de verrouillage</string>
     <string name="setting_lockscreen_visible_desc">Désactivé masque le contenu de la note sur l\'écran de verrouillage</string>
+    <string name="setting_notification_title_first_line">Afficher la première ligne de la note dans le titre</string>
+    <string name="setting_notification_title_first_line_desc">Utiliser la première ligne de votre note comme titre de la notification épinglée</string>
     <string name="change">Changer</string>
     <string name="about_title">À propos de l\'application</string>
     <string name="about_subtitle">Version, conditions, confidentialité et plus</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">Utiliser les couleurs du fond d\'écran</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Utiliser du noir pur en thème sombre</string>
+    <string name="settings_monochrome">Mode monochrome</string>
+    <string name="settings_monochrome_summary">Transformer toutes les couleurs en nuances de gris</string>
     <string name="settings_app_icon">Icône de l\'application</string>
     <string name="settings_icon_accent">Utiliser la couleur d\'accent</string>
     <string name="settings_app_font">Police de l\'application</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (avec titres et dates)</string>
     <string name="archive_export_text">Texte brut (notes seulement)</string>
     <string name="accent_icon_restart_notice">Changer la couleur d\'accent change aussi l\'icône de l\'application et ferme Singlenote. Rouvrez-le depuis votre lanceur.</string>
+    <string name="app_icon_restart_notice">Modifier l’icône de l’application ferme Singlenote. Rouvrez-la depuis le lanceur.</string>
     <string name="settings_icon_dynamic">Couleur dynamique du fond d\'écran</string>
     <string name="diagnostics_title">Diagnostics</string>
     <string name="diagnostics_collecting">Collecte…</string>

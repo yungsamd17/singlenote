@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">Erlaube das Anheften der aktuellen Notiz als permanente Benachrichtigung</string>
     <string name="setting_lockscreen_visible">Notiz auf Sperrbildschirm anzeigen</string>
     <string name="setting_lockscreen_visible_desc">Aus blendet den Notizinhalt auf dem Sperrbildschirm aus</string>
+    <string name="setting_notification_title_first_line">Erste Notizzeile im Titel anzeigen</string>
+    <string name="setting_notification_title_first_line_desc">Die erste Zeile deiner Notiz als Titel der angehefteten Benachrichtigung verwenden</string>
     <string name="change">Ändern</string>
     <string name="about_title">Über die App</string>
     <string name="about_subtitle">Version, Bedingungen, Datenschutz und mehr</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">Hintergrundfarben verwenden</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Reines Schwarz im dunklen Design verwenden</string>
+    <string name="settings_monochrome">Monochromer Modus</string>
+    <string name="settings_monochrome_summary">Alle Farben in Graustufen umwandeln</string>
     <string name="settings_app_icon">App-Symbol</string>
     <string name="settings_icon_accent">Akzentfarbe verwenden</string>
     <string name="settings_app_font">App-Schriftart</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (mit Titeln und Daten)</string>
     <string name="archive_export_text">Klartext (nur Notizen)</string>
     <string name="accent_icon_restart_notice">Das Ändern der Akzentfarbe ändert auch das App-Symbol und schließt Singlenote. Öffne es erneut vom Launcher.</string>
+    <string name="app_icon_restart_notice">Das Ändern des App-Symbols schließt Singlenote. Öffne die App erneut über den Launcher.</string>
     <string name="settings_icon_dynamic">Dynamische Hintergrundfarbe</string>
     <string name="diagnostics_title">Diagnose</string>
     <string name="diagnostics_collecting">Sammle Daten…</string>

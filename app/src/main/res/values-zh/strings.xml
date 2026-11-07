@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">允许将当前笔记固定为持久通知</string>
     <string name="setting_lockscreen_visible">锁屏显示笔记</string>
     <string name="setting_lockscreen_visible_desc">关闭则在锁屏隐藏笔记内容</string>
+    <string name="setting_notification_title_first_line">在标题中显示笔记首行</string>
+    <string name="setting_notification_title_first_line_desc">使用笔记的第一行作为固定通知的标题</string>
     <string name="change">更改</string>
     <string name="about_title">关于应用</string>
     <string name="about_subtitle">版本、条款、隐私等</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">使用壁纸颜色</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">深色主题使用纯黑</string>
+    <string name="settings_monochrome">单色模式</string>
+    <string name="settings_monochrome_summary">将所有颜色转换为灰度</string>
     <string name="settings_app_icon">应用图标</string>
     <string name="settings_icon_accent">使用强调色</string>
     <string name="settings_app_font">应用字体</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (含标题和日期)</string>
     <string name="archive_export_text">纯文本 (仅笔记)</string>
     <string name="accent_icon_restart_notice">更改强调色也会更改应用图标并关闭 Singlenote。从启动器重新打开。</string>
+    <string name="app_icon_restart_notice">更改应用图标会关闭 Singlenote。请从启动器重新打开。</string>
     <string name="settings_icon_dynamic">动态壁纸颜色</string>
     <string name="diagnostics_title">诊断</string>
     <string name="diagnostics_collecting">收集中…</string>

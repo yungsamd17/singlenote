@@ -117,6 +117,8 @@
     <string name="setting_show_notifications_desc">Permitir anclar la nota actual como notificación persistente</string>
     <string name="setting_lockscreen_visible">Mostrar nota en pantalla de bloqueo</string>
     <string name="setting_lockscreen_visible_desc">Desactivado oculta el contenido de la nota en la pantalla de bloqueo</string>
+    <string name="setting_notification_title_first_line">Mostrar la primera línea de la nota en el título</string>
+    <string name="setting_notification_title_first_line_desc">Usar la primera línea de tu nota como título de la notificación fijada</string>
     <string name="change">Cambiar</string>
     <string name="about_title">Acerca de la app</string>
     <string name="about_subtitle">Versión, términos, privacidad y más</string>
@@ -173,6 +175,8 @@
     <string name="settings_dynamic_summary">Usar colores del fondo de pantalla</string>
     <string name="settings_amoled">AMOLED</string>
     <string name="settings_amoled_summary">Usar negro puro en tema oscuro</string>
+    <string name="settings_monochrome">Modo monocromático</string>
+    <string name="settings_monochrome_summary">Convertir todos los colores en tonos de gris</string>
     <string name="settings_app_icon">Icono de la app</string>
     <string name="settings_icon_accent">Usar color de acento</string>
     <string name="settings_app_font">Fuente de la app</string>
@@ -220,6 +224,7 @@
     <string name="archive_export_json">JSON (con títulos y fechas)</string>
     <string name="archive_export_text">Texto plano (solo notas)</string>
     <string name="accent_icon_restart_notice">Cambiar el color de acento también cambia el icono de la app y cierra Singlenote. Vuelve a abrirla desde el launcher.</string>
+    <string name="app_icon_restart_notice">Cambiar el icono de la aplicación cierra Singlenote. Vuelve a abrirla desde el lanzador.</string>
     <string name="settings_icon_dynamic">Color dinámico del fondo de pantalla</string>
     <string name="diagnostics_title">Diagnóstico</string>
     <string name="diagnostics_collecting">Recopilando…</string>
