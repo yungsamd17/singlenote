@@ -431,13 +431,11 @@ fun SettingsScreen(
                                             text = stringResource(entry.nativeName),
                                             style = MaterialTheme.typography.bodyLarge,
                                         )
-                                        entry.regionName?.let { regionRes ->
-                                            Text(
-                                                text = stringResource(regionRes),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
+                                        Text(
+                                            text = stringResource(entry.description),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
                                     }
                                     RadioButton(
                                         selected = checked,
@@ -523,24 +521,31 @@ fun SettingsScreen(
         )
 }
 
-private data class LanguageEntry(
+internal data class LanguageEntry(
     val code: String,
-    val englishName: Int,
+    /** Native name of the language, shown on the first line. */
     val nativeName: Int,
-    val regionName: Int? = null,
+    /**
+     * Second line of the row: the language name in English, so a reader who
+     * does not know the native name still recognises it. Every entry carries
+     * one, so the rows keep a single height.
+     */
+    val description: Int,
 )
 
-private val languageEntries =
+internal val languageEntries =
     listOf(
-        LanguageEntry("", R.string.theme_system, R.string.settings_device_language),
-        LanguageEntry("en-US", R.string.language_english_us, R.string.language_english, R.string.region_united_states),
-        LanguageEntry("de-DE", R.string.language_german_english, R.string.language_german, R.string.region_germany),
-        LanguageEntry("es-ES", R.string.language_spanish_english, R.string.language_spanish, R.string.region_spain),
-        LanguageEntry("fr-FR", R.string.language_french_english, R.string.language_french, R.string.region_france),
-        LanguageEntry("pl-PL", R.string.language_polish_english, R.string.language_polish, R.string.region_poland),
-        LanguageEntry("ru-RU", R.string.language_russian_english, R.string.language_russian, R.string.region_russia),
-        LanguageEntry("zh-CN", R.string.language_chinese_english, R.string.language_chinese, R.string.region_china),
-        LanguageEntry("sk-SK", R.string.language_slovak_english, R.string.language_slovak, R.string.region_slovakia),
+        // The device row keeps the same two lines as the others: the app
+        // follows the system language, spelled out on the second line.
+        LanguageEntry("", R.string.settings_device_language, R.string.theme_system),
+        LanguageEntry("en-US", R.string.language_english, R.string.language_english_us),
+        LanguageEntry("de-DE", R.string.language_german, R.string.language_german_english),
+        LanguageEntry("es-ES", R.string.language_spanish, R.string.language_spanish_english),
+        LanguageEntry("fr-FR", R.string.language_french, R.string.language_french_english),
+        LanguageEntry("pl-PL", R.string.language_polish, R.string.language_polish_english),
+        LanguageEntry("ru-RU", R.string.language_russian, R.string.language_russian_english),
+        LanguageEntry("zh-CN", R.string.language_chinese, R.string.language_chinese_english),
+        LanguageEntry("sk-SK", R.string.language_slovak, R.string.language_slovak_english),
     )
 
 @Composable

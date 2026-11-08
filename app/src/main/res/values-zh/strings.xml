@@ -72,14 +72,6 @@
     <string name="language_chinese_english">Chinese</string>
     <string name="language_chinese">中文</string>
     <string name="language_english_us">English (US)</string>
-    <string name="region_united_states">United States</string>
-    <string name="region_germany">Germany</string>
-    <string name="region_spain">Spain</string>
-    <string name="region_france">France</string>
-    <string name="region_poland">Poland</string>
-    <string name="region_russia">Russia</string>
-    <string name="region_china">China</string>
-    <string name="region_slovakia">Slovakia</string>
     <string name="settings_accent">强调色</string>
     <string name="accent_default">默认</string>
     <string name="accent_blue">蓝色</string>
