@@ -8,21 +8,19 @@ import org.junit.Test
 class ScrollBehaviorTest {
     @Test
     fun fittingSettingsDoNotScroll() {
-        assertFalse(settingsContentOverflows(400, 800, 0f))
-        assertFalse(settingsContentOverflows(800, 800, 0f))
-        assertFalse(settingsContentOverflows(0, 0, 0f))
+        assertFalse(settingsContentOverflows(400, 800))
+        assertFalse(settingsContentOverflows(800, 800))
+        assertFalse(settingsContentOverflows(0, 0))
     }
 
     @Test
-    fun overflowingSettingsCanCollapseAndExpand() {
-        assertTrue(settingsContentOverflows(810, 800, 0f))
-        // The same content fits after collapse, but must still allow expanding the bar.
-        assertTrue(settingsContentOverflows(810, 900, -100f))
+    fun overflowingSettingsScroll() {
+        assertTrue(settingsContentOverflows(810, 800))
     }
 
     @Test
-    fun largerViewportCanDisableScrollingAndRestoreExpandedBar() {
-        assertFalse(settingsContentOverflows(810, 1000, -100f))
+    fun largerViewportCanDisableScrolling() {
+        assertFalse(settingsContentOverflows(810, 1000))
     }
 
     @Test

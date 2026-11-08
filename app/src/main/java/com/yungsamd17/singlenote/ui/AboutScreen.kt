@@ -63,7 +63,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -164,10 +163,6 @@ fun AboutScreen(
         }
     }
     val scroll = rememberSettingsScrollState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-        state = scroll.appBar,
-        canScroll = { scroll.overflows },
-    )
     // The update button spins while it checks: the request can take a
     // moment, and a still icon reads as a dead button.
     val updateSpin = remember { Animatable(0f) }
@@ -191,14 +186,13 @@ fun AboutScreen(
         }
     }
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
         topBar = {
             // Centered like the note and archive toolbars, and opaque so the
-            // content scrolls under the title instead of through it.
+            // content scrolls under the title instead of through it. The bar
+            // stays put: it never collapses while the page scrolls.
             CenterAlignedTopAppBar(
-                scrollBehavior = scrollBehavior.takeIf { !scroll.measured || scroll.overflows },
                 title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     TooltipIconButton(

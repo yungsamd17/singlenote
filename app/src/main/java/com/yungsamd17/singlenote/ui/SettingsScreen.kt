@@ -56,7 +56,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
@@ -113,21 +112,14 @@ fun SettingsSectionHeader(text: String) {
 @Composable
 fun SettingsPage(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
     val scroll = rememberSettingsScrollState()
-    val behavior =
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(
-            state = scroll.appBar,
-            canScroll = { scroll.overflows },
-        )
     Scaffold(
-        modifier = Modifier.nestedScroll(behavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             // Centered like the note and archive toolbars: the title sits in
-            // the middle, and the bar stays opaque so the content scrolls
-            // under it instead of through it.
+            // the middle, and the bar stays put. It never collapses on
+            // scroll, so the page keeps its frame while the content moves.
             CenterAlignedTopAppBar(
                 title = { Text(title) },
-                scrollBehavior = behavior.takeIf { !scroll.measured || scroll.overflows },
                 navigationIcon = {
                     TooltipIconButton(
                         onClick = onBack,
