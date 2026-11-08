@@ -6,7 +6,11 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes for the next release will be listed here.
+### Fixed
+
+- The settings and About toolbars stay put while the page scrolls: they no longer collapse away, and the scroll no longer stutters or jumps.
+- The "Your device language" row in the language picker is as tall as the other language rows.
+- Language rows name the language instead of the country: "Polski — Polish", "Deutsch — German", and so on.
 
 ## [0.5.0] - 2026-11-07
 
