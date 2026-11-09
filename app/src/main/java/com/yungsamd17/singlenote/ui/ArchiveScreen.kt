@@ -97,8 +97,12 @@ fun ArchiveScreen(
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val preferences = remember { NotePreferences.get(context.applicationContext) }
-    val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = "")
-    val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = "")
+    // Start as null, not with a made-up default: rendering the list before the
+    // stored sort/order arrive would show it in the wrong order for a frame and
+    // then animate every card (including overlaps) into place. Paint nothing
+    // until the real values are known instead.
+    val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = null)
+    val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = null)
     val listState = rememberLazyListState()
     var entered by rememberSaveable { mutableStateOf(false) }
     var lastSort by rememberSaveable { mutableStateOf("") }
@@ -115,8 +119,9 @@ fun ArchiveScreen(
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
     LaunchedEffect(sort, order) {
-        if (sort.isEmpty() || order.isEmpty()) return@LaunchedEffect
-        val key = "$sort:$order"
+        val sortKey = sort ?: return@LaunchedEffect
+        val orderKey = order ?: return@LaunchedEffect
+        val key = "$sortKey:$orderKey"
         if (!entered || (lastSort.isNotEmpty() && lastSort != key)) listState.scrollToItem(0)
         entered = true
         lastSort = key
@@ -183,13 +188,19 @@ fun ArchiveScreen(
         pendingClear?.map { it.id }?.toSet() ?: emptySet()
     }
     val visibleNotes = remember(notes, pendingDeleteIds, pendingClearIds, sort, order) {
-        val filtered = notes.filter { !pendingDeleteIds.contains(it.id) && !pendingClearIds.contains(it.id) }
-        val sorted = when (sort) {
-            "title" -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.content.trim() })
-            "archived" -> filtered.sortedBy { it.archivedAt ?: it.updatedAt }
-            else -> filtered.sortedBy { it.editedAt ?: it.archivedAt ?: it.updatedAt }
+        val sortKey = sort
+        val orderKey = order
+        if (sortKey == null || orderKey == null) {
+            emptyList()
+        } else {
+            val filtered = notes.filter { !pendingDeleteIds.contains(it.id) && !pendingClearIds.contains(it.id) }
+            val sorted = when (sortKey) {
+                "title" -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.content.trim() })
+                "archived" -> filtered.sortedBy { it.archivedAt ?: it.updatedAt }
+                else -> filtered.sortedBy { it.editedAt ?: it.archivedAt ?: it.updatedAt }
+            }
+            if (orderKey == "descending" && sortKey != "title" || orderKey == "ascending" && sortKey == "title") sorted.reversed() else sorted
         }
-        if (order == "descending" && sort != "title" || order == "ascending" && sort == "title") sorted.reversed() else sorted
     }
 
     LaunchedEffect(pendingDelete) {
@@ -284,7 +295,13 @@ fun ArchiveScreen(
             )
         }
     ) { innerPadding ->
-        if (visibleNotes.isEmpty()) {
+        // Keep the content area empty until the stored sort/order are known so
+        // the first painted list is already in the right order.
+        val loadedSort = sort
+        val loadedOrder = order
+        if (loadedSort == null || loadedOrder == null) {
+            // Loading preferences; the screen's slide transition covers it.
+        } else if (visibleNotes.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -307,7 +324,7 @@ fun ArchiveScreen(
             ) {
                 items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
                     androidx.compose.animation.AnimatedContent(
-                        targetState = archiveHeader(context, note, sort, now),
+                        targetState = archiveHeader(context, note, loadedSort, now),
                         modifier = Modifier.animateItem(),
                         // Fade only: a size transform would make every row
                         // jump when its timestamp changes.
