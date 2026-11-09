@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.SystemClock
 import android.view.ViewTreeObserver
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -107,6 +108,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
@@ -114,6 +116,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -263,6 +266,7 @@ fun NoteScreen(
     val scope = rememberCoroutineScope()
     val limitShake = remember { androidx.compose.animation.core.Animatable(0f) }
     var limitBlink by remember { mutableStateOf(false) }
+    var lastLimitAnnounce by remember { mutableLongStateOf(0L) }
     var limitJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val pendingUndo by viewModel.pendingUndo.collectAsStateWithLifecycle()
     val undoArchiveLabel = stringResource(R.string.note_archived)
@@ -362,6 +366,14 @@ fun NoteScreen(
     // cooldown so holding a key doesn't spam snackbars.
     fun notifyLimitReached() {
         view.performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS)
+        // The haptic and the shake are invisible to a screen reader: also
+        // announce the limit, throttled by the same hint cooldown so key
+        // repeat cannot flood the queue.
+        val announceNow = SystemClock.elapsedRealtime()
+        if (announceNow - lastLimitAnnounce >= LIMIT_HINT_COOLDOWN_MS) {
+            lastLimitAnnounce = announceNow
+            view.announceForAccessibility(context.getString(R.string.note_limit_reached))
+        }
         limitJob?.cancel()
         limitJob = scope.launch {
             limitShake.snapTo(0f)
@@ -622,9 +634,18 @@ fun NoteScreen(
                         modifier = Modifier.fillMaxSize().focusRequester(widgetFocusRequester)
                     )
                     val remaining = (noteMaxLength - text.length).coerceAtLeast(0)
+                    // Warning amber that clears 4.5:1 against the surface it
+                    // sits on: the stock #FFB300 washes out on light cards,
+                    // the darker tone keeps the countdown readable there.
+                    val warningColor =
+                        if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+                            androidx.compose.ui.graphics.Color(0xFF8A5A00)
+                        } else {
+                            androidx.compose.ui.graphics.Color(0xFFFFB300)
+                        }
                     val indicatorColor = when {
                         remaining == 0 -> MaterialTheme.colorScheme.error
-                        remaining <= 20 -> androidx.compose.ui.graphics.Color(0xFFFFB300)
+                        remaining <= 20 -> warningColor
                         else -> MaterialTheme.colorScheme.primary
                     }
                     // The indicator only exists once the note is long enough
@@ -998,7 +1019,11 @@ private fun NoteEditorField(
                             fontSize = fontSize,
                             lineHeight = lineHeight
                         ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // Visual hint only: the field already exposes it as
+                        // its content description, so keep it out of the
+                        // accessibility tree to avoid reading it twice.
+                        modifier = Modifier.clearAndSetSemantics {},
                     )
                 }
                 innerTextField()
@@ -1014,9 +1039,13 @@ fun PinButton(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = TextUnit.Unspecified,
 ) {
+    // The visible label and the icon would otherwise both land in the
+    // merged FAB semantics ("Pinned, Unpin note"): describe the action once
+    // and keep the decorative children out of the tree.
+    val description = stringResource(if (pinned) R.string.cd_unpin else R.string.cd_pin)
     FloatingActionButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.semantics { contentDescription = description },
         shape = CircleShape,
         elevation = noShadowElevation(),
     ) {
@@ -1031,12 +1060,14 @@ fun PinButton(
             label = "pinButton",
         ) { isPinned ->
             Row(
-                modifier = Modifier.padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .clearAndSetSemantics {},
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
-                    contentDescription = stringResource(if (isPinned) R.string.cd_unpin else R.string.cd_pin)
+                    contentDescription = null
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(stringResource(if (isPinned) R.string.pinned else R.string.pin_note), maxLines = 1, fontSize = fontSize)

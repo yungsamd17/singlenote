@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
@@ -79,7 +81,11 @@ fun MarkdownText(
                             level == 2 -> MaterialTheme.typography.titleMedium
                             else -> MaterialTheme.typography.titleSmall
                         }.copy(fontWeight = FontWeight.Bold)
-                        Text(text = rest.trim(), style = style)
+                        Text(
+                            text = rest.trim(),
+                            style = style,
+                            modifier = Modifier.semantics { heading() },
+                        )
                     } else {
                         LinkedText(text = line.trim(), style = bodyStyle, color = bodyColor)
                     }

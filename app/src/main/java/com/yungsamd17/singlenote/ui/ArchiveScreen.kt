@@ -2,7 +2,6 @@ package com.yungsamd17.singlenote.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -72,6 +74,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -92,8 +97,12 @@ fun ArchiveScreen(
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val preferences = remember { NotePreferences.get(context.applicationContext) }
-    val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = "")
-    val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = "")
+    // Start as null, not with a made-up default: rendering the list before the
+    // stored sort/order arrive would show it in the wrong order for a frame and
+    // then animate every card (including overlaps) into place. Paint nothing
+    // until the real values are known instead.
+    val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = null)
+    val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = null)
     val listState = rememberLazyListState()
     var entered by rememberSaveable { mutableStateOf(false) }
     var lastSort by rememberSaveable { mutableStateOf("") }
@@ -110,8 +119,9 @@ fun ArchiveScreen(
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
     LaunchedEffect(sort, order) {
-        if (sort.isEmpty() || order.isEmpty()) return@LaunchedEffect
-        val key = "$sort:$order"
+        val sortKey = sort ?: return@LaunchedEffect
+        val orderKey = order ?: return@LaunchedEffect
+        val key = "$sortKey:$orderKey"
         if (!entered || (lastSort.isNotEmpty() && lastSort != key)) listState.scrollToItem(0)
         entered = true
         lastSort = key
@@ -178,13 +188,19 @@ fun ArchiveScreen(
         pendingClear?.map { it.id }?.toSet() ?: emptySet()
     }
     val visibleNotes = remember(notes, pendingDeleteIds, pendingClearIds, sort, order) {
-        val filtered = notes.filter { !pendingDeleteIds.contains(it.id) && !pendingClearIds.contains(it.id) }
-        val sorted = when (sort) {
-            "title" -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.content.trim() })
-            "archived" -> filtered.sortedBy { it.archivedAt ?: it.updatedAt }
-            else -> filtered.sortedBy { it.editedAt ?: it.archivedAt ?: it.updatedAt }
+        val sortKey = sort
+        val orderKey = order
+        if (sortKey == null || orderKey == null) {
+            emptyList()
+        } else {
+            val filtered = notes.filter { !pendingDeleteIds.contains(it.id) && !pendingClearIds.contains(it.id) }
+            val sorted = when (sortKey) {
+                "title" -> filtered.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.content.trim() })
+                "archived" -> filtered.sortedBy { it.archivedAt ?: it.updatedAt }
+                else -> filtered.sortedBy { it.editedAt ?: it.archivedAt ?: it.updatedAt }
+            }
+            if (orderKey == "descending" && sortKey != "title" || orderKey == "ascending" && sortKey == "title") sorted.reversed() else sorted
         }
-        if (order == "descending" && sort != "title" || order == "ascending" && sort == "title") sorted.reversed() else sorted
     }
 
     LaunchedEffect(pendingDelete) {
@@ -279,7 +295,13 @@ fun ArchiveScreen(
             )
         }
     ) { innerPadding ->
-        if (visibleNotes.isEmpty()) {
+        // Keep the content area empty until the stored sort/order are known so
+        // the first painted list is already in the right order.
+        val loadedSort = sort
+        val loadedOrder = order
+        if (loadedSort == null || loadedOrder == null) {
+            // Loading preferences; the screen's slide transition covers it.
+        } else if (visibleNotes.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -302,7 +324,7 @@ fun ArchiveScreen(
             ) {
                 items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
                     androidx.compose.animation.AnimatedContent(
-                        targetState = archiveHeader(context, note, sort, now),
+                        targetState = archiveHeader(context, note, loadedSort, now),
                         modifier = Modifier.animateItem(),
                         // Fade only: a size transform would make every row
                         // jump when its timestamp changes.
@@ -328,9 +350,25 @@ fun ArchiveScreen(
         AlertDialog(onDismissRequest = { showExport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.export_archive)) }, text = {
             Column {
                 Text(stringResource(R.string.archive_export_description))
-                listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { exportJson = json }) {
-                        RadioButton(selected = exportJson == json, onClick = { exportJson = json }); Text(stringResource(label))
+                // Same radio pattern as Settings: the row owns the selection
+                // so TalkBack sees one focus stop with a checked state, not
+                // a clickable row plus a second radio button.
+                Column(Modifier.selectableGroup()) {
+                    listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = exportJson == json,
+                                    role = Role.RadioButton,
+                                    onClick = { exportJson = json },
+                                ),
+                        ) {
+                            RadioButton(selected = exportJson == json, onClick = null)
+                            Text(stringResource(label), modifier = Modifier.padding(start = 8.dp))
+                        }
                     }
                 }
             }
@@ -349,13 +387,25 @@ fun ArchiveScreen(
     if (showSort) {
         AlertDialog(onDismissRequest = { showSort = false }, icon = { Icon(painterResource(R.drawable.ic_symbol_sort), null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_sort_title)) }, text = {
             Column {
-                listOf("changed" to R.string.archive_sort_changed, "archived" to R.string.archive_sort_archived, "title" to R.string.archive_sort_name).forEach { (key, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { scope.launch { preferences.setArchiveSort(key) } }) {
-                        RadioButton(selected = sort == key, onClick = { scope.launch { preferences.setArchiveSort(key) } })
-                        Text(stringResource(label))
+                Column(Modifier.selectableGroup()) {
+                    listOf("changed" to R.string.archive_sort_changed, "archived" to R.string.archive_sort_archived, "title" to R.string.archive_sort_name).forEach { (key, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = sort == key,
+                                    role = Role.RadioButton,
+                                    onClick = { scope.launch { preferences.setArchiveSort(key) } },
+                                ),
+                        ) {
+                            RadioButton(selected = sort == key, onClick = null)
+                            Text(stringResource(label), modifier = Modifier.padding(start = 8.dp))
+                        }
                     }
                 }
-                Text(stringResource(R.string.archive_order))
+                Text(stringResource(R.string.archive_order), modifier = Modifier.padding(top = 12.dp))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     listOf("descending", "ascending").forEachIndexed { index, key ->
                         val label = if (sort == "title") { if (index == 0) R.string.archive_order_az else R.string.archive_order_za } else { if (index == 0) R.string.archive_order_newest else R.string.archive_order_oldest }
@@ -476,7 +526,16 @@ private fun ArchivedNoteItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = date, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 8.dp))
+            Text(
+                text = date,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                // Each note starts with its timestamp: heading navigation
+                // jumps between archived notes instead of through the body.
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .semantics { heading() },
+            )
             Text(text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) }, style = MaterialTheme.typography.bodyLarge)
             Row(
                 modifier = Modifier
