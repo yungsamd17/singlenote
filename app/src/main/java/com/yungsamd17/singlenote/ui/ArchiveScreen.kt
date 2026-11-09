@@ -2,7 +2,6 @@ package com.yungsamd17.singlenote.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -72,6 +74,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -328,9 +333,25 @@ fun ArchiveScreen(
         AlertDialog(onDismissRequest = { showExport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.export_archive)) }, text = {
             Column {
                 Text(stringResource(R.string.archive_export_description))
-                listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { exportJson = json }) {
-                        RadioButton(selected = exportJson == json, onClick = { exportJson = json }); Text(stringResource(label))
+                // Same radio pattern as Settings: the row owns the selection
+                // so TalkBack sees one focus stop with a checked state, not
+                // a clickable row plus a second radio button.
+                Column(Modifier.selectableGroup()) {
+                    listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = exportJson == json,
+                                    role = Role.RadioButton,
+                                    onClick = { exportJson = json },
+                                ),
+                        ) {
+                            RadioButton(selected = exportJson == json, onClick = null)
+                            Text(stringResource(label), modifier = Modifier.padding(start = 8.dp))
+                        }
                     }
                 }
             }
@@ -349,13 +370,25 @@ fun ArchiveScreen(
     if (showSort) {
         AlertDialog(onDismissRequest = { showSort = false }, icon = { Icon(painterResource(R.drawable.ic_symbol_sort), null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_sort_title)) }, text = {
             Column {
-                listOf("changed" to R.string.archive_sort_changed, "archived" to R.string.archive_sort_archived, "title" to R.string.archive_sort_name).forEach { (key, label) ->
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { scope.launch { preferences.setArchiveSort(key) } }) {
-                        RadioButton(selected = sort == key, onClick = { scope.launch { preferences.setArchiveSort(key) } })
-                        Text(stringResource(label))
+                Column(Modifier.selectableGroup()) {
+                    listOf("changed" to R.string.archive_sort_changed, "archived" to R.string.archive_sort_archived, "title" to R.string.archive_sort_name).forEach { (key, label) ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = sort == key,
+                                    role = Role.RadioButton,
+                                    onClick = { scope.launch { preferences.setArchiveSort(key) } },
+                                ),
+                        ) {
+                            RadioButton(selected = sort == key, onClick = null)
+                            Text(stringResource(label), modifier = Modifier.padding(start = 8.dp))
+                        }
                     }
                 }
-                Text(stringResource(R.string.archive_order))
+                Text(stringResource(R.string.archive_order), modifier = Modifier.padding(top = 12.dp))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     listOf("descending", "ascending").forEachIndexed { index, key ->
                         val label = if (sort == "title") { if (index == 0) R.string.archive_order_az else R.string.archive_order_za } else { if (index == 0) R.string.archive_order_newest else R.string.archive_order_oldest }
@@ -476,7 +509,16 @@ private fun ArchivedNoteItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = date, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(bottom = 8.dp))
+            Text(
+                text = date,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                // Each note starts with its timestamp: heading navigation
+                // jumps between archived notes instead of through the body.
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .semantics { heading() },
+            )
             Text(text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) }, style = MaterialTheme.typography.bodyLarge)
             Row(
                 modifier = Modifier

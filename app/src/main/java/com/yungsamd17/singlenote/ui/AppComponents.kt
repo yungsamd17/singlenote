@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /** Matches the rounded ends of the editor's 56 dp action buttons. */
@@ -27,7 +30,11 @@ internal fun AppSnackbar(data: SnackbarData) {
     val colors = MaterialTheme.colorScheme
     val actionLabel = data.visuals.actionLabel
     androidx.compose.material3.Surface(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        // Snackbars are transient: without a polite live region TalkBack
+        // never reads the Undo/feedback message that just appeared.
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .semantics { liveRegion = LiveRegionMode.Polite },
         shape = AppCardShape,
         color = colors.surfaceContainerHigh,
         contentColor = colors.onSurface,

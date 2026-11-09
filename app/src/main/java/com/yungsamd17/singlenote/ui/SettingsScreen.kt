@@ -62,6 +62,8 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -104,7 +106,11 @@ fun SettingsSectionHeader(text: String) {
         text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 12.dp, top = 24.dp, bottom = 8.dp),
+        // Section labels are what TalkBack users navigate by, so expose
+        // them as headings rather than plain text nodes.
+        modifier = Modifier
+            .padding(start = 12.dp, top = 24.dp, bottom = 8.dp)
+            .semantics { heading() },
     )
 }
 

@@ -12,6 +12,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FormatPaint
@@ -165,10 +166,11 @@ private fun WidgetChoice(
             onDismissRequest = { open = false },
             title = { Text(title) },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
+                Column(Modifier.verticalScroll(rememberScrollState()).selectableGroup()) {
                     options.forEach { (key, label) ->
                         Row(
                             Modifier.fillMaxWidth()
+                                .heightIn(min = 48.dp)
                                 .selectable(
                                     selected = selected == key,
                                     role = Role.RadioButton,
@@ -176,7 +178,8 @@ private fun WidgetChoice(
                                         onSelect(key)
                                         open = false
                                     },
-                                ),
+                                )
+                                .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             RadioButton(selected = selected == key, onClick = null)
