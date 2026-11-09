@@ -2,9 +2,6 @@ package com.yungsamd17.singlenote.ui
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TopAppBarState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -13,33 +10,37 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
-/** Compare against the expanded viewport so collapsing the bar cannot disable its own expansion. */
+/**
+ * True when the page content is taller than the space below the toolbar.
+ *
+ * The toolbar is pinned, so the viewport never changes while scrolling:
+ * measuring it alone keeps the answer stable and stops the scroll state
+ * from flip-flopping mid-gesture.
+ */
 internal fun settingsContentOverflows(
     contentHeight: Int,
     viewportHeight: Int,
-    barOffset: Float,
-): Boolean = contentHeight > 0 && viewportHeight > 0 && contentHeight > viewportHeight + barOffset
+): Boolean = contentHeight > 0 && viewportHeight > 0 && contentHeight > viewportHeight
 
-@OptIn(ExperimentalMaterial3Api::class)
-internal class SettingsScrollState(val content: ScrollState, val appBar: TopAppBarState) {
+/** Scroll bookkeeping for the settings and about pages. */
+internal class SettingsScrollState(val content: ScrollState) {
     var contentHeight by mutableIntStateOf(0)
     var viewportHeight by mutableIntStateOf(0)
     val measured by derivedStateOf { contentHeight > 0 && viewportHeight > 0 }
     val overflows by derivedStateOf {
-        settingsContentOverflows(contentHeight, viewportHeight, appBar.heightOffset)
+        settingsContentOverflows(contentHeight, viewportHeight)
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun rememberSettingsScrollState(): SettingsScrollState {
     val content = rememberScrollState()
-    val appBar = rememberTopAppBarState()
-    val state = remember(content, appBar) { SettingsScrollState(content, appBar) }
+    val state = remember(content) { SettingsScrollState(content) }
     LaunchedEffect(state.measured, state.overflows) {
+        // The page only stops overflowing when the content or the viewport
+        // changes (rotation, font scale, another language). Park the offset
+        // at the top then, instead of leaving the content half scrolled.
         if (state.measured && !state.overflows) {
-            appBar.heightOffset = 0f
-            appBar.contentOffset = 0f
             content.scrollTo(0)
         }
     }
