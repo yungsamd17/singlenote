@@ -75,6 +75,8 @@ Launcher caching and monochrome themed icons remain under launcher control.
 
 - `widget/`: Glance widget, per-widget configuration in `WidgetStyleStore`,
   scrollable note content, and update receiver. A launcher controls outer size.
+  The store keeps the settings of every widget and the settings changed last,
+  so a widget that is added again starts with them.
 - `tile/`: quick-settings service displays a note preview and launches the editor for a new note, archiving the active note first.
 - `notify/`: pinned-note notification, content visibility, actions and boot/update
   restoration. Turning off notifications also clears the pinned preference.

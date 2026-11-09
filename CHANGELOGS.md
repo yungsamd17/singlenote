@@ -8,6 +8,10 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+### Fixed
+
+- Widget settings are remembered: removing a widget and adding it again starts with the same theme, accent, sizes and tap action instead of the defaults.
+
 ## [0.5.1] - 2026-11-09
 
 ### Fixed

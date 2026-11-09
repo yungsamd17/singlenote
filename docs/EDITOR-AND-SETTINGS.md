@@ -69,6 +69,8 @@ uses the same styling and keeps its Download action.
 
 Widget appearance controls share the segmented card style. Each widget has its
 own saved theme/accent, note/title sizes, title visibility, opacity and tap action.
+The settings of the last widget are remembered as well, so removing a widget and
+adding it again starts with the same settings instead of the defaults.
 
 Long widget notes scroll inside the card with no visible scroll indicator. Tap
 anywhere on the card, including blank space, to run its selected action. The
