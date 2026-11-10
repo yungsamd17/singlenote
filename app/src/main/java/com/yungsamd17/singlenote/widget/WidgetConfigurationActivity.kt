@@ -2,7 +2,6 @@ package com.yungsamd17.singlenote.widget
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -46,82 +45,7 @@ import com.yungsamd17.singlenote.ui.ToggleRow
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.ui.toMonochrome
 import kotlin.math.roundToInt
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-
-internal data class WidgetOptions(
-    val theme: String = "system",
-    val accent: String = "app",
-    val size: String = "medium",
-    val action: String = "open",
-    val titleSize: Int = 12,
-    val showTitle: Boolean = true,
-    val opacity: Int = 100,
-)
-
-internal object WidgetStyleStore {
-    private const val PREFS = "widget_styles"
-
-    private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-
-    fun exists(context: Context, id: Int): Boolean = prefs(context).contains(id.toString())
-
-    fun get(context: Context, id: Int): WidgetOptions {
-        val prefs = prefs(context)
-        val key = id.toString()
-        return WidgetOptions(
-            theme = prefs.getString(key, "system") ?: "system",
-            accent = widgetAccentSetting(prefs.getString("$key.accent", "app")),
-            size = prefs.getString("$key.size", "medium") ?: "medium",
-            action = prefs.getString("$key.action", "open") ?: "open",
-            titleSize = prefs.getInt("$key.titleSize", 12).coerceIn(8, 24),
-            showTitle = prefs.getBoolean("$key.showTitle", true),
-            opacity = prefs.getInt("$key.opacity", 100).coerceIn(0, 100),
-        )
-    }
-
-    fun set(context: Context, id: Int, options: WidgetOptions) {
-        val key = id.toString()
-        prefs(context)
-            .edit()
-            .putString(key, options.theme)
-            .putString("$key.accent", options.accent)
-            .putString("$key.size", options.size)
-            .putString("$key.action", options.action)
-            .putInt("$key.titleSize", options.titleSize)
-            .putBoolean("$key.showTitle", options.showTitle)
-            .putInt("$key.opacity", options.opacity)
-            .apply()
-    }
-
-    fun remove(context: Context, id: Int) {
-        val key = id.toString()
-        prefs(context)
-            .edit()
-            .remove(key)
-            .remove("$key.accent")
-            .remove("$key.size")
-            .remove("$key.action")
-            .remove("$key.titleSize")
-            .remove("$key.showTitle")
-            .remove("$key.opacity")
-            .apply()
-    }
-
-    fun observe(context: Context, id: Int) = callbackFlow {
-        val prefs = prefs(context)
-        val key = id.toString()
-        val listener =
-            android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, changed ->
-                if (changed == key || changed?.startsWith("$key.") == true)
-                    trySend(get(context, id))
-            }
-        prefs.registerOnSharedPreferenceChangeListener(listener)
-        trySend(get(context, id))
-        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
-}
 
 @Composable
 private fun WidgetSettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
@@ -306,6 +230,12 @@ class WidgetConfigurationActivity : ComponentActivity() {
                 )
             }
             var options by remember { mutableStateOf(WidgetStyleStore.get(this, widgetId)) }
+            // The settings are remembered while they change, so a widget that
+            // is added later starts with them instead of the defaults. The
+            // settings of this widget itself are stored when it is confirmed.
+            LaunchedEffect(options) {
+                WidgetStyleStore.remember(this@WidgetConfigurationActivity, options)
+            }
             val previewText = stringResource(R.string.widget_preview_note)
             val brand = stringResource(R.string.app_name)
             val renderer = remember { GlanceRemoteViews() }

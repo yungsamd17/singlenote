@@ -124,11 +124,18 @@ object Diagnostics {
             }.getOrElse { intArrayOf() }
         appendLine("provider: ${SinglenoteWidgetReceiver::class.java.name}")
         appendLine("widgets: ${ids.size}")
+        val remembered = WidgetStyleStore.remembered(context)
         ids.sorted().forEach { id ->
             val style = WidgetStyleStore.get(context, id)
             val stored = WidgetStyleStore.exists(context, id)
+            val source =
+                when {
+                    stored -> "set"
+                    remembered != null -> "remembered"
+                    else -> "default"
+                }
             appendLine(
-                "  id $id (styles ${if (stored) "set" else "default"}): " +
+                "  id $id (styles $source): " +
                     "theme=${style.theme} accent=${style.accent} size=${style.size} " +
                     "action=${style.action} title=${style.titleSize}sp " +
                     "showTitle=${style.showTitle} opacity=${style.opacity}"
