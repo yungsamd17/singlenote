@@ -7,13 +7,15 @@ lives in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
 
 ## Do next — 1.0 blockers
 
-1. [ ] **Room schema + migration coverage** — `exportSchema = false`
-   (`data/NotesDatabase.kt:28`) and no `app/schemas/`. Generate the baseline JSON
-   from a clean build, commit it, flip the flag, and add `MigrationTestHelper`
-   tests for 1→2→3 plus a real DAO test for the unique `activeSlot` index.
+1. [x] **Room schema + migration coverage** — `exportSchema = true`
+   (`data/NotesDatabase.kt:31`) with the `app/schemas/` v3 baseline committed.
+   `MigrationTest` builds the v1/v2 schemas by hand, runs the production
+   migrations through a real `SupportSQLiteOpenHelper.onUpgrade`, and diffs the
+   result against a fresh Room v3 database; `NoteDaoTest` runs the DAO against
+   SQLite, including the unique `activeSlot` guard. 120 JVM tests pass locally.
 2. [ ] **Test gate** — add coverage tooling (JaCoCo/Kover), `PinNotification`
-   branches, archive import/export tests, real DAO tests, and one instrumented
-   archive flow. The plan's ≥70% target must be measured, not assumed.
+   branches, archive import/export tests, and one instrumented archive flow. The
+   plan's ≥70% target must be measured, not assumed.
 3. [ ] **Store assets** — phone screenshots (≥2, 1080×1920), 1024×500 feature
    graphic, Play short (≤80 chars) + full description, F-Droid `fastlane/`
    metadata. Upload to the stores, then link; do not commit.
@@ -36,8 +38,10 @@ reconciled with v0.5.1 on 2026-11-11.
   `ArchiveScreen.kt:163-183,602-611`. Move it to `util/ArchiveFile.kt` and add
   round-trip, malformed-file, version-mismatch and duplicate-import tests.
   Imports currently append duplicates on every run.
-- [ ] **Real DAO tests** — `NoteRepositoryTest` uses a fake DAO; the SQL in
-  `NoteDao` (archive/restore/swap/replace/undo) never runs against SQLite in CI.
+- [x] **Real DAO tests** — `NoteDaoTest` runs `NoteDao` against a real SQLite
+  database (Robolectric): the unique `activeSlot` guard, archive/restore/swap/
+  replace/undo transactions and the import path. `MigrationTest` covers
+  `MIGRATION_1_2` / `MIGRATION_2_3`.
 - [ ] **Instrumented archive flow** — no `app/src/androidTest/` despite the
   configured runner (`app/build.gradle.kts:27`). One end-to-end archive →
   restore → undo test closes the largest untested user path.
@@ -103,7 +107,8 @@ trade-off:
 - **Crashes/data loss** — async theme gate (no UI-thread `runBlocking`);
   scrollable editor; restore-conflict dialog split and wrapping; `@Transaction` +
   write `Mutex` + unique `activeSlot` index with duplicate collapse
-  (`MIGRATION_1_2`).
+  (`MIGRATION_1_2`); exported Room schema plus `MigrationTest`/`NoteDaoTest`
+  covering both migrations and the DAO against real SQLite.
 - **Build** — target/compile SDK 36 (the current Play requirement), with the
   portrait lock documented as phone-only; toolchain checks stay green.
 - **Release pipeline** — `lintRelease` in both workflows; debug APK only as a
