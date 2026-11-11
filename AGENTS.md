@@ -60,6 +60,7 @@ Key patterns:
 - Note edits debounce-save (500ms) and flush on ON_STOP; repository broadcasts `ACTION_NOTE_UPDATED` so widget/tile/notification refresh.
 - Room schema export is on (`exportSchema = true`): every version bump writes `app/schemas/<database>/<version>.json` and that file is committed. Ship the migration and a test with it — `MigrationTest` rebuilds the legacy schemas and diffs them against a fresh database, `NoteDaoTest` runs the DAO against real SQLite (Robolectric). Keep the destructive-migration fallback absent.
 - Archive import/export lives in `util/ArchiveFile.kt` (`buildArchiveJson` / `parseArchiveJson`), not in the screen. Keep the `format`/`version` markers, reject foreign or newer files with a clear error, and cover every change with `ArchiveFileTest`.
+- The pinned-notification rules live in `notify/PinnedNotificationContent.kt` (`pinnedNotificationContent`), not in `PinNotification.refresh`. Keep the "nothing to show" cases (no note, blank note, notifications off, not pinned) and the title/visibility rules there, covered by tests.
 
 ## UI Conventions
 
