@@ -3,7 +3,9 @@
 1. Merge reviewed changes through a pull request and wait for the latest main
    build to pass. Set `versionName` and increase `versionCode` in that PR.
    Move the applicable [unreleased changelog](../CHANGELOGS.md) entries to a dated
-   version section and leave a new Unreleased heading for later work.
+   version section and leave a new Unreleased heading for later work. Update the
+   README roadmap line and the `docs/V1.0.0-PLAN.md` header to the version being
+   shipped in the same PR, so version references never rot.
 2. Tag the tested main commit with `vX.Y.Z` and push the tag. The separate
    **Release** workflow validates that the tag matches `versionName` and belongs
    to main, then builds, tests, lints, signs, and publishes both APKs.
