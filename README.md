@@ -39,15 +39,15 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 
 ## Languages
 
-Singlenote supports English and Slovak
-(Slovenčina). Open **Settings → Language** to select either language. The app
+Singlenote supports English, Slovenčina (Slovak), Deutsch, Español, Français,
+Polski, Русский and 简体中文. Open **Settings → Language** to pick one. The app
 initially follows the system language, falling back to English for unsupported
 languages; choosing a language saves an app-specific preference. Language changes
 crossfade in place without restarting the screen.
 
 ## Roadmap
 
-`v0.5.0` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`.
+`v0.5.1` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`. Portrait orientation is locked for 1.0.0; landscape and tablet layouts are post-1.0.0. The archive JSON/text export is the only backup for 1.0.0, and uninstalling the app deletes the active note.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 

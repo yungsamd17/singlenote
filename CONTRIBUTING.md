@@ -57,12 +57,13 @@ Translation work has its own [step-by-step guide](docs/TRANSLATE-APP.md).
 ## Code conventions
 
 Follow existing Kotlin and Material 3 patterns. Put user-visible text in Android
-resources and keep English and Slovak keys/placeholders aligned. Reuse
-`SettingsGroup`, `SettingsSectionHeader`, and tooltip buttons. Preserve settings
-keys, stored values, the locale crossfade, keyboard focus timing and note saving.
-ViewModels depend on `NoteStore`/`ArchiveStore`; update repository implementations
-and every test fake when an interface changes. Keep Android-specific side effects
-outside pure text/layout helpers so important cases can be tested locally.
+resources and keep every supported translation's keys/placeholders aligned with
+English. Reuse `SettingsGroup`, `SettingsSectionHeader`, and tooltip buttons.
+Preserve settings keys, stored values, the locale crossfade, keyboard focus timing
+and note saving. ViewModels depend on `NoteStore`/`ArchiveStore`; update repository
+implementations and every test fake when an interface changes. Keep
+Android-specific side effects outside pure text/layout helpers so important cases
+can be tested locally.
 
 Fonts and other required assets must work offline. Bundle appropriate licenses;
 do not introduce downloadable fonts, analytics, accounts or background network
@@ -75,10 +76,11 @@ Run relevant JVM tests and Android lint; build the debug APK. Describe any check
 blocked by your environment. Never treat an unrun check as passed.
 `scripts/ci-local-build.sh` runs the same checks as CI locally; see
 [BUILDING.md](docs/BUILDING.md). For UI changes,
-inspect English and Slovak, light/dark themes, small screens and large system text.
-For editing, check long notes, typing/pasting at different positions, selection,
-keyboard open/close/reopen, and the Done/Pinned transition. For widget changes,
-check resizing and long-note scrolling in a launcher. Record motion changes.
+inspect English plus every locale you touched, light/dark themes, small screens
+and large system text. For editing, check long notes, typing/pasting at different
+positions, selection, keyboard open/close/reopen, and the Done/Pinned transition.
+For widget changes, check resizing and long-note scrolling in a launcher. Record
+motion changes.
 
 ## Commits and pull requests
 

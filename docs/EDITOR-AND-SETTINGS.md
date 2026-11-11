@@ -20,9 +20,9 @@ changing layout; early focus clearing can change the keyboard layout mid-dismiss
 ## Settings layout and scrolling
 
 The hub links to Appearance, Typography, Language, Notifications and About. Each
-page uses a large top bar. A page whose complete content fits below the expanded
-bar does not scroll or collapse when swiped. Overflowing pages scroll and collapse
-the bar; increasing the viewport enough to fit the page restores the expanded bar.
+page uses a large top bar. A page whose complete content fits below the bar does
+not scroll. Overflowing pages scroll under the pinned bar, which never collapses
+or hides; increasing the viewport enough to fit the page leaves the bar unchanged.
 This applies to the hub and all settings sub-screens, including About.
 
 Groups use 2 dp gaps and segmented cards with 28 dp outer corners and 4 dp connecting corners, with surface container cards on a surface background. Main and archived note
@@ -35,7 +35,7 @@ Switch cards toggle across their full row; disabled controls are dimmed and iner
 |---|---|
 | Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, and default, preset-accent, or wallpaper-accent launcher icon on Android 12+ |
 | Typography | Bundled Google Sans Flex or system app font; existing default/mono/serif note style and text sizes |
-| Language | Translation contribution link; System, English and Slovenčina, with selected-row highlight and native names |
+| Language | Translation contribution link; System plus English, Slovenčina, Deutsch, Español, Français, Polski, Русский and 简体中文, with selected-row highlight and native names |
 | Notifications | Pinned notification and lock-screen content; lock-screen switch is disabled when notifications are off |
 | About | Accent brand/version/update card, app description, legal links, project/support links, and Changelog last |
 
@@ -84,8 +84,8 @@ resize the widget in the launcher to display more content at once.
 Check short/long notes, middle/end typing, cursor movement, multiline paste,
 keyboard resize/dismiss/reopen, and manual scrolling. Test settings on a tall
 screen where the page fits and a smaller/large-text viewport where it overflows.
-Resize/reopen after scrolling to catch a partially collapsed bar. Inspect both
-languages and light/dark/AMOLED colors. For locale changes, verify the current
+Resize/reopen after scrolling to confirm the bar stays pinned. Inspect each locale
+you touched and light/dark/AMOLED colors. For locale changes, verify the current
 note survives and the themed snapshot fades cleanly. For widget scrolling and
 launcher icon switching, test on an actual launcher.
 

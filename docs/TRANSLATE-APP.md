@@ -2,15 +2,16 @@
 
 Help make Singlenote available in your language. You can improve an existing
 translation or contribute a new one through a [pull request](https://github.com/yungsamd17/singlenote/pulls).
-English is the source language; Slovak (Slovenčina) is already available. The
-codes below are examples for contributors, not a list of shipped translations.
+English is the source language; German, Spanish, French, Polish, Russian, Slovak
+and Simplified Chinese are already available. The codes below are candidates for
+new contributions, not a list of shipped translations.
 
 ## Find the source files
 
 | File | Purpose |
 |---|---|
 | `app/src/main/res/values/strings.xml` | Complete English source and resource keys |
-| `app/src/main/res/values-sk/strings.xml` | Existing Slovak translation; a working example |
+| `app/src/main/res/values-sk/strings.xml` | Shipped translations (`values-de`, `values-es`, `values-fr`, `values-pl`, `values-ru`, `values-sk`, `values-zh`); `values-sk` is a working example |
 | `app/src/main/res/xml/locales_config.xml` | Languages advertised to Android 13+ per-app settings |
 | `app/src/main/java/com/yungsamd17/singlenote/ui/SettingsScreen.kt` | Single `languageEntries` list used by the selector and hub summary |
 | `app/src/main/java/com/yungsamd17/singlenote/util/AppLanguage.kt` | Shared locale switching and persistence; normally needs no changes |
@@ -48,12 +49,12 @@ explains legacy region qualifiers and `b+` qualifiers.
 ## Create or update the translation
 
 Fork [the repository](https://github.com/yungsamd17/singlenote), create a focused
-branch, then copy the English file. For example, to add German:
+branch, then copy the English file. For example, to add Italian:
 
 ```bash
-git switch -c feat/german-translation
-mkdir -p app/src/main/res/values-de
-cp app/src/main/res/values/strings.xml app/src/main/res/values-de/strings.xml
+git switch -c feat/italian-translation
+mkdir -p app/src/main/res/values-it
+cp app/src/main/res/values/strings.xml app/src/main/res/values-it/strings.xml
 ```
 
 Translate the values, keeping the resource names unchanged. This is a short
@@ -62,9 +63,9 @@ example, not a complete replacement for the source file:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="settings_title">Einstellungen</string>
-    <string name="settings_theme">Design</string>
-    <string name="update_available">Neue Version %1$s verfügbar</string>
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_theme">Tema</string>
+    <string name="update_available">Nuova versione %1$s disponibile</string>
     <string name="about_version_line">v%1$s • %2$d</string>
 </resources>
 ```
@@ -97,24 +98,24 @@ keys, but submitted translations should be complete.
 ## Register a new language
 
 A new resource folder alone does not add an entry to Singlenote's language list.
-For German, add name resources to the English file and every translated file,
-including the new German file:
+For Italian, add name resources to the English file and every translated file,
+including the new Italian file:
 
 ```xml
-<string name="language_german_english">German</string>
-<string name="language_german">Deutsch</string>
+<string name="language_italian_english">Italian</string>
+<string name="language_italian">Italiano</string>
 ```
 
 Add one entry to `languageEntries` in `SettingsScreen.kt`:
 
 ```kotlin
-LanguageEntry("de", R.string.language_german_english, R.string.language_german),
+LanguageEntry("it", R.string.language_italian_english, R.string.language_italian),
 ```
 
 Then add the locale to `app/src/main/res/xml/locales_config.xml`:
 
 ```xml
-<locale android:name="de" />
+<locale android:name="it" />
 ```
 
 Use the same BCP 47 tag in both places. `System` is already a special entry with

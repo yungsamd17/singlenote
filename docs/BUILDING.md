@@ -106,14 +106,14 @@ key consistent; uninstalling a preview deletes its own notes and settings.
 
 Check the editor with short and long notes, cursor movement, multiline paste,
 keyboard resizing and quick keyboard reopen. Check archive restore/delete/undo, rapid consecutive deletions, JSON import/export and sorting,
-the settings hub and every sub-screen, both languages, large system text,
+the settings hub and every sub-screen, the locales you touched, large system text,
 light/dark/AMOLED themes, dynamic colors on Android 12+, notification permission,
 lock-screen privacy, tile behavior, and widget resizing/scrolling. Add a widget
 from the preview app when verifying preview widget behavior.
 
 A settings page that fits beneath the expanded top bar should stay still when
-swiped. On a smaller viewport or with larger text, overflowing pages should scroll
-and collapse the bar. See [UI behavior](EDITOR-AND-SETTINGS.md).
+swiped. On a smaller viewport or with larger text, overflowing pages scroll under
+the pinned bar — the bar never collapses. See [UI behavior](EDITOR-AND-SETTINGS.md).
 
 ## Troubleshooting
 
