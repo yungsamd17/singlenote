@@ -81,6 +81,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.util.buildArchiveJson
+import com.yungsamd17.singlenote.util.parseArchiveJson
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
@@ -165,15 +167,7 @@ fun ArchiveScreen(
             val imported = withContext(Dispatchers.IO) {
                 try {
                     val raw = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("empty")
-                    val root = org.json.JSONObject(raw)
-                    require(root.getString("format") == "singlenote-archive" && root.getInt("version") == 1)
-                    val array = root.getJSONArray("notes")
-                    val notes = (0 until array.length()).map { index ->
-                        val obj = array.getJSONObject(index)
-                        Note(content = obj.getString("content"), createdAt = obj.getLong("createdAt"), updatedAt = obj.getLong("updatedAt"),
-                            editedAt = if (obj.isNull("editedAt")) null else obj.getLong("editedAt"),
-                            archivedAt = if (obj.isNull("archivedAt")) null else obj.getLong("archivedAt"), state = Note.STATE_ARCHIVED)
-                    }
+                    val notes = parseArchiveJson(raw)
                     viewModel.importArchived(notes)
                     true
                 } catch (_: Exception) { false }
@@ -374,7 +368,7 @@ fun ArchiveScreen(
             }
         }, confirmButton = { TextButton(onClick = {
             showExport = false
-            viewModel.pendingExport = if (exportJson) archiveJson(visibleNotes) else visibleNotes.joinToString("\n\n---\n\n") { it.content }
+            viewModel.pendingExport = if (exportJson) buildArchiveJson(visibleNotes) else visibleNotes.joinToString("\n\n---\n\n") { it.content }
             exportLauncher.launch(if (exportJson) "singlenote-archive.json" else "singlenote-archive.txt")
         }) { Text(stringResource(R.string.export_archive)) } }, dismissButton = { TextButton(onClick = { showExport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
     }
@@ -597,15 +591,4 @@ private fun archiveHeader(context: android.content.Context, note: Note, sort: St
         }
     }
     return context.getString(if (edited) R.string.archive_edited_time else R.string.archive_archived_time, time)
-}
-
-private fun archiveJson(notes: List<Note>): String {
-    val items = org.json.JSONArray()
-    notes.forEach { note ->
-        items.put(org.json.JSONObject().put("title", note.content.lineSequence().firstOrNull().orEmpty())
-            .put("content", note.content).put("createdAt", note.createdAt).put("updatedAt", note.updatedAt)
-            .put("editedAt", note.editedAt ?: org.json.JSONObject.NULL)
-            .put("archivedAt", note.archivedAt ?: org.json.JSONObject.NULL))
-    }
-    return org.json.JSONObject().put("format", "singlenote-archive").put("version", 1).put("notes", items).toString(2)
 }

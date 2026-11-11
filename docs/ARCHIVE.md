@@ -57,6 +57,12 @@ accepts a compatible Singlenote JSON archive and adds its notes to the archive
 with new database IDs. It does not replace the current archive. Save a copy of
 any important notes before testing import or delete behavior.
 
+The JSON format lives in `util/ArchiveFile.kt` (`buildArchiveJson` /
+`parseArchiveJson`) and is covered by `ArchiveFileTest`. It carries a `format`
+marker and a `version` number: a file from another app, a malformed file or a
+newer archive version is rejected with the "import failed" message instead of
+importing half the notes. Importing the same file twice adds the notes twice.
+
 These exports include **archived notes only**: they do not include the active
 note, app settings, widgets, or notification preferences. Full app backup/restore
 is planned for after 1.0.0. Export files are readable, unencrypted files; keep them in a

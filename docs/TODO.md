@@ -34,10 +34,13 @@ reconciled with v0.5.1 on 2026-11-11.
   disabled notifications, title-first-line, lock-screen visibility, channel
   migration) have zero coverage. Extract the builder from the side effects so it
   can be tested on the JVM.
-- [ ] **Archive file I/O is untestable** — JSON build/parse lives in
-  `ArchiveScreen.kt:163-183,602-611`. Move it to `util/ArchiveFile.kt` and add
-  round-trip, malformed-file, version-mismatch and duplicate-import tests.
-  Imports currently append duplicates on every run.
+- [x] **Archive file I/O is testable** — the JSON build/parse moved to
+  `util/ArchiveFile.kt` (`buildArchiveJson` / `parseArchiveJson`) with
+  `ArchiveFileTest` covering the round trip, malformed JSON, a foreign format,
+  an unsupported version and notes without content or timestamps.
+- [ ] **Duplicate imports** — importing the same export twice appends the notes
+  a second time. Decide whether an import should skip notes that are already in
+  the archive (same content and creation time) and report how many were added.
 - [x] **Real DAO tests** — `NoteDaoTest` runs `NoteDao` against a real SQLite
   database (Robolectric): the unique `activeSlot` guard, archive/restore/swap/
   replace/undo transactions and the import path. `MigrationTest` covers
