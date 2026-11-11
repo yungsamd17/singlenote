@@ -1,139 +1,129 @@
 # Singlenote TODO
 
-Review backlog from an outside-scrutiny pass (2026-09-18): four reviewers
-(platform, security/privacy, UX/accessibility, repo hygiene) tore the app
-down. Everything below was verified against the source. Check items off as
-they land; the `v1.0.0` checklist stays in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
+Backlog from the 2026-09-18 outside-scrutiny pass, re-verified against source on
+2026-11-11 (`v0.5.1`, `versionCode 22`). Every open item below was confirmed in
+code; the closed list at the bottom records what shipped and where. The 1.0 gate
+lives in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
 
-## Critical — privacy credibility
+## Do next — 1.0 blockers
 
-- [x] Soften "fully offline" to "offline-first" everywhere (README, About,
-  store copy). Changelog/update checks call `api.github.com` with a custom
-  user agent (`util/GithubReleases.kt:25-40`, `ui/AboutScreen.kt:92,120`);
-  keep the fine-print disclosure, fix the headline.
-- [x] Backup rules: `allowBackup=true` with no extraction rules
-  (`AndroidManifest.xml:12`) backs up the plaintext Room DB + DataStore to
-  Drive, contradicting "uninstall wipes everything." Set `allowBackup=false`
-  or exclude the DB, then document it.
-- [x] Lockscreen leak: pinned notification is `VISIBILITY_PUBLIC` with full
-  `BigTextStyle` at `IMPORTANCE_DEFAULT` (`notify/PinNotification.kt:31-35,74-80`).
-  Add a visibility toggle (or `PRIVATE` minimum) and drop the channel to `LOW`.
-- [x] Download action: `GithubReleases.kt:72` matches an asset literally named
-  `app-release.apk`, but CI publishes `singlenote-vX.Y.Z-release.apk` — the
-  in-app Download never downloads. Match by suffix or link the release page,
-  and never pipe unverified APKs (pin SHA-256 or go Play-only).
-- [x] `THIRD_PARTY_LICENSES` omits Room/Compose/Glance/DataStore/Navigation/
-  Coroutines (all Apache-2.0 with attribution requirements) while claiming
-  full coverage. List every shipped dependency.
+1. [ ] **Target Android 16 (API 36)** — `compileSdk`/`targetSdk` are 35
+   (`app/build.gradle.kts:13,23-24`). Play has required 36 for new apps and
+   updates since 2026-08-31, so no 1.0.0 submission can pass until this lands.
+   Re-test insets, the now-default predictive back and dynamic color after the
+   bump.
+2. [ ] **Room schema + migration coverage** — `exportSchema = false`
+   (`data/NotesDatabase.kt:28`) and no `app/schemas/`. Generate the baseline JSON
+   from a clean build, commit it, flip the flag, and add `MigrationTestHelper`
+   tests for 1→2→3 plus a real DAO test for the unique `activeSlot` index.
+3. [ ] **Test gate** — add coverage tooling (JaCoCo/Kover), `PinNotification`
+   branches, archive import/export tests, real DAO tests, and one instrumented
+   archive flow. The plan's ≥70% target must be measured, not assumed.
+4. [ ] **Store assets** — phone screenshots (≥2, 1080×1920), 1024×500 feature
+   graphic, Play short (≤80 chars) + full description, F-Droid `fastlane/`
+   metadata. Upload to the stores, then link; do not commit.
 
-## Critical — crashes and data loss
+Portrait remains locked for 1.0.0 by decision; landscape/tablet moves to the
+post-1.0.0 section. Full backup/restore is deferred by decision. Docs were
+reconciled with v0.5.1 on 2026-11-11.
 
-- [x] `runBlocking` DataStore read on the UI thread (`MainActivity.kt:194-195`,
-  every cold start and resume). Use the SplashScreen API or an async theme gate.
-- [x] Fixed-height no-scroll editor clips data (`ui/NoteScreen.kt:227-229,689-691`).
-  At large font scales pasted content is unreachable and silently truncated.
-  Cap length if needed, but let the field scroll.
-- [x] Restore-conflict dialog crams Cancel/Swap/Replace into `confirmButton`
-  (`ui/ArchiveScreen.kt:152-172`). Overflows at large font scale with wrong
-  screen-reader order — split into dismiss/confirm/neutral.
-- [x] Non-atomic writes: `saveActive`/`swapWithActive` are read-modify-write
-  with no `@Transaction` (`data/NotesDatabase.kt:78-89,124-132`); concurrent
-  flush + debounce can duplicate the ACTIVE row. Add `@Transaction`, a unique
-  index, and serialize saves with a `Mutex`.
+## Engineering follow-ups
 
-## Release pipeline
+- [ ] **Coverage tooling** — no JaCoCo/Kover task, so the plan's ≥70% goal cannot
+  be measured. Add it, then target `NoteRepository`, `ArchiveViewModel` and
+  `NoteViewModel` first.
+- [ ] **`PinNotification` tests** — notification builder branches (blank note,
+  disabled notifications, title-first-line, lock-screen visibility, channel
+  migration) have zero coverage. Extract the builder from the side effects so it
+  can be tested on the JVM.
+- [ ] **Archive file I/O is untestable** — JSON build/parse lives in
+  `ArchiveScreen.kt:163-183,602-611`. Move it to `util/ArchiveFile.kt` and add
+  round-trip, malformed-file, version-mismatch and duplicate-import tests.
+  Imports currently append duplicates on every run.
+- [ ] **Real DAO tests** — `NoteRepositoryTest` uses a fake DAO; the SQL in
+  `NoteDao` (archive/restore/swap/replace/undo) never runs against SQLite in CI.
+- [ ] **Instrumented archive flow** — no `app/src/androidTest/` despite the
+  configured runner (`app/build.gradle.kts:27`). One end-to-end archive →
+  restore → undo test closes the largest untested user path.
+- [ ] **Predictive back** — under targetSdk 36 predictive back is on by default;
+  verify the NavHost back stack, archive pair transition and dialogs on Android
+  16 after the bump. Opt out only if the gesture behaviour breaks.
+- [ ] **Dependency freeze** — `composeBom 2024.12.01`, Glance 1.1.1, DataStore
+  1.1.1, WorkManager 2.7.1, Navigation 2.8.5, lifecycle 2.8.7, activity-compose
+  1.9.3, core-ktx 1.15.0. Re-open after compileSdk 36; keep Dependabot
+  security-only until then.
+- [ ] **16 KB page sizes** — confirm the release APK aligns 16 KB ELF segments
+  (`zipalign -c -P 16` or the Play pre-launch report). Pure Kotlin should pass,
+  but Play requires it for apps targeting 35+.
+- [ ] **Performance guardrail** — no StrictMode run and no startup measurement.
+  Add a debug-only StrictMode harness and record a cold-start baseline.
+- [ ] **Widget regression watch** — re-test on MIUI/One UI after any Glance bump;
+  the in-process render is deliberately compensating for their worker behaviour.
 
-- [x] CI lints debug but ships release (`build.yml:96` runs `lintDebug` while
-  release has minify+shrink). Add `lintRelease` — the plan already demands it.
-- [x] Debug APK ships next to release with no checksums and nothing stopping
-  users installing it. Quarantine debug to workflow artifacts or publish
-  SHA-256 alongside.
-- [x] Fork PRs can't build: the keystore step `base64 -d`s empty secrets on
-  forks, then release signing fails (`build.yml:81-92`). Guard on secret
-  presence with a release-only signing fallback.
-- [x] Supply-chain basics: `contents: write` is over-broad, actions float on
-  moving tags, no wrapper validation or artifact attestation for sideloaded APKs.
+## Feature follow-ups
 
-## Data and architecture
+- [ ] **Archive search** — debounced, case-insensitive filter over archived note
+  text. `ArchiveScreen.kt` has sort state but no query state.
 
-- [x] One app-scoped DataStore singleton instead of N instances on one file
-  (`NotesDatabase.kt:65`, `MainActivity.kt:69-80`, `PinNotification.kt:46`).
-- [x] Flush ordering: `flushSave()` is fire-and-forget while shade-Archive
-  assumes it landed (`ui/NoteScreen.kt:163-186`, `NoteViewModel.kt:93-96`).
-  Make it joinable or covered by the save `Mutex`.
-- [x] Widget update storm: every debounced keystroke-save broadcasts
-  `NOTE_UPDATED` → full Glance rebuild. Throttle/coalesce to 2–5 s.
-- [x] `NoteChangedReceiver` does Room/Glance work on `Dispatchers.Default`
-  with an unstructured scope and a silent catch-all
-  (`widget/NoteChangedReceiver.kt:21-26`). Use `IO`, `goAsync`, log failures.
-- [x] Tests stop where risk starts: zero coverage for `NoteRepository`,
-  DAO queries, `ArchiveViewModel` swap/replace, `PinNotification` branches,
-  `GithubReleases.parse`. No `androidTest/` dir despite the declared runner.
-  ( Landed: repository, DAO-adjacent, swap/replace, parse. Still open:
-  `PinNotification` branches and an instrumented archive-flow test. )
-- [x] Dependencies ~9 months stale (Kotlin 2.1.0, AGP 8.7.3, BOM 2024.12.01),
-  no Dependabot/Renovate. The 2.1→2.2 + AGP 8→9 jump breaks KSP all at once.
-  ( Landed: Dependabot config, then the coordinated jump itself — Kotlin 2.3,
-  AGP 9, KSP 2.3, Room 2.8, coroutines 1.11, Gradle 9. Held: `composeBom`
-  (needs SDK 37) and KSP-less Kotlin 2.4. Version updates frozen since,
-  security-only. )
+## Post-1.0.0 (decided 2026-11-11)
 
-## Accessibility and UX
+- [ ] **Full backup/restore** — the active note, preferences, widget styles and
+  accent are not exportable; `allowBackup="false"` makes uninstall irreversible.
+  The archive JSON export stays the only backup in 1.0.0. Revisit with dedupe and
+  file-size limits.
+- [ ] **Landscape / tablets / foldables** — remove the portrait lock
+  (`AndroidManifest.xml:34`) once the layouts pass the QA matrix; multi-window is
+  already enabled.
+- [ ] **Swipe actions** — add archive swipe with haptics + Undo; the current
+  buttons stay until then.
 
-- [x] `selectable` abused as `clickable` on Settings/About rows
-  (`SettingsScreen.kt:260,291`, `AboutScreen.kt:459`) — TalkBack announces
-  fake selection states. Use `clickable(role=Button)` / `toggleable`.
-- [x] Empty-note archive/delete FABs are alpha-only, still focusable and
-  tappable (`ui/NoteScreen.kt:540-575`). Set `enabled=hasContent`.
-- [x] Radio rows miss 48dp and `RadioButton(onClick=null)` isn't focusable
-  (`SettingsScreen.kt:340-345`). 48dp rows, `Role.RadioButton`, `selectableGroup`.
-- [x] Editor has no accessible label: the hint overlay is invisible to TalkBack
-  (`ui/NoteScreen.kt:693-825`). Add `semantics { hint = … }`.
-- [x] No Undo anywhere — archive/delete/clear are irreversible with
-  informational-only snackbars.
-- [x] Archive snackbar ignores insets (`ArchiveScreen.kt:107`) and sits under
-  the gesture bar; match the note screen's lifted host.
-- [x] Changelog error state is a dead end (`ui/AboutScreen.kt:281-285`) — add
-  a Retry button instead of dismiss-and-reopen.
-- [x] Blank first frame while prefs load (`NoteScreen.kt:432-435`,
-  `SettingsScreen.kt:98-101`) — spinner with a "Loading" label for TalkBack.
-- [x] Widget: no preview/description, 2x1 cell rendering 6 lines that always
-  ellipsize, hardcoded English fallback (`SinglenoteWidget.kt:66`) instead of
-  `strings.xml`.
-- [x] Tile subtitle has no TalkBack distinction between label and subtitle
-  (`tile/NoteTileService.kt:37`).
+## Decisions to keep
 
-## Hardening nits
+These were flagged in the original review and resolved by an explicit product
+decision, not by deleting the code. Don't “fix” them again without revisiting the
+trade-off:
 
-- [x] No tapjacking defense (`filterTouchesWhenObscured`) on one-tap
-  Archive/Delete/Pin.
-- [x] Plaintext SQLite + prefs, no encryption story — fine if disclosed next
-  to the "privacy first" claim, not fine silent.
-- [x] Copy isn't `EXTRA_IS_SENSITIVE` (API 33+) and lingers in keyboard history
-  (`ui/NoteScreen.kt:250-251`); Share is one-tap `text/plain` to any target.
-- [x] `singleTask` with no `onNewIntent`; `BOOT_COMPLETED` without
-  `MY_PACKAGE_REPLACED` (pin vanishes on every update); no explicit
-  `usesCleartextTraffic=false` while `http://` links render.
-- [ ] Complete rotation and large-screen support. Multi-window remains enabled,
-  but the portrait lock is currently retained until landscape layout is fixed.
-  The editor now uses edge-to-edge `adjustResize` with `imePadding` (#118).
-  Keyboard dismissal keeps editor focus until the keyboard settles closed,
-  fixing the transient number row and Done-button shift. Rotation and wider
-  layouts still need verification before this item can be completed.
-- [x] Deprecated `URL()` + raw `HttpURLConnection` (`GithubReleases.kt:27`);
-  `openUrl()` with no `ActivityNotFoundException` guard (`AboutScreen.kt:491-493`);
-  `@Database(exportSchema=false)` ships the next migration blind.
-  ( Landed: fetch modernized, link guard added. `exportSchema` stays `false`
-  until the baseline JSON is generated by a real build — debug/release KSP
-  race on the shared schema dir otherwise; the `room.schemaLocation` arg is
-  already in place. )
-- [x] Issue template asks for "browser" on a native app, no version/device/
-  logcat fields; PR template placeholder fits bots, not humans.
-- [x] Docs-only CI skip forgets extensionless `THIRD_PARTY_LICENSES`
-  (`build.yml:34-35`).
+- **Clipboard stays plain text** — `EXTRA_IS_SENSITIVE` makes Gboard mask the
+  note as a password in suggestions/history (`ui/NoteScreen.kt:350-362`); the
+  privacy policy discloses the clipboard caveat.
+- **Pinned channel stays `IMPORTANCE_DEFAULT`** — the old `LOW` channel never
+  surfaced on the lock screen and was replaced by `pinned_note_v4` with
+  `VISIBILITY_PRIVATE` plus a user toggle
+  (`notify/PinNotification.kt:27-51,107-110`).
+- **`allowBackup="false"` stays** — plaintext DB/prefs must not go to Drive;
+  backup is an explicit user export instead.
+- **Full backup/restore stays out of 1.0.0** — archive export is the only backup
+  for this release; the README and plan say so plainly.
+- **Portrait lock stays for 1.0.0** — a deliberate scope decision, not a design
+  choice; landscape, tablets and foldables are post-1.0.0.
+- **Dependencies stay frozen** except security updates until compileSdk 36.
 
-## Docs drift (recurring)
+## Closed in the 2026-09-18 pass (verified 2026-11-11)
 
-- [x] README + plan version references rot on every release (`v0.3.3` named
-  while `0.3.4` shipped). Fold the bump into the release checklist.
-- [ ] Screenshots / feature graphic / store copy still missing (plan item).
+- **Privacy** — offline-first headline with the GitHub fetch disclosed;
+  `allowBackup=false`; PRIVATE notification + lock-screen toggle; release-asset
+  matching fixed; every shipped dependency listed in `THIRD_PARTY_LICENSES`.
+- **Crashes/data loss** — async theme gate (no UI-thread `runBlocking`);
+  scrollable editor; restore-conflict dialog split and wrapping; `@Transaction` +
+  write `Mutex` + unique `activeSlot` index with duplicate collapse
+  (`MIGRATION_1_2`).
+- **Release pipeline** — `lintRelease` in both workflows; debug APK only as a
+  1-day artifact; fork signing guard; pinned actions, minimal permissions,
+  wrapper validation, APK attestation, SHA-256 logging.
+- **Data/architecture** — one DataStore singleton; `flushSave()` ordered through
+  the save mutex; 1 s broadcast coalescing; `goAsync` + IO + logged failures in
+  `NoteChangedReceiver`; repository/swap/parse tests; Kotlin 2.3 + AGP 9 + Room
+  2.8 upgrade; Dependabot security-only.
+- **Accessibility/UX** — real `clickable`/`toggleable` roles; disabled empty-note
+  FABs; 48 dp radio rows with `Role.RadioButton`; editor hint semantics; Undo for
+  archive/delete/clear; inset-aware archive snackbar; changelog Retry; labelled
+  loading states; widget preview/description + localized fallback; tile TalkBack
+  description.
+- **Hardening** — tapjacking guard; plaintext storage disclosed; `singleTask`
+  `onNewIntent` + `MY_PACKAGE_REPLACED` re-pin; `usesCleartextTraffic=false`;
+  modern URL fetch + `ActivityNotFoundException` guard; issue/PR templates
+  fixed; docs-only CI skip handles extensionless files.
+- **Docs** — README/plan version refs, AGENTS.md conventions, archive docs, and a
+  full reconciliation with v0.5.1 on 2026-11-11 (README, CONTRIBUTING, AGENTS,
+  ARCHITECTURE, BUILDING, ARCHIVE, TRANSLATE-APP, RELEASES,
+  EDITOR-AND-SETTINGS).

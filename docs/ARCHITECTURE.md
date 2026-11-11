@@ -91,7 +91,8 @@ category labels. Shared overflow measurement controls settings scrolling.
 `NoteEditorField` retains local selection/composition state and scrolls the cursor
 into the available viewport while preserving manual scrolling between edits.
 `LinkedText` / `MarkdownText` render links and lightweight markup from resources.
-All user-visible copy belongs in `res/values/strings.xml` with matching Slovak keys.
+All user-visible copy belongs in `res/values/strings.xml` with matching keys and
+placeholders in every shipped translation.
 Google Sans Flex is bundled under SIL OFL 1.1; its license ships in assets.
 
 ## Tests and privacy boundaries
