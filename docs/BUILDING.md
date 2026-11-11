@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Use JDK 17, Android SDK Platform 35, and the repository's Gradle wrapper. Build
+Use JDK 17, Android SDK Platform 36, and the repository's Gradle wrapper. Build
 Tools are selected by the Android Gradle Plugin (the current setup requests
 Build Tools 36). Install missing packages and accept their licenses through
 Android Studio's SDK Manager. Dependency downloads require network access on a

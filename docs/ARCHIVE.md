@@ -19,8 +19,9 @@ are refreshed when the screen resumes; older entries show a date.
 - **Title** sorts the note text alphabetically; its header still uses the normal time.
 
 Date sorts offer newest or oldest first; title offers A to Z or Z to A. Opening
-the archive or changing sort/order returns the list to the top. The app stays in
-portrait for 1.0.0, so rotation does not recreate the archive screen.
+the archive or changing sort/order returns the list to the top. Phones stay in
+portrait for 1.0.0; Android 16 ignores the lock on screens 600 dp and wider, so
+tablet/foldable rotation is not supported yet.
 
 Existing archived notes migrated from the previous database use their old
 `updatedAt` as the best available archive time and have no recorded edit time.

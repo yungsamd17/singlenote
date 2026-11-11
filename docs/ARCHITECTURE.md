@@ -2,7 +2,7 @@
 
 Singlenote is a native Kotlin/Compose Android app with one active note, an archive,
 and three ways to surface the active note outside the editor. It supports Android
-10+ (API 29), compiles/targets API 35, and uses JVM 17. Dependencies are pinned in
+10+ (API 29), compiles/targets API 36, and uses JVM 17. Dependencies are pinned in
 `gradle/libs.versions.toml`; follow the existing stack when changing one area.
 
 ## Entry points and navigation

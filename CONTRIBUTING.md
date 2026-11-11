@@ -26,7 +26,7 @@ git remote add upstream https://github.com/yungsamd17/singlenote.git
 git switch -c fix/short-description
 ```
 
-Open the root folder in Android Studio. Use JDK 17, the Android SDK for API 35,
+Open the root folder in Android Studio. Use JDK 17, the Android SDK for API 36,
 and the included Gradle wrapper. See [BUILDING.md](docs/BUILDING.md) for complete
 setup, SDK/build-tool troubleshooting, and a separately installable preview.
 
