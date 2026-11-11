@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 android {
     namespace = "com.yungsamd17.singlenote"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yungsamd17.singlenote"
@@ -21,7 +21,7 @@ android {
             manifestPlaceholders["appLabel"] = "@string/app_name"
         }
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 22
         versionName = "0.5.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

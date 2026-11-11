@@ -7,24 +7,20 @@ lives in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
 
 ## Do next — 1.0 blockers
 
-1. [ ] **Target Android 16 (API 36)** — `compileSdk`/`targetSdk` are 35
-   (`app/build.gradle.kts:13,23-24`). Play has required 36 for new apps and
-   updates since 2026-08-31, so no 1.0.0 submission can pass until this lands.
-   Re-test insets, the now-default predictive back and dynamic color after the
-   bump.
-2. [ ] **Room schema + migration coverage** — `exportSchema = false`
+1. [ ] **Room schema + migration coverage** — `exportSchema = false`
    (`data/NotesDatabase.kt:28`) and no `app/schemas/`. Generate the baseline JSON
    from a clean build, commit it, flip the flag, and add `MigrationTestHelper`
    tests for 1→2→3 plus a real DAO test for the unique `activeSlot` index.
-3. [ ] **Test gate** — add coverage tooling (JaCoCo/Kover), `PinNotification`
+2. [ ] **Test gate** — add coverage tooling (JaCoCo/Kover), `PinNotification`
    branches, archive import/export tests, real DAO tests, and one instrumented
    archive flow. The plan's ≥70% target must be measured, not assumed.
-4. [ ] **Store assets** — phone screenshots (≥2, 1080×1920), 1024×500 feature
+3. [ ] **Store assets** — phone screenshots (≥2, 1080×1920), 1024×500 feature
    graphic, Play short (≤80 chars) + full description, F-Droid `fastlane/`
    metadata. Upload to the stores, then link; do not commit.
 
-Portrait remains locked for 1.0.0 by decision; landscape/tablet moves to the
-post-1.0.0 section. Full backup/restore is deferred by decision. Docs were
+Target SDK 36 landed (`compileSdk`/`targetSdk` 36). Portrait remains on phones for
+1.0.0; Android 16 ignores the lock at 600 dp and wider, so tablet/foldable rotation
+is a documented limitation. Full backup/restore is deferred by decision. Docs were
 reconciled with v0.5.1 on 2026-11-11.
 
 ## Engineering follow-ups
@@ -71,9 +67,9 @@ reconciled with v0.5.1 on 2026-11-11.
   accent are not exportable; `allowBackup="false"` makes uninstall irreversible.
   The archive JSON export stays the only backup in 1.0.0. Revisit with dedupe and
   file-size limits.
-- [ ] **Landscape / tablets / foldables** — remove the portrait lock
-  (`AndroidManifest.xml:34`) once the layouts pass the QA matrix; multi-window is
-  already enabled.
+- [ ] **Landscape / tablets / foldables** — full layouts for 600 dp and wider;
+  Android 16 already ignores the portrait lock there. Revisit the lock after the
+  layouts pass the QA matrix.
 - [ ] **Swipe actions** — add archive swipe with haptics + Undo; the current
   buttons stay until then.
 
@@ -95,7 +91,8 @@ trade-off:
 - **Full backup/restore stays out of 1.0.0** — archive export is the only backup
   for this release; the README and plan say so plainly.
 - **Portrait lock stays for 1.0.0** — a deliberate scope decision, not a design
-  choice; landscape, tablets and foldables are post-1.0.0.
+  choice; phones stay portrait, while Android 16 ignores the lock at 600 dp and
+  wider (documented). Full layouts are post-1.0.0.
 - **Dependencies stay frozen** except security updates until compileSdk 36.
 
 ## Closed in the 2026-09-18 pass (verified 2026-11-11)
@@ -107,6 +104,8 @@ trade-off:
   scrollable editor; restore-conflict dialog split and wrapping; `@Transaction` +
   write `Mutex` + unique `activeSlot` index with duplicate collapse
   (`MIGRATION_1_2`).
+- **Build** — target/compile SDK 36 (the current Play requirement), with the
+  portrait lock documented as phone-only; toolchain checks stay green.
 - **Release pipeline** — `lintRelease` in both workflows; debug APK only as a
   1-day artifact; fork signing guard; pinned actions, minimal permissions,
   wrapper validation, APK attestation, SHA-256 logging.

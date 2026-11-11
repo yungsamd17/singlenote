@@ -21,10 +21,12 @@
         android:theme="@style/Theme.Singlenote"
         android:usesCleartextTraffic="false">
 
-        <!-- Temporary portrait lock (was android:screenOrientation="portrait"
-            before rotation support): forces vertical orientation until the
-            landscape layout is fixed. Edge-to-edge adjustResize supplies
-            animated keyboard insets to the editor's imePadding. http:// links still render: LinkedText only
+        <!-- Portrait on phones for 1.0.0. Android 16 (targetSdk 36) ignores
+            orientation and resizability restrictions on screens 600dp and
+            wider, so tablets and unfolded foldables rotate regardless; full
+            landscape/large-screen layouts stay post-1.0.0. Edge-to-edge
+            adjustResize supplies animated keyboard insets to the editor's
+            imePadding. http:// links still render: LinkedText only
             displays them, never fetches. -->
         <activity
             android:configChanges="locale|layoutDirection"

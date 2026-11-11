@@ -9,7 +9,7 @@ home-screen widget, quick-settings tile, and an optional pinned notification.
 Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widget.
 
 - Package: `com.yungsamd17.singlenote`
-- minSdk 29, target/compile SDK 35, JVM 17
+- minSdk 29, target/compile SDK 36, JVM 17
 - Author/maintainer: yungsamd17 (https://github.com/yungsamd17)
 
 ## Build & Verify
