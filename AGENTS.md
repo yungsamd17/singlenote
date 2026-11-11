@@ -58,6 +58,7 @@ Key patterns:
 - Links and light markdown live in those strings as `[label](url)` and render via `LinkedText` / `MarkdownText` (`util/LinkedText.kt`): accent-colored, shown without the `https://` prefix. Bare URLs, emails, `#1234` issue refs, `@mentions` and `**bold**` linkify/style automatically; `#` / `##` / `###` become headings.
 - Settings other than app language persist via `NotePreferences` (DataStore). Expose flows as `StateFlow` with `SharingStarted.WhileSubscribed(5000)` in ViewModels.
 - Note edits debounce-save (500ms) and flush on ON_STOP; repository broadcasts `ACTION_NOTE_UPDATED` so widget/tile/notification refresh.
+- Room schema export is on (`exportSchema = true`): every version bump writes `app/schemas/<database>/<version>.json` and that file is committed. Ship the migration and a test with it — `MigrationTest` rebuilds the legacy schemas and diffs them against a fresh database, `NoteDaoTest` runs the DAO against real SQLite (Robolectric). Keep the destructive-migration fallback absent.
 
 ## UI Conventions
 

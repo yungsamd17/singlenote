@@ -33,6 +33,13 @@ boundaries. Schema version 3 adds archive and edit timestamps; existing archived
 previous `updatedAt` as their archive time and start with no edit time. Update
 schema/migrations and tests together when data changes.
 
+`exportSchema` is on: every version bump writes `app/schemas/<database>/<version>.json`,
+and the generated file is committed. `MigrationTest` rebuilds the pre-export v1/v2
+schemas by hand, runs the production migrations through a real SQLite open helper
+and diffs the result against a freshly created database, so a migration cannot
+silently drift from the entity. `NoteDaoTest` runs the DAO against SQLite, including
+the unique active-slot guard.
+
 `NoteViewModel` updates editor state immediately, debounce-saves after 500 ms,
 and flushes on lifecycle stop. Stored notes remain intact when changing font or
 size. Repository content-change broadcasts are throttled with a trailing update;

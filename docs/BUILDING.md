@@ -29,9 +29,16 @@ numbers live in `app/build.gradle.kts`.
 
 On Windows use `gradlew.bat` for the equivalent tasks. The APK is
 `app/build/outputs/apk/debug/app-debug.apk`. JVM tests cover ViewModels, repository
-mutations, text/release helpers and scrolling calculations. Lint reports are
-under `app/build/reports/`. These checks complement device testing; they do not
+mutations, text/release helpers and scrolling calculations. The Room tests
+(`MigrationTest`, `NoteDaoTest`) run on Robolectric, which needs a native SQLite
+runtime: Linux arm64 hosts require Robolectric 4.18 or newer (the pinned
+`4.18-beta-1` ships the aarch64 library). Lint reports are under
+`app/build/reports/`. These checks complement device testing; they do not
 prove the rendered UI or launcher behavior.
+
+Room writes the exported schema to `app/schemas/` on every build. Commit the
+changed JSON with the entity or migration that produced it — the file is the
+baseline the migration tests and the next schema bump compare against.
 
 A normal debug build uses `com.yungsamd17.singlenote`, the same application ID as
 the release. Its debug signature may differ from an installed release signature.

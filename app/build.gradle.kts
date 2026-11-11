@@ -71,6 +71,12 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests {
+            // Room and DataStore tests run on the JVM through Robolectric.
+            isIncludeAndroidResources = true
+        }
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -112,6 +118,11 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    // Robolectric runs the real Room/SQLite stack on the JVM, so migrations
+    // and DAO constraints are covered without a connected device.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.room.testing)
     // Real org.json for JVM unit tests: android.jar only ships stubs that
     // throw, so GithubReleases.parse needs this on the test classpath. The
     // test jar wins over android.jar because it comes first.
