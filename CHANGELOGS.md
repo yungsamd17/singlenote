@@ -17,6 +17,7 @@ Changes for the next release will be listed here.
 ### Changed
 
 - **Built for Android 16.** The app now targets SDK 36, so it follows the current back-gesture and 16 KB page-size requirements on Android 16 while keeping the same behaviour on older versions.
+- **The accent picker shows the colours.** Every accent option carries a round colour preview next to its name, so the palette can be picked by sight instead of by name. In monochrome mode the previews turn gray along with the rest of the app.
 - **The language list is alphabetical.** The picker shows the device-language row first, then English, then the remaining languages in alphabetical order by their English name, so a language is easy to find.
 - **The language rows read like a language list.** Each row now leads with the English name ("German"), shows the native name underneath ("Deutsch") and carries a round badge with the region code, the way other apps present their language pickers.
 - **The selected language is marked in its badge.** The picked row swaps the region code for a check mark on an accent-tinted circle, and the radio buttons on the right are gone.

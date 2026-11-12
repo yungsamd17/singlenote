@@ -131,6 +131,13 @@ fun accentScheme(accent: String, dark: Boolean): ColorScheme {
 }
 
 /**
+ * The vivid tone of an accent, used for the preview swatches in the accent
+ * picker. It always shows the light tone, so the swatches read as the same
+ * colours in both themes.
+ */
+fun accentPreviewColor(accent: String): Color = accentScheme(accent, dark = false).primary
+
+/**
  * Luma-weighted grayscale of a color. Perceptual luminance keeps the
  * perceived brightness of the original tone, so a colored surface turns
  * into a neutral one instead of a darker or brighter one.

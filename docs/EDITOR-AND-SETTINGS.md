@@ -41,7 +41,9 @@ Switch cards toggle across their full row; disabled controls are dimmed and iner
 
 Dynamic colors disable manual accent selection while active. Turning them off
 preserves the saved accent. AMOLED affects dark mode. The accent picker contains
-only preset colors; Dynamic colors is the single wallpaper-color control. Legacy app Material You selections enable that toggle
+only preset colors, each with a round color preview next to its name (grayed
+along with the app in monochrome mode); Dynamic colors is the single
+wallpaper-color control. Legacy app Material You selections enable that toggle
 unless an explicit choice was already saved. Launcher aliases can follow a preset accent or the Android 12+ wallpaper accent.
 A changed alias closes the app; reopen it from the launcher. Launcher caching can
 delay updates.
