@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FontDownload
 import androidx.compose.material.icons.outlined.FormatSize
@@ -218,9 +219,7 @@ fun SettingsScreen(
                             ValueRow(
                                 Icons.Outlined.Language,
                                 stringResource(R.string.settings_language),
-                                if (AppLanguage.getLanguageTag(context).isBlank())
-                                    stringResource(R.string.theme_system)
-                                else languageLabel(AppLanguage.getLanguageTag(context)),
+                                languageLabel(context, AppLanguage.getLanguageTag(context)),
                                 { onOpenScreen("language") },
                             )
                         },
@@ -432,7 +431,7 @@ fun SettingsScreen(
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    LanguageBadge(entry)
+                                    LanguageBadge(entry, checked)
                                     Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                                         Text(
                                             text = stringResource(entry.englishName),
@@ -444,14 +443,6 @@ fun SettingsScreen(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                    RadioButton(
-                                        selected = checked,
-                                        onClick = null,
-                                        colors = RadioButtonDefaults.colors(
-                                            selectedColor = MaterialTheme.colorScheme.primary,
-                                            unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        ),
-                                    )
                                 }
                             }
                         }
@@ -531,29 +522,48 @@ fun SettingsScreen(
 /**
  * Round badge in front of a language row: the region code of the locale
  * (`en-US` → `US`) like the language pickers of other apps, or a language
- * glyph for the device row, which has no locale of its own.
+ * glyph for the device row, which has no locale of its own. The selected row
+ * swaps the code for a check mark on an accent-tinted circle, so the badge
+ * itself carries the selection.
  */
 @Composable
-private fun LanguageBadge(entry: LanguageEntry) {
+private fun LanguageBadge(entry: LanguageEntry, selected: Boolean) {
     val region = entry.code.substringAfter('-', "")
+    val container = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val content = if (selected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Box(
         modifier = Modifier
             .size(40.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+            .background(container, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        if (region.isEmpty()) {
+        if (selected) {
+            Icon(
+                Icons.Outlined.Check,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = content,
+            )
+        } else if (region.isEmpty()) {
             Icon(
                 Icons.Outlined.Language,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = content,
             )
         } else {
             Text(
                 text = region,
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = content,
             )
         }
     }
@@ -577,15 +587,15 @@ internal data class LanguageEntry(
  * Rows of the language picker. The device row comes first because it is not a
  * language but the "follow the system" choice; English follows it, and the
  * rest are alphabetical by their English name so the list can be scanned
- * without reading every native spelling.
+ * without reading every native spelling. Chinese sits at the end, next to the
+ * other regional variants.
  */
 internal val languageEntries =
     listOf(
         // The device row keeps the same two lines as the others: "System" as
         // the name and the app following the device language underneath.
         LanguageEntry("", R.string.theme_system, R.string.settings_device_language),
-        LanguageEntry("en-US", R.string.language_english_us, R.string.language_english),
-        LanguageEntry("zh-CN", R.string.language_chinese_english, R.string.language_chinese),
+        LanguageEntry("en-US", R.string.language_english_english, R.string.language_english),
         LanguageEntry("nl-NL", R.string.language_dutch_english, R.string.language_dutch),
         LanguageEntry("fr-FR", R.string.language_french_english, R.string.language_french),
         LanguageEntry("de-DE", R.string.language_german_english, R.string.language_german),
@@ -596,6 +606,9 @@ internal val languageEntries =
         LanguageEntry("sk-SK", R.string.language_slovak_english, R.string.language_slovak),
         LanguageEntry("es-ES", R.string.language_spanish_english, R.string.language_spanish),
         LanguageEntry("tr-TR", R.string.language_turkish_english, R.string.language_turkish),
+        // The app ships Simplified Chinese only; the variant name keeps it
+        // apart from the traditional variant other apps offer.
+        LanguageEntry("zh-CN", R.string.language_chinese_english, R.string.language_chinese),
     )
 
 @Composable
@@ -785,10 +798,26 @@ private fun sizeLabel(key: String): String =
         else -> stringResource(R.string.size_medium)
     }
 
+/**
+ * Name of the active language for the Settings hub row. An explicit choice
+ * shows its own name; following the system shows the language the device
+ * actually uses, so the row never just says "System" — the user wants to know
+ * which language they are looking at.
+ */
 @Composable
-private fun languageLabel(languageTag: String): String =
-    stringResource(
-        // The same name the picker shows on the first line, so the hub and the
-        // list never disagree about which language is active.
-        languageEntries.firstOrNull { it.code == languageTag }?.englishName ?: R.string.theme_system
-    )
+private fun languageLabel(context: android.content.Context, languageTag: String): String {
+    if (languageTag.isNotBlank()) {
+        return stringResource(
+            languageEntries.firstOrNull { it.code == languageTag }?.englishName ?: R.string.theme_system
+        )
+    }
+    val device = context.resources.configuration.locales[0]
+    val entry = languageEntries.firstOrNull { it.code == device.toLanguageTag() }
+        ?: languageEntries.firstOrNull { it.code.startsWith("${device.language}-") }
+    return if (entry != null) {
+        stringResource(entry.englishName)
+    } else {
+        // A language the app does not ship: name it as the device does.
+        device.getDisplayName(java.util.Locale.ENGLISH)
+    }
+}

@@ -20,7 +20,7 @@ class LanguageEntriesTest {
         // German), and the device row says the app follows the system.
         val expected = mapOf(
             "" to R.string.theme_system,
-            "en-US" to R.string.language_english_us,
+            "en-US" to R.string.language_english_english,
             "de-DE" to R.string.language_german_english,
             "es-ES" to R.string.language_spanish_english,
             "fr-FR" to R.string.language_french_english,
@@ -66,9 +66,13 @@ class LanguageEntriesTest {
     @Test
     fun languagesAreAlphabeticalAfterEnglish() {
         // English stays at the top as the source language; everything after it
-        // is ordered by the English name on the first line.
+        // is ordered by the English name on the first line, with the Chinese
+        // variant last, the way other apps group the regional variants.
         assertEquals(
-            listOf("en-US", "zh-CN", "nl-NL", "fr-FR", "de-DE", "it-IT", "pl-PL", "pt-BR", "ru-RU", "sk-SK", "es-ES", "tr-TR"),
+            listOf(
+                "en-US", "nl-NL", "fr-FR", "de-DE", "it-IT", "pl-PL",
+                "pt-BR", "ru-RU", "sk-SK", "es-ES", "tr-TR", "zh-CN",
+            ),
             languageEntries.drop(1).map { it.code },
         )
     }
