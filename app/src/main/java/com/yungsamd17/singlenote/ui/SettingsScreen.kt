@@ -432,13 +432,14 @@ fun SettingsScreen(
                                         .padding(horizontal = 16.dp, vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                    LanguageBadge(entry)
+                                    Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                                         Text(
-                                            text = stringResource(entry.nativeName),
+                                            text = stringResource(entry.englishName),
                                             style = MaterialTheme.typography.bodyLarge,
                                         )
                                         Text(
-                                            text = stringResource(entry.description),
+                                            text = stringResource(entry.nativeName),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
@@ -527,16 +528,49 @@ fun SettingsScreen(
         )
 }
 
+/**
+ * Round badge in front of a language row: the region code of the locale
+ * (`en-US` → `US`) like the language pickers of other apps, or a language
+ * glyph for the device row, which has no locale of its own.
+ */
+@Composable
+private fun LanguageBadge(entry: LanguageEntry) {
+    val region = entry.code.substringAfter('-', "")
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (region.isEmpty()) {
+            Icon(
+                Icons.Outlined.Language,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Text(
+                text = region,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 internal data class LanguageEntry(
     val code: String,
-    /** Native name of the language, shown on the first line. */
-    val nativeName: Int,
     /**
-     * Second line of the row: the language name in English, so a reader who
-     * does not know the native name still recognises it. Every entry carries
-     * one, so the rows keep a single height.
+     * Name of the language in English, shown on the first line: every reader
+     * recognises "German" even when they cannot read "Deutsch".
      */
-    val description: Int,
+    val englishName: Int,
+    /**
+     * Native name of the language, shown on the second line, so the row also
+     * shows the language as its own speakers write it.
+     */
+    val nativeName: Int,
 )
 
 /**
@@ -547,21 +581,21 @@ internal data class LanguageEntry(
  */
 internal val languageEntries =
     listOf(
-        // The device row keeps the same two lines as the others: the app
-        // follows the system language, spelled out on the second line.
-        LanguageEntry("", R.string.settings_device_language, R.string.theme_system),
-        LanguageEntry("en-US", R.string.language_english, R.string.language_english_us),
-        LanguageEntry("zh-CN", R.string.language_chinese, R.string.language_chinese_english),
-        LanguageEntry("nl-NL", R.string.language_dutch, R.string.language_dutch_english),
-        LanguageEntry("fr-FR", R.string.language_french, R.string.language_french_english),
-        LanguageEntry("de-DE", R.string.language_german, R.string.language_german_english),
-        LanguageEntry("it-IT", R.string.language_italian, R.string.language_italian_english),
-        LanguageEntry("pl-PL", R.string.language_polish, R.string.language_polish_english),
-        LanguageEntry("pt-BR", R.string.language_portuguese, R.string.language_portuguese_english),
-        LanguageEntry("ru-RU", R.string.language_russian, R.string.language_russian_english),
-        LanguageEntry("sk-SK", R.string.language_slovak, R.string.language_slovak_english),
-        LanguageEntry("es-ES", R.string.language_spanish, R.string.language_spanish_english),
-        LanguageEntry("tr-TR", R.string.language_turkish, R.string.language_turkish_english),
+        // The device row keeps the same two lines as the others: "System" as
+        // the name and the app following the device language underneath.
+        LanguageEntry("", R.string.theme_system, R.string.settings_device_language),
+        LanguageEntry("en-US", R.string.language_english_us, R.string.language_english),
+        LanguageEntry("zh-CN", R.string.language_chinese_english, R.string.language_chinese),
+        LanguageEntry("nl-NL", R.string.language_dutch_english, R.string.language_dutch),
+        LanguageEntry("fr-FR", R.string.language_french_english, R.string.language_french),
+        LanguageEntry("de-DE", R.string.language_german_english, R.string.language_german),
+        LanguageEntry("it-IT", R.string.language_italian_english, R.string.language_italian),
+        LanguageEntry("pl-PL", R.string.language_polish_english, R.string.language_polish),
+        LanguageEntry("pt-BR", R.string.language_portuguese_english, R.string.language_portuguese),
+        LanguageEntry("ru-RU", R.string.language_russian_english, R.string.language_russian),
+        LanguageEntry("sk-SK", R.string.language_slovak_english, R.string.language_slovak),
+        LanguageEntry("es-ES", R.string.language_spanish_english, R.string.language_spanish),
+        LanguageEntry("tr-TR", R.string.language_turkish_english, R.string.language_turkish),
     )
 
 @Composable
@@ -754,5 +788,7 @@ private fun sizeLabel(key: String): String =
 @Composable
 private fun languageLabel(languageTag: String): String =
     stringResource(
-        languageEntries.firstOrNull { it.code == languageTag }?.nativeName ?: R.string.theme_system
+        // The same name the picker shows on the first line, so the hub and the
+        // list never disagree about which language is active.
+        languageEntries.firstOrNull { it.code == languageTag }?.englishName ?: R.string.theme_system
     )
