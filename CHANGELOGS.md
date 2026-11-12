@@ -8,8 +8,19 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+### Added
+
+- **Archive search.** A search button in the archive opens a field that filters archived notes as you type, ignoring case and surrounding spaces, and tells you when nothing matches. Back closes the search before it leaves the archive. Exporting and clearing still apply to the whole archive, never only to the matches.
+- **Four new languages.** Italiano, Nederlands, Português (Brasil) and Türkçe, each fully translated across the editor, settings, archive, widget setup, About, legal text and diagnostics. The Android 13+ per-app language picker lists them too.
+
+### Changed
+
+- **Built for Android 16.** The app now targets SDK 36, so it follows the current back-gesture and 16 KB page-size requirements on Android 16 while keeping the same behaviour on older versions.
+
 ### Fixed
 
+- The archive no longer flashes in the wrong order when it opens: it paints the list once, already sorted by the order you chose, instead of showing the default order for a frame and animating every card into place.
+- TalkBack improvements: status messages such as "Note archived" are announced, screen headings and the pinned-note button are described correctly, and small controls meet the 48 dp touch target.
 - Widget settings are remembered: removing a widget and adding it again starts with the same theme, accent, sizes and tap action instead of the defaults.
 
 ## [0.5.1] - 2026-11-09
