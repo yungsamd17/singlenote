@@ -25,6 +25,7 @@ numbers live in `app/build.gradle.kts`.
 ./gradlew assembleDebug
 ./gradlew testDebugUnitTest
 ./gradlew lintDebug
+./gradlew koverVerifyDebug
 ```
 
 On Windows use `gradlew.bat` for the equivalent tasks. The APK is
@@ -35,6 +36,28 @@ runtime: Linux arm64 hosts require Robolectric 4.18 or newer (the pinned
 `4.18-beta-1` ships the aarch64 library). Lint reports are under
 `app/build/reports/`. These checks complement device testing; they do not
 prove the rendered UI or launcher behavior.
+
+### Coverage
+
+`koverVerifyDebug` measures the line coverage of the app's logic and fails
+below **70 %**. The scope is set in `app/build.gradle.kts` and covers what a
+JVM test can reach:
+
+| Scope | Contents |
+|---|---|
+| `com.yungsamd17.singlenote.data.*` | Room entity/DAO, the repository, DataStore preferences |
+| `com.yungsamd17.singlenote.util.*` | archive file I/O, language override, launcher icon, diagnostics, link/markdown parsing |
+| `com.yungsamd17.singlenote.notify.*` | the pinned-notification rules |
+| `ui.NoteViewModel`, `ui.ArchiveViewModel`, `ui.SettingsViewModel` | the ViewModels |
+
+Outside the scope, and therefore not measured: Compose UI, Android components
+(activity, quick-settings tile, receivers, widget) and the Glance widget
+rendering — those need a device or a rendering tree. Room's generated `_Impl`
+classes are out too: the DAO tests already exercise them, so counting their
+lines line by line would only measure generated code.
+
+`:app:koverHtmlReport` writes the same numbers as a browsable report to
+`app/build/reports/kover/html/`, `:app:koverXmlReport` as XML.
 
 Room writes the exported schema to `app/schemas/` on every build. Commit the
 changed JSON with the entity or migration that produced it — the file is the
@@ -47,7 +70,7 @@ Use a preview to test alongside your regular app.
 ## Run the CI checks locally
 
 `scripts/ci-local-build.sh` runs the same task list as the Build workflow
-(`clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease`):
+(`clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease`):
 
 ```bash
 scripts/ci-local-build.sh

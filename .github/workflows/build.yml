@@ -126,14 +126,14 @@ jobs:
 
       - name: Build, test, lint
         if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing == 'true'
-        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease
+        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease
 
       # Unsigned fallback for forks: same checks minus assembleRelease,
       # which would fail at signing time without the release keystore.
       # lintRelease needs no keystore, so the plan's demand still holds.
       - name: Build, test, lint (debug only)
         if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing != 'true'
-        run: ./gradlew --no-daemon clean assembleDebug testDebugUnitTest lintDebug lintRelease
+        run: ./gradlew --no-daemon clean assembleDebug testDebugUnitTest koverVerifyDebug lintDebug lintRelease
 
       - name: Upload debug APK artifact
         if: steps.filter.outputs.app == 'true' && github.ref_type != 'tag'

@@ -12,10 +12,11 @@ lives in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
    `MigrationTest` builds the v1/v2 schemas by hand, runs the production
    migrations through a real `SupportSQLiteOpenHelper.onUpgrade`, and diffs the
    result against a fresh Room v3 database; `NoteDaoTest` runs the DAO against
-   SQLite, including the unique `activeSlot` guard. 120 JVM tests pass locally.
-2. [ ] **Test gate** — add coverage tooling (JaCoCo/Kover), `PinNotification`
-   branches, archive import/export tests, and one instrumented archive flow. The
-   plan's ≥70% target must be measured, not assumed.
+   SQLite, including the unique `activeSlot` guard. 186 JVM tests pass locally.
+2. [ ] **Test gate** — coverage is measured and gated (Kover, ≥70 % line
+   coverage of the app logic, enforced by `koverVerifyDebug` in CI), the
+   `PinNotification` branches and the archive import/export are covered by JVM
+   tests. Still open: one instrumented archive flow on a device.
 3. [ ] **Store assets** — phone screenshots (≥2, 1080×1920), 1024×500 feature
    graphic, Play short (≤80 chars) + full description, F-Droid `fastlane/`
    metadata. Upload to the stores, then link; do not commit.
@@ -27,9 +28,12 @@ reconciled with v0.5.1 on 2026-11-11.
 
 ## Engineering follow-ups
 
-- [ ] **Coverage tooling** — no JaCoCo/Kover task, so the plan's ≥70% goal cannot
-  be measured. Add it, then target `NoteRepository`, `ArchiveViewModel` and
-  `NoteViewModel` first.
+- [x] **Coverage tooling** — Kover 0.9.11 is wired in (`app/build.gradle.kts`)
+  and `koverVerifyDebug` runs in CI: the app logic (data, util, notification
+  rules, the three ViewModels) has to stay at or above 70 % line coverage. The
+  scope and its exclusions are documented in `docs/BUILDING.md`. Compose UI,
+  Android components and Room's generated code stay outside the gate — they
+  need a device or a rendering tree.
 - [x] **`PinNotification` tests** — the notification rules moved to
   `notify/PinnedNotificationContent.kt` (`pinnedNotificationContent`): no note,
   a blank note, disabled notifications, an unpinned note, the title-first-line
