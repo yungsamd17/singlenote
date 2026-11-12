@@ -16,8 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -33,6 +34,26 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
     private val _events = Channel<ArchiveEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
+
+    /**
+     * Raw text of the archive search field. Kept here (not in the screen) so
+     * it survives rotation and process recreation of the composable.
+     */
+    private val _query = MutableStateFlow("")
+    val query: StateFlow<String> = _query.asStateFlow()
+
+    /**
+     * Debounced copy of [query] used to filter the list. The archive already
+     * lives in memory, so filtering is cheap — the debounce only avoids
+     * re-sorting and recomposing the list on every keystroke of a long word.
+     */
+    val searchQuery: StateFlow<String> = _query
+        .debounce(SEARCH_DEBOUNCE_MS)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+
+    fun setQuery(value: String) {
+        _query.value = value
+    }
 
     // Retain the selected snapshot while the system save picker is open.
     var pendingExport: String? = null
@@ -151,10 +172,28 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
     companion object {
         // Matches SnackbarDuration.Short so the bar and the commit stay aligned.
         const val UNDO_WINDOW_MS = 4_000L
+
+        // Long enough to swallow a burst of keystrokes, short enough that the
+        // filtered list still feels live.
+        const val SEARCH_DEBOUNCE_MS = 150L
+
         fun factory(archiveStore: ArchiveStore) = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T =
                 ArchiveViewModel(archiveStore) as T
         }
     }
+}
+
+/**
+ * Case-insensitive substring match over the note text.
+ *
+ * Search runs over the archive the screen already holds instead of querying
+ * Room: the list is small, it is already loaded for sorting, and this keeps
+ * the schema and the DAO untouched. A blank query returns the list unchanged.
+ */
+internal fun filterArchivedNotes(notes: List<Note>, query: String): List<Note> {
+    val needle = query.trim()
+    if (needle.isEmpty()) return notes
+    return notes.filter { it.content.contains(needle, ignoreCase = true) }
 }

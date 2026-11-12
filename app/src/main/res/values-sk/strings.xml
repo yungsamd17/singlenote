@@ -9,6 +9,11 @@
     <string name="action_swap">Vymeniť</string>
     <string name="action_replace">Nahradiť</string>
     <string name="archive_empty">Zatiaľ tu nie sú žiadne archivované poznámky.</string>
+    <string name="archive_search">Hľadať v archíve</string>
+    <string name="archive_search_empty">Žiadna poznámka nezodpovedá hľadaniu.</string>
+    <string name="cd_search_archive">Hľadať v archíve</string>
+    <string name="cd_clear_search">Vymazať hľadanie</string>
+    <string name="cd_close_search">Zavrieť hľadanie</string>
     <string name="delete_dialog_title">Odstrániť natrvalo?</string>
     <string name="delete_dialog_message">Táto poznámka sa natrvalo odstráni a nebude ju možné obnoviť.</string>
     <string name="delete_dialog_confirm">Odstrániť</string>

@@ -9,6 +9,11 @@
     <string name="action_swap">Échanger</string>
     <string name="action_replace">Remplacer</string>
     <string name="archive_empty">Rien n\'est archivé pour l\'instant.</string>
+    <string name="archive_search">Rechercher dans les archives</string>
+    <string name="archive_search_empty">Aucune note ne correspond à votre recherche.</string>
+    <string name="cd_search_archive">Rechercher dans les archives</string>
+    <string name="cd_clear_search">Effacer la recherche</string>
+    <string name="cd_close_search">Fermer la recherche</string>
     <string name="delete_dialog_title">Supprimer définitivement ?</string>
     <string name="delete_dialog_message">Cette note sera supprimée définitivement et ne pourra pas être récupérée.</string>
     <string name="delete_dialog_confirm">Supprimer</string>

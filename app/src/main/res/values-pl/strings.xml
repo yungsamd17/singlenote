@@ -9,6 +9,11 @@
     <string name="action_swap">Zamień</string>
     <string name="action_replace">Zastąp</string>
     <string name="archive_empty">Nic jeszcze nie zarchiwizowano.</string>
+    <string name="archive_search">Przeszukaj archiwum</string>
+    <string name="archive_search_empty">Żadna notatka nie pasuje do wyszukiwania.</string>
+    <string name="cd_search_archive">Przeszukaj archiwum</string>
+    <string name="cd_clear_search">Wyczyść wyszukiwanie</string>
+    <string name="cd_close_search">Zamknij wyszukiwanie</string>
     <string name="delete_dialog_title">Usunąć na zawsze?</string>
     <string name="delete_dialog_message">Ta notatka zostanie usunięta trwale i nie będzie można jej odzyskać.</string>
     <string name="delete_dialog_confirm">Usuń</string>
