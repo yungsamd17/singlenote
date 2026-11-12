@@ -40,4 +40,14 @@ class LanguageEntriesTest {
         // The empty code follows the device language.
         assertTrue(languageEntries.first().code.isEmpty())
     }
+
+    @Test
+    fun languagesAreAlphabeticalAfterEnglish() {
+        // English stays at the top as the source language; everything after it
+        // is ordered by the English name on the second line.
+        assertEquals(
+            listOf("en-US", "zh-CN", "nl-NL", "fr-FR", "de-DE", "it-IT", "pl-PL", "pt-BR", "ru-RU", "sk-SK", "es-ES", "tr-TR"),
+            languageEntries.drop(1).map { it.code },
+        )
+    }
 }
