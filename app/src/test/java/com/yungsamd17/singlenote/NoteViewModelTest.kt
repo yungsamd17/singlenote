@@ -161,8 +161,41 @@ class NoteViewModelTest {
     }
 
     @Test
-    fun delete_clearsEditorWithoutResaving() = runTest {
+    fun quickCapture_archivesTheNoteInsteadOfDeletingIt() = runTest {
         installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.onTextChange("to do")
+        advanceUntilIdle()
+        vm.quickCapture()
+        advanceUntilIdle()
+
+        // The note must survive: it lands in the archive, not in the bin.
+        assertTrue(store.archiveRequested)
+        assertFalse(store.deleteRequested)
+        assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun quickCapture_dropsAnEmptyNoteInsteadOfArchivingIt() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.quickCapture()
+        advanceUntilIdle()
+
+        // Nothing worth keeping: the empty row goes, the archive stays clean.
+        assertFalse(store.archiveRequested)
+        assertTrue(store.deleteRequested)
+        assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun delete_clearsEditorWithoutResaving() = runTest {        installMain()
         val store = FakeNoteStore()
         val vm = NoteViewModel(store)
         advanceUntilIdle()

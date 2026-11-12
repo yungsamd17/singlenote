@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Закреплённая заметка</string>
     <string name="channel_pinned_description">Показывает текущую заметку, чтобы она оставалась видимой</string>
     <string name="notification_pinned_title">Закреплённый Singlenote</string>
+    <string name="notification_action_new_note">Новая заметка</string>
     <string name="notification_action_open">Открыть</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Сначала напишите заметку</string>

@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Nota anclada</string>
     <string name="channel_pinned_description">Muestra tu nota actual para que se mantenga visible</string>
     <string name="notification_pinned_title">Singlenote anclado</string>
+    <string name="notification_action_new_note">Nueva nota</string>
     <string name="notification_action_open">Abrir</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Escribe una nota primero</string>

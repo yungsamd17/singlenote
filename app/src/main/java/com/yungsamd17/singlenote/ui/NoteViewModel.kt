@@ -137,26 +137,49 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     fun archiveCurrent(): Job {
         saveJob?.cancel()
+        return viewModelScope.launch { archiveNow() }
+    }
+
+    /**
+     * Quick capture from the notification shade: the note on screen is
+     * **archived, never deleted**, so nothing the user wrote is thrown away,
+     * and the editor starts empty with the cursor in it.
+     *
+     * An empty note has nothing worth keeping, so its empty row is dropped
+     * instead of filling the archive with a blank entry.
+     */
+    fun quickCapture(): Job {
+        saveJob?.cancel()
         return viewModelScope.launch {
-            val snapshot = _text.value
-            val snapshotId = currentNoteId
-            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
-            // Persist-then-archive under one lock: the shade-Archive path
-            // and this FAB share the store, so the archive must see the
-            // flushed text, never the still-debouncing keystrokes.
-            persistMutex.withLock {
-                persist()
-                store.archiveActive()
-            }
-            currentNoteId = null
-            _text.value = ""
-            if (snapshot.isNotBlank()) {
-                _pendingUndo.value = PendingUndo(
-                    UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned,
-                    System.currentTimeMillis()
-                )
-            }
+            if (_text.value.isNotBlank()) archiveNow() else clearEmptyNote()
         }
+    }
+
+    private suspend fun archiveNow() {
+        val snapshot = _text.value
+        val snapshotId = currentNoteId
+        val wasPinned = try { pinned.first() } catch (_: Exception) { false }
+        // Persist-then-archive under one lock: the shade-Archive path
+        // and this FAB share the store, so the archive must see the
+        // flushed text, never the still-debouncing keystrokes.
+        persistMutex.withLock {
+            persist()
+            store.archiveActive()
+        }
+        currentNoteId = null
+        _text.value = ""
+        if (snapshot.isNotBlank()) {
+            _pendingUndo.value = PendingUndo(
+                UndoKind.ARCHIVE, snapshotId, snapshot, wasPinned,
+                System.currentTimeMillis()
+            )
+        }
+    }
+
+    private suspend fun clearEmptyNote() {
+        persistMutex.withLock { store.deleteActive() }
+        currentNoteId = null
+        _text.value = ""
     }
 
     fun deleteCurrent() {

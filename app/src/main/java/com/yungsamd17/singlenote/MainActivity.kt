@@ -52,7 +52,7 @@ import com.yungsamd17.singlenote.ui.toGray
 import com.yungsamd17.singlenote.ui.toMonochrome
 import com.yungsamd17.singlenote.util.AppLanguage
 import com.yungsamd17.singlenote.util.Diagnostics
-import com.yungsamd17.singlenote.widget.WidgetActionSecurity
+import com.yungsamd17.singlenote.util.ActionSecurity
 import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -66,17 +66,30 @@ class MainActivity : ComponentActivity() {
         // Debounce (ms) before re-establishing the widget session on resume.
         private const val WIDGET_REFRESH_DEBOUNCE = 5_000L
         const val EXTRA_WIDGET_ACTION = "widget_action"
+        /**
+         * Quick capture from the notification shade: archive the note on
+         * screen and start a new one, with the cursor in it.
+         */
+        const val EXTRA_QUICK_CAPTURE = "quick_capture"
     }
     private var widgetAction by mutableStateOf<String?>(null)
+    private var quickCapture by mutableStateOf(false)
 
-    private fun receiveWidgetAction(intent: Intent?) {
-        if (WidgetActionSecurity.valid(this, intent?.getStringExtra(WidgetActionSecurity.EXTRA_TOKEN))) {
+    /**
+     * Reads the actions our own widgets, tiles and notification can trigger.
+     * They all arrive as intents on this exported activity, so the token
+     * decides which ones are ours.
+     */
+    private fun receiveExternalAction(intent: Intent?) {
+        if (ActionSecurity.valid(this, intent?.getStringExtra(ActionSecurity.EXTRA_TOKEN))) {
             widgetAction = intent?.getStringExtra(EXTRA_WIDGET_ACTION)?.takeIf {
                 it in setOf("open", "edit", "archive")
             }
+            quickCapture = intent?.getBooleanExtra(EXTRA_QUICK_CAPTURE, false) == true
         }
         intent?.removeExtra(EXTRA_WIDGET_ACTION)
-        intent?.removeExtra(WidgetActionSecurity.EXTRA_TOKEN)
+        intent?.removeExtra(EXTRA_QUICK_CAPTURE)
+        intent?.removeExtra(ActionSecurity.EXTRA_TOKEN)
     }
 
 
@@ -91,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        receiveWidgetAction(intent)
+        receiveExternalAction(intent)
         // Match the launch window to the system theme before the first
         // frame. The stored theme needs a DataStore read, which must never
         // block the UI thread — so the launch background uses the system
@@ -181,8 +194,8 @@ class MainActivity : ComponentActivity() {
                 }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
-                    LaunchedEffect(widgetAction) {
-                        if (widgetAction != null && navController.currentDestination?.route != "note") {
+                    LaunchedEffect(widgetAction, quickCapture) {
+                        if ((widgetAction != null || quickCapture) && navController.currentDestination?.route != "note") {
                             navController.navigate("note") { popUpTo("note") { inclusive = false }; launchSingleTop = true }
                         }
                     }
@@ -268,6 +281,8 @@ class MainActivity : ComponentActivity() {
                                 viewModel = noteViewModel,
                                 widgetAction = widgetAction,
                                 onWidgetActionHandled = { widgetAction = null },
+                                quickCapture = quickCapture,
+                                onQuickCaptureHandled = { quickCapture = false },
                                 onOpenArchive = { navController.navigate("archive") },
                                 onOpenSettings = { navController.navigate("settings") }
                             )
@@ -388,7 +403,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        receiveWidgetAction(intent)
+        receiveExternalAction(intent)
     }
 
     private fun applyBarAppearance(darkTheme: Boolean) {
