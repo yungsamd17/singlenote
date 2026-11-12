@@ -539,22 +539,28 @@ internal data class LanguageEntry(
     val description: Int,
 )
 
+/**
+ * Rows of the language picker. The device row comes first because it is not a
+ * language but the "follow the system" choice; English follows it, and the
+ * rest are alphabetical by their English name so the list can be scanned
+ * without reading every native spelling.
+ */
 internal val languageEntries =
     listOf(
         // The device row keeps the same two lines as the others: the app
         // follows the system language, spelled out on the second line.
         LanguageEntry("", R.string.settings_device_language, R.string.theme_system),
         LanguageEntry("en-US", R.string.language_english, R.string.language_english_us),
-        LanguageEntry("de-DE", R.string.language_german, R.string.language_german_english),
-        LanguageEntry("es-ES", R.string.language_spanish, R.string.language_spanish_english),
-        LanguageEntry("fr-FR", R.string.language_french, R.string.language_french_english),
-        LanguageEntry("it-IT", R.string.language_italian, R.string.language_italian_english),
+        LanguageEntry("zh-CN", R.string.language_chinese, R.string.language_chinese_english),
         LanguageEntry("nl-NL", R.string.language_dutch, R.string.language_dutch_english),
+        LanguageEntry("fr-FR", R.string.language_french, R.string.language_french_english),
+        LanguageEntry("de-DE", R.string.language_german, R.string.language_german_english),
+        LanguageEntry("it-IT", R.string.language_italian, R.string.language_italian_english),
         LanguageEntry("pl-PL", R.string.language_polish, R.string.language_polish_english),
         LanguageEntry("pt-BR", R.string.language_portuguese, R.string.language_portuguese_english),
         LanguageEntry("ru-RU", R.string.language_russian, R.string.language_russian_english),
-        LanguageEntry("zh-CN", R.string.language_chinese, R.string.language_chinese_english),
         LanguageEntry("sk-SK", R.string.language_slovak, R.string.language_slovak_english),
+        LanguageEntry("es-ES", R.string.language_spanish, R.string.language_spanish_english),
         LanguageEntry("tr-TR", R.string.language_turkish, R.string.language_turkish_english),
     )
 
