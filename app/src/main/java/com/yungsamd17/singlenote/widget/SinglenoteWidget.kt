@@ -47,6 +47,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.yungsamd17.singlenote.MainActivity
 import com.yungsamd17.singlenote.R
+import com.yungsamd17.singlenote.util.ActionSecurity
 import com.yungsamd17.singlenote.data.AppDatabase
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.ui.accentScheme
@@ -99,7 +100,7 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
     val initialStyle = WidgetStyleStore.get(context, widgetId)
     val widgetStyle = WidgetStyleStore.observe(context, widgetId)
     val fallbackHint = context.getString(R.string.hint_write_one_thing)
-    val actionToken = WidgetActionSecurity.token(context)
+    val actionToken = ActionSecurity.token(context)
     Diagnostics.event(
         LOG_TAG,
         "prefs ready widgetId=$widgetId accent=$initialAccent dynamic=$initialDynamic " +
@@ -115,7 +116,7 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
             Intent(context, MainActivity::class.java)
                 .setData(android.net.Uri.parse("singlenote://widget/$widgetId"))
                 .putExtra(MainActivity.EXTRA_WIDGET_ACTION, style.action)
-                .putExtra(WidgetActionSecurity.EXTRA_TOKEN, actionToken)
+                .putExtra(ActionSecurity.EXTRA_TOKEN, actionToken)
         WidgetContent(
             openIntent = openIntent,
             content = note?.content.orEmpty(),
@@ -265,7 +266,7 @@ private suspend fun renderWidgetInProcess(
             Intent(context, MainActivity::class.java)
                 .setData(android.net.Uri.parse("singlenote://widget/$appWidgetId"))
                 .putExtra(MainActivity.EXTRA_WIDGET_ACTION, style.action)
-                .putExtra(WidgetActionSecurity.EXTRA_TOKEN, WidgetActionSecurity.token(context))
+                .putExtra(ActionSecurity.EXTRA_TOKEN, ActionSecurity.token(context))
         val views =
             withContext(Dispatchers.Main) {
                 GlanceRemoteViews()

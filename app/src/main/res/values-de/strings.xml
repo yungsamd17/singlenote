@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Angeheftete Notiz</string>
     <string name="channel_pinned_description">Zeigt deine aktuelle Notiz an, damit sie sichtbar bleibt</string>
     <string name="notification_pinned_title">Angeheftete Singlenote</string>
+    <string name="notification_action_new_note">Neue Notiz</string>
     <string name="notification_action_open">Öffnen</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Erst eine Notiz schreiben</string>

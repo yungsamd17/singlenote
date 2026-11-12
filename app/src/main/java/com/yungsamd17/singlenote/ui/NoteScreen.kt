@@ -161,6 +161,8 @@ fun NoteScreen(
     viewModel: NoteViewModel,
     widgetAction: String? = null,
     onWidgetActionHandled: () -> Unit = {},
+    quickCapture: Boolean = false,
+    onQuickCaptureHandled: () -> Unit = {},
     onOpenArchive: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -177,17 +179,24 @@ fun NoteScreen(
     val view = LocalView.current
     val widgetFocusRequester = remember { FocusRequester() }
     var widgetCursorRequest by remember { mutableIntStateOf(0) }
-    LaunchedEffect(widgetAction, ready) {
-        val action = widgetAction ?: return@LaunchedEffect
+    LaunchedEffect(widgetAction, quickCapture, ready) {
+        val action = widgetAction
+        val capture = quickCapture
         if (!ready) return@LaunchedEffect
+        if (action == null && !capture) return@LaunchedEffect
         if (action == "archive") viewModel.archiveCurrent().join()
-        if (action == "edit" || action == "archive") {
+        // Quick capture from the notification shade: the note on screen is
+        // archived, never deleted, and the editor starts empty with the
+        // cursor in it.
+        if (capture) viewModel.quickCapture().join()
+        if (action == "edit" || action == "archive" || capture) {
             widgetCursorRequest++
             androidx.compose.runtime.withFrameNanos { }
             widgetFocusRequester.requestFocus()
             keyboard?.show()
         }
         onWidgetActionHandled()
+        onQuickCaptureHandled()
     }
 
     // Tapjacking defense: drop touches that land while another visible

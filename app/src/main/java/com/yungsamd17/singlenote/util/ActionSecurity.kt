@@ -1,10 +1,17 @@
-package com.yungsamd17.singlenote.widget
+package com.yungsamd17.singlenote.util
 
 import android.content.Context
 
-/** Authenticates actions delivered through our widget's private PendingIntent. */
-internal object WidgetActionSecurity {
-    const val EXTRA_TOKEN = "widget_action_token"
+/**
+ * Authenticates actions delivered through one of our own private
+ * PendingIntents (the home-screen widget and the pinned notification).
+ *
+ * The activity behind those intents is exported, so without this token any
+ * other app could fire a widget action or the quick capture and have the
+ * user's note archived behind their back.
+ */
+internal object ActionSecurity {
+    const val EXTRA_TOKEN = "action_token"
     private const val PREFS = "widget_action_auth"
     private const val TOKEN = "token"
 

@@ -10,6 +10,7 @@ Changes for the next release will be listed here.
 
 ### Added
 
+- **Quick capture from the notification shade.** The pinned notification gained a "New note" action: tap it and Singlenote opens with an empty note and the cursor in it. A note that is already on screen is **archived**, never deleted, so nothing you wrote is thrown away — and the Undo bar still offers it back.
 - **Archive search.** A search button in the archive opens a field that filters archived notes as you type, ignoring case and surrounding spaces, and tells you when nothing matches. Back closes the search before it leaves the archive. Exporting and clearing still apply to the whole archive, never only to the matches.
 - **Four new languages.** Italiano, Nederlands, Português (Brasil) and Türkçe, each fully translated across the editor, settings, archive, widget setup, About, legal text and diagnostics. The Android 13+ per-app language picker lists them too.
 

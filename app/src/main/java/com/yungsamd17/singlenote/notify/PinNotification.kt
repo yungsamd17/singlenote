@@ -10,6 +10,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.yungsamd17.singlenote.MainActivity
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
+import com.yungsamd17.singlenote.util.ActionSecurity
 import kotlinx.coroutines.flow.first
 import com.yungsamd17.singlenote.data.NotePreferences
 
@@ -22,6 +23,7 @@ object PinNotification {
     internal const val LEGACY_CHANNEL_ID_V3 = "pinned_note_v3"
     internal const val NOTIFICATION_ID = 1
     private const val REQUEST_OPEN_APP = 2
+    private const val REQUEST_QUICK_CAPTURE = 3
 
     fun ensureChannel(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
@@ -79,6 +81,18 @@ object PinNotification {
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        // Quick capture from the shade: opens the app, archives the note on
+        // screen (never deletes it) and puts the cursor in an empty editor.
+        // It is an explicit activity start, so it also works on restrictive
+        // ROMs where a background action button would go dead.
+        val quickCaptureAction = PendingIntent.getActivity(
+            context,
+            REQUEST_QUICK_CAPTURE,
+            Intent(context, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_QUICK_CAPTURE, true)
+                .putExtra(ActionSecurity.EXTRA_TOKEN, ActionSecurity.token(context)),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         // The title is the note's first line when the user asked for it, and
         // the app's own label otherwise. The rules live in
@@ -109,13 +123,19 @@ object PinNotification {
             .setDeleteIntent(PinActionReceiver.respawnIntent(context))
             .setShowWhen(false)
             .setContentIntent(openIntent)
-            // Single action on purpose: buttons that need background work
-            // go dead on restrictive ROMs once the app is closed, but an
-            // explicit open always works (user-initiated activity start).
+            // Both actions open the app on purpose: buttons that need
+            // background work go dead on restrictive ROMs once the app is
+            // closed, but an explicit open always works (user-initiated
+            // activity start).
             .addAction(
                 R.drawable.ic_notification,
                 context.getString(R.string.notification_action_open),
                 openAction
+            )
+            .addAction(
+                R.drawable.ic_new_note,
+                context.getString(R.string.notification_action_new_note),
+                quickCaptureAction
             )
             .build()
 

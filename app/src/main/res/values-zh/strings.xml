@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">固定笔记</string>
     <string name="channel_pinned_description">显示当前笔记使其保持可见</string>
     <string name="notification_pinned_title">固定的 Singlenote</string>
+    <string name="notification_action_new_note">新建笔记</string>
     <string name="notification_action_open">打开</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">先写一条笔记</string>

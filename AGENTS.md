@@ -65,6 +65,7 @@ Key patterns:
 - Room schema export is on (`exportSchema = true`): every version bump writes `app/schemas/<database>/<version>.json` and that file is committed. Ship the migration and a test with it — `MigrationTest` rebuilds the legacy schemas and diffs them against a fresh database, `NoteDaoTest` runs the DAO against real SQLite (Robolectric). Keep the destructive-migration fallback absent.
 - Archive import/export lives in `util/ArchiveFile.kt` (`buildArchiveJson` / `parseArchiveJson`), not in the screen. Keep the `format`/`version` markers, reject foreign or newer files with a clear error, and cover every change with `ArchiveFileTest`.
 - The pinned-notification rules live in `notify/PinnedNotificationContent.kt` (`pinnedNotificationContent`), not in `PinNotification.refresh`. Keep the "nothing to show" cases (no note, blank note, notifications off, not pinned) and the title/visibility rules there, covered by tests.
+- Actions that arrive from outside the app (the widget, the quick-settings tile, the notification's "New note" action) go through `util/ActionSecurity.kt`: the activity behind them is exported, so the intent must carry the app's token or the action is ignored. The quick capture archives the note on screen — it never deletes it.
 
 ## UI Conventions
 

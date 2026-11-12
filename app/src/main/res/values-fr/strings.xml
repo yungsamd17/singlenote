@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Note épinglée</string>
     <string name="channel_pinned_description">Affiche votre note actuelle pour qu\'elle reste visible</string>
     <string name="notification_pinned_title">Singlenote épinglée</string>
+    <string name="notification_action_new_note">Nouvelle note</string>
     <string name="notification_action_open">Ouvrir</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Écrivez une note d\'abord</string>

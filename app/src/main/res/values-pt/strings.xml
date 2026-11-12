@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Nota fixada</string>
     <string name="channel_pinned_description">Mostra sua nota atual para que continue visível</string>
     <string name="notification_pinned_title">Singlenote fixado</string>
+    <string name="notification_action_new_note">Nova nota</string>
     <string name="notification_action_open">Abrir</string>
     <string name="tile_label">Singlenote</string>
     <string name="tile_no_note">Escreva uma nota primeiro</string>
