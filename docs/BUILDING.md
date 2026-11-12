@@ -24,7 +24,7 @@ numbers live in `app/build.gradle.kts`.
 ```bash
 ./gradlew assembleDebug
 ./gradlew testDebugUnitTest
-./gradlew lintDebug
+./gradlew lintRelease
 ./gradlew koverVerifyDebug
 ```
 
@@ -63,6 +63,39 @@ Room writes the exported schema to `app/schemas/` on every build. Commit the
 changed JSON with the entity or migration that produced it — the file is the
 baseline the migration tests and the next schema bump compare against.
 
+### Build time
+
+A cold CI build of the current tree spends about 200 s inside Gradle. The
+breakdown is worth knowing before adding work to the pipeline:
+
+| Step | Approx. time | Notes |
+|---|---|---|
+| Lint (release variant) | ~55 s | ~27 % of the build; the single most expensive step |
+| KSP (Room) | ~26 s | `kspDebugKotlin`; the release variant runs its own KSP too |
+| Unit tests | ~20 s | all 192 JVM tests, see below |
+| R8 / resource shrinking | ~10 s | release only |
+| Everything else | ~90 s | resource merge, dexing, packaging, Kover |
+
+What keeps it that way:
+
+- **Lint runs once**, on the release variant. `lintDebug` analyses the same
+  sources and misses the release-only Proguard checks, so it is not run in CI;
+  `assembleRelease` still runs `lintVitalRelease` on top of `lintRelease`.
+  Locally, `./gradlew lintDebug` is fine for a quicker loop.
+- **The Gradle build cache is on** (`org.gradle.caching=true`) and the CI
+  Gradle action keeps `~/.gradle/caches` between runs, so unchanged KSP,
+  compilation, dexing and lint-analysis work is restored instead of repeated.
+- **Configuration cache** is on; the wrapper, JDK and SDK steps take ~15 s.
+
+The test count is not the cost driver: 192 JVM test methods execute in ~20 s on
+CI (about 0.1 s each). What costs time is compiling the test sources once and
+starting a Robolectric sandbox per Android SDK level. The suite therefore keeps
+two levels only: SDK 34 for everything that is not version-specific and SDK 30
+for the pre-Android-13 language-override path. Every extra level means another
+~150 MB `android-all` jar and another sandbox. Adding a focused test to an
+existing class is nearly free; adding a new Robolectric class costs a few
+seconds of sandbox setup.
+
 A normal debug build uses `com.yungsamd17.singlenote`, the same application ID as
 the release. Its debug signature may differ from an installed release signature.
 Use a preview to test alongside your regular app.
@@ -70,7 +103,7 @@ Use a preview to test alongside your regular app.
 ## Run the CI checks locally
 
 `scripts/ci-local-build.sh` runs the same task list as the Build workflow
-(`clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease`):
+(`clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintRelease`):
 
 ```bash
 scripts/ci-local-build.sh
