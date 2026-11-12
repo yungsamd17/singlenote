@@ -18,9 +18,11 @@ Kotlin + Jetpack Compose (Material 3), Room, DataStore Preferences, Glance widge
 ./gradlew assembleDebug          # build debug APK
 ./gradlew testDebugUnitTest      # unit tests
 ./gradlew lintDebug              # Android lint
+./gradlew koverVerifyDebug       # coverage gate (≥70% of the app logic)
 ```
 
-- CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest lintDebug` on every push/PR. The separate `.github/workflows/release.yml` validates `v*` tags against main and the app version, then builds and publishes APKs.
+- CI (`.github/workflows/build.yml`) runs `clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease` on every push/PR. The separate `.github/workflows/release.yml` validates `v*` tags against main and the app version, then builds and publishes APKs.
+- Coverage is gated by Kover at ≥70% line coverage of the app logic — the `data`, `util` and `notify` packages plus the three ViewModels. The scope lives in `app/build.gradle.kts`; Compose UI and Android components (activity, tile, receivers, widget) stay outside it because they need a device or a rendering tree, and Room's generated `_Impl` classes stay outside it because the DAO tests already exercise them. New logic ships with tests, or the gate goes red.
 - Batch merges are cheap by design: rapid merges to `main` cancel the superseded in-flight main builds (concurrency cancel), so only the last build of the batch runs to completion and covers everything. Per-PR builds still gate every PR — never merge on a stale green.
 - Every non-tag build also uploads the `singlenote-debug-apk` artifact — fetch it with `gh run download <run-id> -n singlenote-debug-apk` to verify on-device when no ADB connection exists.
 - Local sandboxes often lack the Android SDK/JDK — if Gradle can't run, rely on careful code review and let CI verify. Never skip updating tests when changing shared interfaces.

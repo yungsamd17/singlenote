@@ -5,7 +5,7 @@
 # Runs exactly the task list from .github/workflows/build.yml so a change can
 # be verified locally before pushing:
 #
-#   clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease
+#   clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease
 #
 # Setup it does for you (mirroring the workflow):
 #   - Android SDK: platform-tools, platforms;android-35, build-tools
@@ -52,7 +52,7 @@ LOG_DIR="${CI_LOCAL_LOG_DIR:-/tmp/opencode/ci-local-logs}"
 TASKS_EXPLICIT=0
 TASKS=("$@")
 if [ ${#TASKS[@]} -eq 0 ]; then
-  TASKS=(clean assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease)
+  TASKS=(clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease)
 else
   TASKS_EXPLICIT=1
 fi
@@ -369,6 +369,9 @@ if [ "${CI_LOCAL_STAGED:-auto}" = "1" ] || { [ "${CI_LOCAL_STAGED:-auto}" = "aut
     # without shrinking needs more memory than the unit tests.
     run_stage "$GRADLE_HEAP" assembleRelease
     run_stage "$GRADLE_HEAP_SMALL" testDebugUnitTest
+    # The coverage gate runs on the instrumented test task: after the unit
+    # tests, it only verifies the binary report they produced.
+    run_stage "$GRADLE_HEAP_SMALL" koverVerifyDebug
     run_stage "$GRADLE_HEAP" lintDebug
     run_stage "$GRADLE_HEAP" lintRelease
     run_stage "$GRADLE_HEAP" assembleDebug

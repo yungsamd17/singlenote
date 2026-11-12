@@ -2,11 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kover)
 }
 
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import kotlinx.kover.gradle.plugin.dsl.AggregationType
+import kotlinx.kover.gradle.plugin.dsl.CoverageUnit
 
 android {
     namespace = "com.yungsamd17.singlenote"
@@ -130,6 +133,56 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.ui.tooling)
+}
+
+// Coverage gate for the app's logic. The scope is the code a JVM test can
+// reach: the data layer, the util helpers, the notification rules and the
+// three ViewModels. Compose UI and Android components (activity, services,
+// receivers, widget) need a device or a rendering tree, and Room's generated
+// code is exercised through the DAO, so they stay outside the gate.
+kover {
+    reports {
+        filters {
+            includes {
+                // Kover turns a package into the class pattern "<package>.*",
+                // so the package names go in without a trailing wildcard.
+                packages(
+                    "com.yungsamd17.singlenote.data",
+                    "com.yungsamd17.singlenote.util",
+                    "com.yungsamd17.singlenote.notify",
+                )
+                classes(
+                    "com.yungsamd17.singlenote.ui.NoteViewModel*",
+                    "com.yungsamd17.singlenote.ui.ArchiveViewModel*",
+                    "com.yungsamd17.singlenote.ui.SettingsViewModel*",
+                )
+            }
+            excludes {
+                classes(
+                    // Room generates this from the DAO: it is exercised
+                    // through the DAO, not line by line. The trailing "*"
+                    // also catches the inner classes ("NoteDao_Impl$1").
+                    "com.yungsamd17.singlenote.data.*_Impl*",
+                    // Android components: they need a device, not a JVM test.
+                    "com.yungsamd17.singlenote.notify.PinNotification*",
+                    "com.yungsamd17.singlenote.notify.PinActionReceiver*",
+                    "com.yungsamd17.singlenote.notify.PinBootReceiver*",
+                )
+                androidGeneratedClasses()
+            }
+        }
+        variant("debug") {
+            verify {
+                rule {
+                    bound {
+                        minValue = 70
+                        coverageUnits = CoverageUnit.LINE
+                        aggregationForGroup = AggregationType.COVERED_PERCENTAGE
+                    }
+                }
+            }
+        }
+    }
 }
 
 // Full failure details in CI logs so a red testDebugUnitTest names the
