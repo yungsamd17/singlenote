@@ -12,16 +12,15 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.AppDatabase
 import kotlinx.coroutines.flow.first
 import com.yungsamd17.singlenote.data.NotePreferences
-import com.yungsamd17.singlenote.util.notificationBody
-import com.yungsamd17.singlenote.util.notificationTitle
 
 object PinNotification {
 
-    private const val CHANNEL_ID = "pinned_note_v4"
-    private const val LEGACY_CHANNEL_ID = "pinned_note"
-    private const val LEGACY_CHANNEL_ID_V2 = "pinned_note_v2"
-    private const val LEGACY_CHANNEL_ID_V3 = "pinned_note_v3"
-    private const val NOTIFICATION_ID = 1
+    // Internal so the channel migration can be tested.
+    internal const val CHANNEL_ID = "pinned_note_v4"
+    internal const val LEGACY_CHANNEL_ID = "pinned_note"
+    internal const val LEGACY_CHANNEL_ID_V2 = "pinned_note_v2"
+    internal const val LEGACY_CHANNEL_ID_V3 = "pinned_note_v3"
+    internal const val NOTIFICATION_ID = 1
     private const val REQUEST_OPEN_APP = 2
 
     fun ensureChannel(context: Context) {
@@ -82,32 +81,27 @@ object PinNotification {
         )
 
         // The title is the note's first line when the user asked for it, and
-        // the app's own label otherwise.
-        val title = if (titleFirstLine) {
-            notificationTitle(note.content).ifEmpty {
-                context.getString(R.string.notification_pinned_title)
-            }
-        } else {
-            context.getString(R.string.notification_pinned_title)
-        }
-
-        // The title already carries the first line, so the body starts at
-        // the second one instead of repeating it.
-        val body = if (titleFirstLine) notificationBody(note.content) else note.content
+        // the app's own label otherwise. The rules live in
+        // PinnedNotificationContent.kt so they can be tested on the JVM.
+        val content = pinnedNotificationContent(
+            note = note,
+            notificationsEnabled = notificationsEnabled,
+            pinned = pinned,
+            titleFirstLine = titleFirstLine,
+            lockscreenVisible = lockscreenVisible,
+            defaultTitle = context.getString(R.string.notification_pinned_title),
+        ) ?: return
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setContentTitle(content.title)
+            .setContentText(content.body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(content.body))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             // Private by default: full content only on the lock screen when
             // the user opts in via Settings. Ongoing and silent on every
             // refresh (it re-posts on each save while pinned).
-            .setVisibility(
-                if (lockscreenVisible) NotificationCompat.VISIBILITY_PUBLIC
-                else NotificationCompat.VISIBILITY_PRIVATE
-            )
+            .setVisibility(content.visibility)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             // Re-post if the user dismisses the pin anyway (some skins let

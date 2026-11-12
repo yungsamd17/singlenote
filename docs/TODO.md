@@ -30,10 +30,11 @@ reconciled with v0.5.1 on 2026-11-11.
 - [ ] **Coverage tooling** — no JaCoCo/Kover task, so the plan's ≥70% goal cannot
   be measured. Add it, then target `NoteRepository`, `ArchiveViewModel` and
   `NoteViewModel` first.
-- [ ] **`PinNotification` tests** — notification builder branches (blank note,
-  disabled notifications, title-first-line, lock-screen visibility, channel
-  migration) have zero coverage. Extract the builder from the side effects so it
-  can be tested on the JVM.
+- [x] **`PinNotification` tests** — the notification rules moved to
+  `notify/PinnedNotificationContent.kt` (`pinnedNotificationContent`): no note,
+  a blank note, disabled notifications, an unpinned note, the title-first-line
+  rule and the lock-screen visibility. `PinNotificationChannelTest` covers the
+  channel creation and the removal of the legacy channels.
 - [x] **Archive file I/O is testable** — the JSON build/parse moved to
   `util/ArchiveFile.kt` (`buildArchiveJson` / `parseArchiveJson`) with
   `ArchiveFileTest` covering the round trip, malformed JSON, a foreign format,
