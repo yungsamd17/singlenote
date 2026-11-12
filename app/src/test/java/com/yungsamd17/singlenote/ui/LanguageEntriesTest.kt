@@ -23,10 +23,14 @@ class LanguageEntriesTest {
             "de-DE" to R.string.language_german_english,
             "es-ES" to R.string.language_spanish_english,
             "fr-FR" to R.string.language_french_english,
+            "it-IT" to R.string.language_italian_english,
+            "nl-NL" to R.string.language_dutch_english,
             "pl-PL" to R.string.language_polish_english,
+            "pt-BR" to R.string.language_portuguese_english,
             "ru-RU" to R.string.language_russian_english,
             "zh-CN" to R.string.language_chinese_english,
             "sk-SK" to R.string.language_slovak_english,
+            "tr-TR" to R.string.language_turkish_english,
         )
         assertEquals(expected, languageEntries.associate { it.code to it.description })
     }

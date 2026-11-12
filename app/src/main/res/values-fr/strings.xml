@@ -77,6 +77,14 @@
     <string name="language_chinese_english">Chinese</string>
     <string name="language_chinese">中文</string>
     <string name="language_english_us">English (US)</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_english">Italian</string>
+    <string name="language_dutch">Nederlands</string>
+    <string name="language_dutch_english">Dutch</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_portuguese_english">Brazilian Portuguese</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_turkish_english">Turkish</string>
     <string name="settings_accent">Couleur d\'accent</string>
     <string name="accent_default">Défaut</string>
     <string name="accent_blue">Bleu</string>

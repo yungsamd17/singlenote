@@ -35,7 +35,7 @@ Switch cards toggle across their full row; disabled controls are dimmed and iner
 |---|---|
 | Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, and default, preset-accent, or wallpaper-accent launcher icon on Android 12+ |
 | Typography | Bundled Google Sans Flex or system app font; existing default/mono/serif note style and text sizes |
-| Language | Translation contribution link; System plus English, Slovenčina, Deutsch, Español, Français, Polski, Русский and 简体中文, with selected-row highlight and native names |
+| Language | Translation contribution link; System plus English, Slovenčina, Deutsch, Español, Français, Italiano, Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文, with selected-row highlight and native names |
 | Notifications | Pinned notification and lock-screen content; lock-screen switch is disabled when notifications are off |
 | About | Accent brand/version/update card, app description, legal links, project/support links, and Changelog last |
 
