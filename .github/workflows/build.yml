@@ -124,16 +124,20 @@ jobs:
             echo "RELEASE_KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}"
           } >> "$GITHUB_ENV"
 
+      # Lint runs once, on the release variant: its source set is the one that
+      # ships, it includes the Proguard checks `lintDebug` cannot see, and the
+      # two variants analyse the same code. Running both cost ~55 s of a ~200 s
+      # build. `assembleRelease` still runs lintVitalRelease on top of this.
       - name: Build, test, lint
         if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing == 'true'
-        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintDebug lintRelease
+        run: ./gradlew --no-daemon clean assembleDebug assembleRelease testDebugUnitTest koverVerifyDebug lintRelease
 
       # Unsigned fallback for forks: same checks minus assembleRelease,
       # which would fail at signing time without the release keystore.
       # lintRelease needs no keystore, so the plan's demand still holds.
       - name: Build, test, lint (debug only)
         if: steps.filter.outputs.app == 'true' && steps.signing.outputs.has-signing != 'true'
-        run: ./gradlew --no-daemon clean assembleDebug testDebugUnitTest koverVerifyDebug lintDebug lintRelease
+        run: ./gradlew --no-daemon clean assembleDebug testDebugUnitTest koverVerifyDebug lintRelease
 
       - name: Upload debug APK artifact
         if: steps.filter.outputs.app == 'true' && github.ref_type != 'tag'
