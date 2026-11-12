@@ -17,6 +17,7 @@ Changes for the next release will be listed here.
 
 - **Built for Android 16.** The app now targets SDK 36, so it follows the current back-gesture and 16 KB page-size requirements on Android 16 while keeping the same behaviour on older versions.
 - **The language list is alphabetical.** The picker shows the device-language row first, then English, then the remaining languages in alphabetical order by their English name, so a language is easy to find.
+- **The language rows read like a language list.** Each row now leads with the English name ("German"), shows the native name underneath ("Deutsch") and carries a round badge with the region code, the way other apps present their language pickers.
 - **The archive search button appears only when it helps.** With no archived note or just one, the search action is left out of the app bar; from two notes on, it shows up on its own.
 - **The archive always starts at the top.** Opening the archive returns to the first note, and changing the sort, opening the search or clearing it jumps back to the first row instead of keeping an offset that belonged to the old list.
 - **Clearing the archive search closes the keyboard.** The clear button in the search field empties the query and puts the keyboard away, so the list gets the screen back right away.
