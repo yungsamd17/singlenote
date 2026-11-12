@@ -50,7 +50,7 @@ fun LinkedText(
     color: Color = Color.Unspecified,
 ) {
     val linkColor = MaterialTheme.colorScheme.primary
-    val annotated = remember(text, linkColor) { linkified(text, linkColor) }
+    val annotated = remember(text, linkColor) { linkify(text, linkColor) }
     Text(text = annotated, modifier = modifier, style = style, color = color)
 }
 
@@ -106,7 +106,13 @@ fun MarkdownText(
     }
 }
 
-private fun linkified(source: String, linkColor: Color): AnnotatedString {
+/**
+ * Parses the inline markup into an [AnnotatedString].
+ *
+ * Public so the rules can be tested without a Compose tree: [LinkedText] only
+ * adds the theme color on top of it.
+ */
+fun linkify(source: String, linkColor: Color = Color.Unspecified): AnnotatedString {
 
     val link = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)
     return AnnotatedString.Builder().apply {
@@ -146,7 +152,7 @@ private fun linkified(source: String, linkColor: Color): AnnotatedString {
                     // Bold first, links inside stay clickable: the inner
                     // parse keeps its spans, the push adds weight over all.
                     pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    append(linkified(bold, linkColor))
+                    append(linkify(bold, linkColor))
                     pop()
                 }
             }

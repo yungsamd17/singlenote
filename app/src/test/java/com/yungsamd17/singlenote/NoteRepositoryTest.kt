@@ -641,4 +641,65 @@ class NoteRepositoryTest {
 
         assertEquals(1, dao.activeCount())
     }
+
+    @Test
+    fun hasActiveNote_followsTheActiveRow() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), notifyScope = backgroundScope)
+
+        assertFalse(repo.hasActiveNote())
+
+        repo.saveActive("hello")
+        advanceUntilIdle()
+
+        assertTrue(repo.hasActiveNote())
+    }
+
+    @Test
+    fun importArchived_addsTheNotesAndBroadcasts() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        var broadcasts = 0
+        val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
+
+        repo.importArchived(listOf(Note(content = "imported", createdAt = 1, updatedAt = 2)))
+        advanceUntilIdle()
+
+        assertEquals(1, broadcasts)
+        assertEquals("imported", dao.getById(1L)?.content)
+        assertEquals(Note.STATE_ARCHIVED, dao.getById(1L)?.state)
+    }
+
+    @Test
+    fun importArchived_withNoNotesDoesNotBroadcast() = runTest(UnconfinedTestDispatcher()) {
+        var broadcasts = 0
+        val repo = NoteRepository(FakeDao(), FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
+
+        repo.importArchived(emptyList())
+        advanceUntilIdle()
+
+        assertEquals(0, broadcasts)
+    }
+
+    @Test
+    fun turningNotificationsOffUnpinsTheNote() = runTest(UnconfinedTestDispatcher()) {
+        val prefs = FakePrefs().apply { pinned.value = true }
+        val repo = NoteRepository(FakeDao(), prefs, {}, { 10_000L }, backgroundScope, 0L)
+
+        repo.setNotificationsEnabled(false)
+        advanceUntilIdle()
+
+        assertFalse(prefs.notificationsEnabled.value)
+        assertFalse(prefs.pinned.value)
+    }
+
+    @Test
+    fun theNotificationTitlePreferenceReachesTheStore() = runTest(UnconfinedTestDispatcher()) {
+        val prefs = FakePrefs()
+        val repo = NoteRepository(FakeDao(), prefs, {}, { 10_000L }, backgroundScope, 0L)
+
+        repo.setNotificationTitleFirstLine(true)
+        advanceUntilIdle()
+
+        assertTrue(prefs.notificationTitleFirstLine.value)
+    }
 }

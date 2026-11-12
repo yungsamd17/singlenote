@@ -176,6 +176,15 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         @Volatile private var instance: NotePreferences? = null
 
         /**
+         * Test hook: drops the cached instance. Every test gets its own data
+         * directory, so a test that starts from a fresh context has to drop an
+         * instance a previous test may have created.
+         */
+        internal fun resetForTests() {
+            synchronized(this) { instance = null }
+        }
+
+        /**
          * Single app-scoped instance (holds the application context, never an activity). Mirrors
          * [AppDatabase.get].
          */
