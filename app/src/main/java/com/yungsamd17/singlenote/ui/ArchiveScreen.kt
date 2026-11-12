@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.fadeIn
@@ -27,10 +28,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SegmentedButton
@@ -42,8 +45,10 @@ import androidx.compose.runtime.DisposableEffect
 import com.yungsamd17.singlenote.data.NotePreferences
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Unarchive
@@ -71,12 +76,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
@@ -97,6 +106,11 @@ fun ArchiveScreen(
     onRestored: () -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    var searchActive by rememberSaveable { mutableStateOf(false) }
+    val searchFocus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     val preferences = remember { NotePreferences.get(context.applicationContext) }
     // Start as null, not with a made-up default: rendering the list before the
@@ -127,6 +141,18 @@ fun ArchiveScreen(
         if (!entered || (lastSort.isNotEmpty() && lastSort != key)) listState.scrollToItem(0)
         entered = true
         lastSort = key
+    }
+    // The field is composed in the same frame that flips [searchActive], so
+    // the effect runs after it exists and the focus request lands.
+    LaunchedEffect(searchActive) {
+        if (searchActive) searchFocus.requestFocus()
+    }
+    // Back closes the search before it leaves the archive: users expect the
+    // field to dismiss first, not the whole screen.
+    BackHandler(enabled = searchActive) {
+        searchActive = false
+        viewModel.setQuery("")
+        keyboard?.hide()
     }
     val pendingDelete by viewModel.pendingDelete.collectAsStateWithLifecycle()
     val pendingDeleteIds by viewModel.pendingDeleteIds.collectAsStateWithLifecycle()
@@ -181,7 +207,10 @@ fun ArchiveScreen(
     val pendingClearIds = remember(pendingClear) {
         pendingClear?.map { it.id }?.toSet() ?: emptySet()
     }
-    val visibleNotes = remember(notes, pendingDeleteIds, pendingClearIds, sort, order) {
+    // Everything that export and clear act on. Search is deliberately not
+    // applied here: exporting only the current matches would silently back up
+    // a fragment of the archive.
+    val sortedNotes = remember(notes, pendingDeleteIds, pendingClearIds, sort, order) {
         val sortKey = sort
         val orderKey = order
         if (sortKey == null || orderKey == null) {
@@ -195,6 +224,11 @@ fun ArchiveScreen(
             }
             if (orderKey == "descending" && sortKey != "title" || orderKey == "ascending" && sortKey == "title") sorted.reversed() else sorted
         }
+    }
+    // Sorting is the expensive part and only changes with the sort keys, so
+    // the search filters the already-sorted list instead of re-sorting it.
+    val visibleNotes = remember(sortedNotes, searchQuery) {
+        filterArchivedNotes(sortedNotes, searchQuery)
     }
 
     LaunchedEffect(pendingDelete) {
@@ -251,6 +285,31 @@ fun ArchiveScreen(
                     }
                 },
                 actions = {
+                    if (searchActive) {
+                        TooltipIconButton(
+                            onClick = {
+                                searchActive = false
+                                viewModel.setQuery("")
+                                keyboard?.hide()
+                            },
+                            tooltip = stringResource(R.string.cd_close_search),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Close,
+                                contentDescription = stringResource(R.string.cd_close_search)
+                            )
+                        }
+                    } else {
+                        TooltipIconButton(
+                            onClick = { searchActive = true },
+                            tooltip = stringResource(R.string.cd_search_archive),
+                        ) {
+                            Icon(
+                                Icons.Outlined.Search,
+                                contentDescription = stringResource(R.string.cd_search_archive)
+                            )
+                        }
+                    }
                     Box {
                         TooltipIconButton(
                             onClick = { menuOpen = true },
@@ -262,12 +321,12 @@ fun ArchiveScreen(
                             shape = RoundedCornerShape(28.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             shadowElevation = 8.dp, tonalElevation = 0.dp, modifier = Modifier.widthIn(min = 220.dp)) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.archive_sort)) }, trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_sort), null) }, onClick = { menuOpen = false; showSort = true })
-                            DropdownMenuItem(text = { Text(stringResource(R.string.export_archive)) }, enabled = visibleNotes.isNotEmpty(), trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_upload), null) }, onClick = {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.export_archive)) }, enabled = sortedNotes.isNotEmpty(), trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_upload), null) }, onClick = {
                                 menuOpen = false
                                 showExport = true
                             })
                             DropdownMenuItem(text = { Text(stringResource(R.string.archive_import)) }, trailingIcon = { Icon(Icons.Outlined.SaveAlt, null) }, onClick = { menuOpen = false; showImport = true })
-                            DropdownMenuItem(text = { Text(stringResource(R.string.clear_archive)) }, enabled = visibleNotes.isNotEmpty(), trailingIcon = { Icon(Icons.Outlined.Delete, null) }, onClick = { menuOpen = false; showClearDialog = true })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.clear_archive)) }, enabled = sortedNotes.isNotEmpty(), trailingIcon = { Icon(Icons.Outlined.Delete, null) }, onClick = { menuOpen = false; showClearDialog = true })
                         }
                     }
                 },
@@ -295,45 +354,84 @@ fun ArchiveScreen(
         val loadedOrder = order
         if (loadedSort == null || loadedOrder == null) {
             // Loading preferences; the screen's slide transition covers it.
-        } else if (visibleNotes.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = stringResource(R.string.archive_empty),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         } else {
-            LazyColumn(
-                state = listState,
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(innerPadding)
+                    // Keep the list above the keyboard while the field is open.
+                    .imePadding()
             ) {
-                items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
-                    androidx.compose.animation.AnimatedContent(
-                        targetState = archiveHeader(context, note, loadedSort, now),
-                        modifier = Modifier.animateItem(),
-                        // Fade only: a size transform would make every row
-                        // jump when its timestamp changes.
-                        transitionSpec = {
-                            fadeIn(motionSpec(AppMotion.FAST_MS)) togetherWith
-                                fadeOut(motionSpec(AppMotion.FAST_MS))
+                if (searchActive) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = viewModel::setQuery,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = NoteCardHorizontalPadding, vertical = NoteCardTopPadding)
+                            .focusRequester(searchFocus),
+                        placeholder = { Text(stringResource(R.string.archive_search)) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (query.isNotEmpty()) {
+                                TooltipIconButton(
+                                    onClick = { viewModel.setQuery("") },
+                                    tooltip = stringResource(R.string.cd_clear_search),
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Close,
+                                        contentDescription = stringResource(R.string.cd_clear_search)
+                                    )
+                                }
+                            }
                         },
-                        label = "archive timestamp",
-                    ) { header ->
-                    ArchivedNoteItem(
-                        note = note,
-                        date = header,
-                        onRestore = { viewModel.restore(note) },
-                        onDelete = { noteToDelete = note }
+                        singleLine = true,
+                        shape = AppCardShape,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     )
+                }
+                if (visibleNotes.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            // Distinguish "the archive is empty" from "nothing
+                            // matches the current search".
+                            text = stringResource(
+                                if (sortedNotes.isEmpty()) R.string.archive_empty
+                                else R.string.archive_search_empty
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
+                            androidx.compose.animation.AnimatedContent(
+                                targetState = archiveHeader(context, note, loadedSort, now),
+                                modifier = Modifier.animateItem(),
+                                // Fade only: a size transform would make every row
+                                // jump when its timestamp changes.
+                                transitionSpec = {
+                                    fadeIn(motionSpec(AppMotion.FAST_MS)) togetherWith
+                                        fadeOut(motionSpec(AppMotion.FAST_MS))
+                                },
+                                label = "archive timestamp",
+                            ) { header ->
+                            ArchivedNoteItem(
+                                note = note,
+                                date = header,
+                                onRestore = { viewModel.restore(note) },
+                                onDelete = { noteToDelete = note }
+                            )
+                            }
+                        }
                     }
                 }
             }
@@ -368,7 +466,7 @@ fun ArchiveScreen(
             }
         }, confirmButton = { TextButton(onClick = {
             showExport = false
-            viewModel.pendingExport = if (exportJson) buildArchiveJson(visibleNotes) else visibleNotes.joinToString("\n\n---\n\n") { it.content }
+            viewModel.pendingExport = if (exportJson) buildArchiveJson(sortedNotes) else sortedNotes.joinToString("\n\n---\n\n") { it.content }
             exportLauncher.launch(if (exportJson) "singlenote-archive.json" else "singlenote-archive.txt")
         }) { Text(stringResource(R.string.export_archive)) } }, dismissButton = { TextButton(onClick = { showExport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
     }

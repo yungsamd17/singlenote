@@ -70,8 +70,10 @@ reconciled with v0.5.1 on 2026-11-11.
 
 ## Feature follow-ups
 
-- [ ] **Archive search** — debounced, case-insensitive filter over archived note
-  text. `ArchiveScreen.kt` has sort state but no query state.
+- [x] **Archive search** — a search action in the top bar opens a field that
+  filters the archive by note text as you type (case-insensitive, 150 ms
+  debounced). The query lives in `ArchiveViewModel` so it survives rotation;
+  export and clear still act on the whole archive, never just the matches.
 
 ## Post-1.0.0 (decided 2026-11-11)
 

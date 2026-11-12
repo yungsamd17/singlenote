@@ -9,6 +9,11 @@
     <string name="action_swap">交换</string>
     <string name="action_replace">替换</string>
     <string name="archive_empty">暂无归档笔记。</string>
+    <string name="archive_search">搜索归档</string>
+    <string name="archive_search_empty">没有匹配的笔记。</string>
+    <string name="cd_search_archive">搜索归档</string>
+    <string name="cd_clear_search">清除搜索</string>
+    <string name="cd_close_search">关闭搜索</string>
     <string name="delete_dialog_title">永久删除？</string>
     <string name="delete_dialog_message">此笔记将被永久删除，无法恢复。</string>
     <string name="delete_dialog_confirm">删除</string>

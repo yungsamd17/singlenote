@@ -9,6 +9,11 @@
     <string name="action_swap">Tauschen</string>
     <string name="action_replace">Ersetzen</string>
     <string name="archive_empty">Noch nichts archiviert.</string>
+    <string name="archive_search">Archiv durchsuchen</string>
+    <string name="archive_search_empty">Keine Notizen entsprechen deiner Suche.</string>
+    <string name="cd_search_archive">Archiv durchsuchen</string>
+    <string name="cd_clear_search">Suche löschen</string>
+    <string name="cd_close_search">Suche schließen</string>
     <string name="delete_dialog_title">Endgültig löschen?</string>
     <string name="delete_dialog_message">Diese Notiz wird dauerhaft gelöscht und kann nicht wiederhergestellt werden.</string>
     <string name="delete_dialog_confirm">Löschen</string>

@@ -5,6 +5,7 @@ import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.ui.ArchiveEvent
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.filterArchivedNotes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -306,5 +307,88 @@ class ArchiveViewModelTest {
         assertTrue(store.cleared)
         assertTrue(store.archivedNotes.value.isEmpty())
         assertEquals(listOf(ArchiveEvent.Cleared), received)
+    }
+
+    // ------------------------------------------------------------- search ---
+
+    @Test
+    fun setQuery_updatesTheRawQueryImmediately() = runTest {
+        installMain()
+        val vm = ArchiveViewModel(FakeArchiveStore())
+
+        vm.setQuery("rent")
+
+        assertEquals("rent", vm.query.value)
+        vm.setQuery("")
+        assertEquals("", vm.query.value)
+    }
+
+    @Test
+    fun searchQuery_publishesOnlyAfterTheDebounceWindow() = runTest {
+        installMain()
+        val vm = ArchiveViewModel(FakeArchiveStore())
+        val seen = mutableListOf<String>()
+        backgroundScope.launch { vm.searchQuery.collect { seen += it } }
+        runCurrent()
+
+        vm.setQuery("a")
+        advanceTimeBy(ArchiveViewModel.SEARCH_DEBOUNCE_MS - 10)
+        runCurrent()
+        assertTrue("still debouncing, saw $seen", seen.none { it == "a" })
+
+        advanceTimeBy(20)
+        runCurrent()
+        assertEquals("a", seen.last())
+    }
+
+    @Test
+    fun searchQuery_keepsOnlyTheLastValueOfAFastBurst() = runTest {
+        installMain()
+        val vm = ArchiveViewModel(FakeArchiveStore())
+        val seen = mutableListOf<String>()
+        backgroundScope.launch { vm.searchQuery.collect { seen += it } }
+        runCurrent()
+
+        vm.setQuery("a")
+        advanceTimeBy(50)
+        runCurrent()
+        vm.setQuery("ab")
+        advanceTimeBy(50)
+        runCurrent()
+        vm.setQuery("abc")
+        advanceTimeBy(ArchiveViewModel.SEARCH_DEBOUNCE_MS + 1)
+        runCurrent()
+
+        // The initial value, then one publish for the whole burst.
+        assertEquals(listOf("", "abc"), seen)
+    }
+
+    @Test
+    fun filterArchivedNotes_matchesCaseInsensitivelyAndTrimsTheQuery() {
+        val notes = listOf(
+            archived(1, "Buy Milk"),
+            archived(2, "call the plumber"),
+            archived(3, "milk and eggs"),
+        )
+
+        assertEquals(
+            listOf(1L, 3L),
+            filterArchivedNotes(notes, "  MILK ").map { it.id },
+        )
+    }
+
+    @Test
+    fun filterArchivedNotes_blankQueryReturnsTheListUnchanged() {
+        val notes = listOf(archived(1, "one"), archived(2, "two"))
+
+        assertEquals(notes, filterArchivedNotes(notes, ""))
+        assertEquals(notes, filterArchivedNotes(notes, "   "))
+    }
+
+    @Test
+    fun filterArchivedNotes_keepsTheInputOrderWhenNothingMatches() {
+        val notes = listOf(archived(1, "alpha"), archived(2, "beta"))
+
+        assertEquals(emptyList<Note>(), filterArchivedNotes(notes, "gamma"))
     }
 }

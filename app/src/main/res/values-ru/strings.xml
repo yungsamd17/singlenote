@@ -9,6 +9,11 @@
     <string name="action_swap">Обменять</string>
     <string name="action_replace">Заменить</string>
     <string name="archive_empty">Пока ничего не архивировано.</string>
+    <string name="archive_search">Поиск в архиве</string>
+    <string name="archive_search_empty">Нет заметок, соответствующих запросу.</string>
+    <string name="cd_search_archive">Поиск в архиве</string>
+    <string name="cd_clear_search">Очистить поиск</string>
+    <string name="cd_close_search">Закрыть поиск</string>
     <string name="delete_dialog_title">Удалить навсегда?</string>
     <string name="delete_dialog_message">Эта заметка будет удалена безвозвратно и её нельзя будет восстановить.</string>
     <string name="delete_dialog_confirm">Удалить</string>
