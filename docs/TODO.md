@@ -12,7 +12,7 @@ lives in [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
    `MigrationTest` builds the v1/v2 schemas by hand, runs the production
    migrations through a real `SupportSQLiteOpenHelper.onUpgrade`, and diffs the
    result against a fresh Room v3 database; `NoteDaoTest` runs the DAO against
-   SQLite, including the unique `activeSlot` guard. 186 JVM tests pass locally.
+   SQLite, including the unique `activeSlot` guard. 191 JVM tests pass locally.
 2. [ ] **Test gate** — coverage is measured and gated (Kover, ≥70 % line
    coverage of the app logic, enforced by `koverVerifyDebug` in CI), the
    `PinNotification` branches and the archive import/export are covered by JVM
