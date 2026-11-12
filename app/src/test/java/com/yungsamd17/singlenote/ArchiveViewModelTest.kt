@@ -5,6 +5,7 @@ import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.ui.ArchiveEvent
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.archiveSearchAvailable
 import com.yungsamd17.singlenote.ui.filterArchivedNotes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -390,5 +392,15 @@ class ArchiveViewModelTest {
         val notes = listOf(archived(1, "alpha"), archived(2, "beta"))
 
         assertEquals(emptyList<Note>(), filterArchivedNotes(notes, "gamma"))
+    }
+
+    @Test
+    fun theSearchButtonOnlyAppearsWithMoreThanOneNote() {
+        // With no note or a single note there is nothing to filter, so the app
+        // bar leaves the search action out.
+        assertFalse(archiveSearchAvailable(0))
+        assertFalse(archiveSearchAvailable(1))
+        assertTrue(archiveSearchAvailable(2))
+        assertTrue(archiveSearchAvailable(25))
     }
 }

@@ -120,8 +120,6 @@ fun ArchiveScreen(
     val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = null)
     val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = null)
     val listState = rememberLazyListState()
-    var entered by rememberSaveable { mutableStateOf(false) }
-    var lastSort by rememberSaveable { mutableStateOf("") }
     var showSort by remember { mutableStateOf(false) }
     var showExport by remember { mutableStateOf(false) }
     var showImport by remember { mutableStateOf(false) }
@@ -134,14 +132,15 @@ fun ArchiveScreen(
         owner.lifecycle.addObserver(observer)
         onDispose { owner.lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(sort, order) {
-        val sortKey = sort ?: return@LaunchedEffect
-        val orderKey = order ?: return@LaunchedEffect
-        val key = "$sortKey:$orderKey"
-        if (!entered || (lastSort.isNotEmpty() && lastSort != key)) listState.scrollToItem(0)
-        entered = true
-        lastSort = key
-    }
+    // The archive always opens at the top: the NavHost restores the last scroll
+    // offset, so coming back to a screen that was left half-scrolled looked
+    // like the list had opened in the middle.
+    LaunchedEffect(Unit) { listState.scrollToItem(0) }
+    // Changing the sort or the search builds a different list, so the previous
+    // offset belongs to rows that may no longer exist. Starting from the first
+    // row is the only predictable outcome — opening and clearing the search
+    // included.
+    LaunchedEffect(sort, order, searchActive, searchQuery) { listState.scrollToItem(0) }
     // The field is composed in the same frame that flips [searchActive], so
     // the effect runs after it exists and the focus request lands.
     LaunchedEffect(searchActive) {
@@ -300,14 +299,16 @@ fun ArchiveScreen(
                             )
                         }
                     } else {
-                        TooltipIconButton(
-                            onClick = { searchActive = true },
-                            tooltip = stringResource(R.string.cd_search_archive),
-                        ) {
-                            Icon(
-                                Icons.Outlined.Search,
-                                contentDescription = stringResource(R.string.cd_search_archive)
-                            )
+                        if (archiveSearchAvailable(sortedNotes.size)) {
+                            TooltipIconButton(
+                                onClick = { searchActive = true },
+                                tooltip = stringResource(R.string.cd_search_archive),
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Search,
+                                    contentDescription = stringResource(R.string.cd_search_archive)
+                                )
+                            }
                         }
                     }
                     Box {
@@ -690,3 +691,10 @@ private fun archiveHeader(context: android.content.Context, note: Note, sort: St
     }
     return context.getString(if (edited) R.string.archive_edited_time else R.string.archive_archived_time, time)
 }
+
+/**
+ * The app bar only offers the archive search once the archive holds more than
+ * one note. With none or a single row there is nothing to filter, and a search
+ * that can only return the same row is noise next to the overflow menu.
+ */
+internal fun archiveSearchAvailable(noteCount: Int): Boolean = noteCount >= 2
