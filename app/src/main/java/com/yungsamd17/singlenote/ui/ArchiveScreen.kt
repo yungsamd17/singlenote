@@ -376,7 +376,12 @@ fun ArchiveScreen(
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 TooltipIconButton(
-                                    onClick = { viewModel.setQuery("") },
+                                    onClick = {
+                                        viewModel.setQuery("")
+                                        // Clearing the field ends the search, so
+                                        // the keyboard goes with it.
+                                        keyboard?.hide()
+                                    },
                                     tooltip = stringResource(R.string.cd_clear_search),
                                 ) {
                                     Icon(

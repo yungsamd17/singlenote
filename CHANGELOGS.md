@@ -19,6 +19,7 @@ Changes for the next release will be listed here.
 - **The language list is alphabetical.** The picker shows the device-language row first, then English, then the remaining languages in alphabetical order by their English name, so a language is easy to find.
 - **The archive search button appears only when it helps.** With no archived note or just one, the search action is left out of the app bar; from two notes on, it shows up on its own.
 - **The archive always starts at the top.** Opening the archive returns to the first note, and changing the sort, opening the search or clearing it jumps back to the first row instead of keeping an offset that belonged to the old list.
+- **Clearing the archive search closes the keyboard.** The clear button in the search field empties the query and puts the keyboard away, so the list gets the screen back right away.
 
 ### Fixed
 
