@@ -72,7 +72,7 @@ breakdown is worth knowing before adding work to the pipeline:
 |---|---|---|
 | Lint (release variant) | ~55 s | ~27 % of the build; the single most expensive step |
 | KSP (Room) | ~26 s | `kspDebugKotlin`; the release variant runs its own KSP too |
-| Unit tests | ~20 s | all 192 JVM tests, see below |
+| Unit tests | ~20 s | all 191 JVM tests, see below |
 | R8 / resource shrinking | ~10 s | release only |
 | Everything else | ~90 s | resource merge, dexing, packaging, Kover |
 

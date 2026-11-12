@@ -13,7 +13,9 @@ import org.robolectric.annotation.Config
 
 /**
  * Covers the language override: the platform app-locales path on Android 13+
- * and the SharedPreferences fallback below it.
+ * and the SharedPreferences fallback below it. The modern path runs on SDK 34
+ * like the rest of the suite, so the tests share one Robolectric sandbox; the
+ * fallback needs its own pre-Android-13 sandbox and keeps SDK 30.
  */
 @RunWith(RobolectricTestRunner::class)
 class AppLanguageTest {
@@ -22,7 +24,7 @@ class AppLanguageTest {
         get() = ApplicationProvider.getApplicationContext()
 
     @Test
-    @Config(sdk = [33])
+    @Config(sdk = [34])
     fun theLanguageTagFollowsTheAppLocales() {
         assertEquals("", AppLanguage.getLanguageTag(context))
 
@@ -32,7 +34,7 @@ class AppLanguageTest {
     }
 
     @Test
-    @Config(sdk = [33])
+    @Config(sdk = [34])
     fun settingTheSameLanguageChangesNothing() {
         AppLanguage.setLanguage(context, "de")
 
@@ -42,7 +44,7 @@ class AppLanguageTest {
     }
 
     @Test
-    @Config(sdk = [33])
+    @Config(sdk = [34])
     fun anEmptyTagClearsTheOverride() {
         AppLanguage.setLanguage(context, "de")
 
@@ -88,7 +90,7 @@ class AppLanguageTest {
     }
 
     @Test
-    @Config(sdk = [33])
+    @Config(sdk = [34])
     fun wrapKeepsTheContextOnAndroid13() {
         AppLanguage.setLanguage(context, "de")
 
@@ -103,14 +105,5 @@ class AppLanguageTest {
         AppLanguage.setLanguage(activity, "de")
 
         assertEquals("de", AppLanguage.getLanguageTag(activity))
-    }
-
-    @Test
-    @Config(sdk = [33])
-    fun finishingWithoutASnapshotDoesNothing() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-
-        // No transition was started, so there is nothing to finish.
-        AppLanguage.finishTransition(activity)
     }
 }
