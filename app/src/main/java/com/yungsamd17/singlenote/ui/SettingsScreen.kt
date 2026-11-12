@@ -495,6 +495,17 @@ fun SettingsScreen(
                 "icon" -> stringResource(R.string.app_icon_restart_notice)
                 else -> null
             },
+            // Every accent option carries its colour, so the palette can be
+            // picked by sight. Monochrome turns the whole app gray, and the
+            // previews follow it.
+            swatches = if (dialog == "accent") {
+                ACCENTS.associateWith { key ->
+                    val color = accentPreviewColor(key)
+                    if (monochrome == true) color.toGray() else color
+                }
+            } else {
+                emptyMap()
+            },
             selected =
                 when (dialog) {
                     "theme" -> theme
@@ -725,6 +736,7 @@ private fun SelectionDialog(
     options: List<Pair<String, String>>,
     selected: String,
     notice: String? = null,
+    swatches: Map<String, androidx.compose.ui.graphics.Color> = emptyMap(),
     onSelect: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -751,8 +763,17 @@ private fun SelectionDialog(
                         Text(
                             text = label,
                             style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 8.dp),
+                            modifier = Modifier.padding(start = 8.dp).weight(1f),
                         )
+                        // Colour preview of the option, so the palette can be
+                        // picked by sight instead of by name.
+                        swatches[key]?.let { color ->
+                            Box(
+                                modifier = Modifier
+                                    .size(22.dp)
+                                    .background(color, CircleShape),
+                            )
+                        }
                     }
                 }
             }
