@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Singlenote</string>
+    <string name="hint_write_one_thing">Hatırlamak için bir şey yaz…</string>
+    <string name="cd_archive">Notu arşivle</string>
+    <string name="cd_delete">Kalıcı olarak sil</string>
+    <string name="action_restore">Geri yükle</string>
+    <string name="action_delete">Sil</string>
+    <string name="action_swap">Yer değiştir</string>
+    <string name="action_replace">Değiştir</string>
+    <string name="archive_empty">Henüz arşivlenmiş not yok.</string>
+    <string name="archive_search">Arşivde ara</string>
+    <string name="archive_search_empty">Aramanızla eşleşen not yok.</string>
+    <string name="cd_search_archive">Arşivde ara</string>
+    <string name="cd_clear_search">Aramayı temizle</string>
+    <string name="cd_close_search">Aramayı kapat</string>
+    <string name="delete_dialog_title">Kalıcı olarak silinsin mi?</string>
+    <string name="delete_dialog_message">Bu not kalıcı olarak silinecek ve geri alınamayacak.</string>
+    <string name="delete_dialog_confirm">Sil</string>
+    <string name="cancel">İptal</string>
+    <string name="archive_cleared">Arşiv temizlendi</string>
+    <string name="restore_conflict_title">Bu not geri yüklensin mi?</string>
+    <string name="restore_conflict_message">Ana görünümde zaten bir not var. İki notu yer değiştirelim mi, yoksa ana notu bununla değiştirelim mi?</string>
+    <string name="clear_archive">Arşivi temizle</string>
+    <string name="clear_archive_title">Arşiv temizlensin mi?</string>
+    <string name="clear_archive_message">Arşivlenmiş tüm notlar kalıcı olarak silinecek ve geri alınamayacak.</string>
+    <string name="archive_title">Arşiv</string>
+    <string name="cd_back">Geri</string>
+    <string name="cd_open_archive">Arşivi aç</string>
+    <string name="empty_note_placeholder">(boş not)</string>
+    <string name="cd_pin">Notu bildirimlere sabitle</string>
+    <string name="cd_unpin">Notun sabitlemesini kaldır</string>
+    <string name="pin_note">Notu sabitle</string>
+    <string name="pinned">Sabitlendi</string>
+    <string name="channel_pinned_name">Sabitlenmiş not</string>
+    <string name="channel_pinned_description">Geçerli notunuzu görünür kalması için gösterir</string>
+    <string name="notification_pinned_title">Singlenote sabitlendi</string>
+    <string name="notification_action_open">Aç</string>
+    <string name="tile_label">Singlenote</string>
+    <string name="tile_no_note">Önce bir not yazın</string>
+    <string name="tile_content_desc">%1$s: %2$s</string>
+    <string name="widget_config_update">Araç takımını güncelle</string>
+    <string name="widget_follow_app">Uygulama vurgusunu izle</string>
+    <string name="widget_section_behavior">Davranış</string>
+    <string name="widget_tap_action">Dokunulduğunda</string>
+    <string name="widget_action_open">Uygulamayı aç</string>
+    <string name="widget_action_edit">Uygulamayı aç ve düzenle</string>
+    <string name="widget_action_archive">Geçerli notu arşivle ve yeni bir not başlat</string>
+    <string name="widget_background_opacity">Arka plan opaklığı</string>
+    <string name="widget_opacity_percent">%1$d%%</string>
+    <string name="widget_note_size">Not metni boyutu</string>
+    <string name="widget_title_size">Araç takımı adı boyutu</string>
+    <string name="widget_show_title">Araç takımı adını göster</string>
+    <string name="widget_size_save">Kaydet</string>
+    <string name="widget_size_sp">%1$d sp</string>
+    <string name="widget_config_add">Araç takımı ekle</string>
+    <string name="widget_config_system">Sistem</string>
+    <string name="widget_config_light">Açık</string>
+    <string name="widget_config_dark">Koyu</string>
+    <string name="widget_preview_note">Notunuz bir bakışta</string>
+    <string name="widget_description">Geçerli notunuzu gösterir</string>
+    <string name="settings_title">Ayarlar</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Dil</string>
+    <string name="language_english">English</string>
+    <string name="language_slovak">Slovenčina</string>
+    <string name="settings_accent">Vurgu rengi</string>
+    <string name="accent_default">Varsayılan</string>
+    <string name="accent_blue">Mavi</string>
+    <string name="accent_teal">Su yeşili</string>
+    <string name="accent_green">Yeşil</string>
+    <string name="accent_orange">Turuncu</string>
+    <string name="accent_pink">Pembe</string>
+    <string name="settings_font">Yazı tipi türü</string>
+    <string name="settings_text_size">Metin boyutu</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="font_default">Varsayılan</string>
+    <string name="font_mono">Tek aralıklı</string>
+    <string name="font_serif">Serif</string>
+    <string name="size_small">Küçük</string>
+    <string name="size_medium">Orta</string>
+    <string name="size_large">Büyük</string>
+    <string name="more_options">Diğer seçenekler</string>
+    <string name="menu_share">Notu paylaş</string>
+    <string name="menu_copy">Notu kopyala</string>
+    <string name="action_done">Bitti</string>
+    <string name="action_undo">Geri al</string>
+    <string name="action_retry">Yeniden dene</string>
+    <string name="note_archived">Not arşivlendi</string>
+    <string name="note_deleted">Not silindi</string>
+    <string name="archived_note_deleted">Not arşivden silindi</string>
+    <string name="note_limit_reached">Not sınırına ulaşıldı</string>
+    <string name="note_copied">Not kopyalandı</string>
+    <string name="menu_settings">Ayarlar</string>
+    <string name="settings_section_appearance">Görünüm</string>
+    <string name="settings_section_notifications">Bildirimler</string>
+    <string name="settings_section_about">Hakkında</string>
+    <string name="setting_show_notifications">Sabitlenmiş bildirim</string>
+    <string name="setting_show_notifications_desc">Geçerli notun kalıcı bildirim olarak sabitlenmesine izin ver</string>
+    <string name="setting_lockscreen_visible">Notu kilit ekranında göster</string>
+    <string name="setting_lockscreen_visible_desc">Kapalıyken not içeriğini kilit ekranında gizler</string>
+    <string name="setting_notification_title_first_line">Notun ilk satırını başlıkta göster</string>
+    <string name="setting_notification_title_first_line_desc">Notunuzun ilk satırını sabitlenmiş bildirim başlığı olarak kullan</string>
+    <string name="change">Değiştir</string>
+    <string name="about_title">Uygulama hakkında</string>
+    <string name="about_subtitle">Sürüm, koşullar, gizlilik ve daha fazlası</string>
+    <string name="about_version_line">v%1$s • %2$d</string>
+    <string name="about_privacy_blurb">Singlenote çevrimdışı önceliklidir. Notunuz cihazınızdan asla ayrılmaz — hesap yok, analiz yok, izleme yok. Notlar ve ayarlar uygulamanın özel alanında şifrelenmeden saklanır.</string>
+    <string name="about_license">Lisans</string>
+    <string name="license_short">MIT Lisansı</string>
+    <string name="license_components_title">Açık kaynak bileşenler</string>
+    <string name="license_full">Tam lisans: [github.com/yungsamd17/singlenote/blob/main/LICENSE](https://github.com/yungsamd17/singlenote/blob/main/LICENSE)</string>
+    <string name="terms_title">Koşullar ve Hükümler</string>
+    <string name="terms_subtitle">Kullanım kuralları</string>
+    <string name="privacy_subtitle">Cihazınızda kalır</string>
+    <string name="source_title">Kaynak kodu</string>
+    <string name="source_subtitle">GitHub deposu</string>
+    <string name="issue_title">Sorun oluştur</string>
+    <string name="issue_subtitle">Hata bildir</string>
+    <string name="changelog_title">Yenilikler</string>
+    <string name="changelog_subtitle">Sürüm notları</string>
+    <string name="changelog_version_title">Yenilikler v%1$s</string>
+    <string name="action_ok">OK</string>
+    <string name="changelog_error">Yenilikler yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.</string>
+    <string name="changelog_empty_notes">Bu sürüm için not yok.</string>
+    <string name="cd_check_updates">Güncellemeleri denetle</string>
+    <string name="update_available">Yeni sürüm %1$s kullanılabilir</string>
+    <string name="action_download">İndir</string>
+    <string name="update_uptodate">Güncelsiniz</string>
+    <string name="update_check_failed">Güncellemeler denetlenemedi. Daha sonra tekrar deneyin.</string>
+    <string name="no_app_to_open_link">Bu bağlantıyı açacak uygulama bulunamadı</string>
+    <string name="email_title">E-posta</string>
+    <string name="email_address">yungsamd@proton.me</string>
+    <string name="privacy_title">Gizlilik Politikası</string>
+    <string name="terms_body">Singlenote, yungsamd17 tarafından geliştirilen, ücretsiz sunulan minimal ve çevrimdışı öncelikli bir not uygulamasıdır.
+
+KULLANIM
+Uygulamayı MIT Lisansı koşulları altında kullanabilir, kopyalayabilir, değiştirebilir, birleştirebilir, yayımlayabilir ve dağıtabilirsiniz. Uygulamanın kaynağını yanlış tanıtamaz veya adını türev ürünleri desteklemek için kullanamazsınız.
+
+NOTLARINIZ
+Notunuz cihazınızdan asla ayrılmaz. Hesap, analiz ve izleme yoktur.
+
+SORUMLULUK
+Uygulama olduğu gibi, hiçbir garanti olmaksızın sunulur. Geliştirici, kullanımdan doğan kayıp veya zararlardan sorumlu değildir.
+
+Tam koşullar: [github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md](https://github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md)</string>
+    <string name="privacy_body">Singlenote çevrimdışı önceliklidir ve hiçbir veri toplamaz.
+
+TOPLANAN VERİLER
+Hiçbiri. Hesap, analiz, reklam veya izleme tanımlayıcısı yoktur.
+
+CİHAZINIZDA
+Notunuz ve ayarlarınız cihazınızdaki uygulamanın özel alanında kalır. Şifrelenmeden saklanırlar (düz metin veritabanı ve tercihler): kilidi açık cihazınıza erişimi olan herkes bunları okuyabilir. Otomatik yedekleme kapalıdır, bu yüzden Google hesabınıza hiçbir şey kopyalanmaz — uygulamayı kaldırmak her şeyi siler.
+
+KOPYALAMA VE PAYLAŞMA
+Kopyala, düz metni sistem panosuna koyar — sistem bir önizleme gösterebilir ve metin klavye geçmişinde kalabilir. Paylaş, düz metni seçtiğiniz uygulamaya gönderir.
+
+İZİNLER
+Bildirimler (isteğe bağlı): yalnızca notunuzu sabitleyip görünür tutmak için.
+
+AĞ
+Herkese açık sürüm notlarını getirmek ve güncellemeleri denetlemek GitHub ile iletişim kurar ve yalnızca bunları açtığınızda. Hesap yok, analiz yok, başka hiçbir şey hiçbir yere gönderilmez.
+
+İLETİŞİM
+Sorular: yungsamd@proton.me.
+
+Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
+    <string name="license_kotlin">Kotlin — Apache License 2.0</string>
+    <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
+    <string name="license_room">Room — Apache License 2.0</string>
+    <string name="license_datastore">DataStore Preferences — Apache License 2.0</string>
+    <string name="license_glance">Glance — Apache License 2.0</string>
+    <string name="license_navigation">Navigation Compose — Apache License 2.0</string>
+    <string name="license_coroutines">Kotlin Coroutines — Apache License 2.0</string>
+    <string name="license_symbols">Material Symbols (license, format_paint) — Apache License 2.0</string>
+    <string name="license_bootstrap">Bootstrap Icons (sticky-fill) — MIT License</string>
+    <string name="license_third_party">Full third-party notices: [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
+    <string name="export_archive">Notları dışa aktar</string>
+    <string name="archive_export_success">Arşiv kaydedildi</string>
+    <string name="archive_export_failed">Arşiv kaydedilemedi</string>
+    <string name="settings_typography">Tipografi</string>
+    <string name="settings_appearance_summary">Temalar, vurgu renkleri ve uygulama simgesi</string>
+    <string name="settings_typography_summary">Yazı tipi, stil ve boyut</string>
+    <string name="settings_notifications_summary">Sabitlenmiş not ve kilit ekranı</string>
+    <string name="settings_app_looks">Uygulama görünümü</string>
+    <string name="settings_dynamic">Dinamik renkler</string>
+    <string name="settings_dynamic_summary">Duvar kağıdı renklerini kullan</string>
+    <string name="settings_amoled">AMOLED</string>
+    <string name="settings_amoled_summary">Koyu temada saf siyah kullan</string>
+    <string name="settings_monochrome">Tek renk</string>
+    <string name="settings_monochrome_summary">Her rengi gri tonuna dönüştür</string>
+    <string name="settings_app_icon">Uygulama simgesi</string>
+    <string name="settings_icon_accent">Vurgu rengini kullan</string>
+    <string name="settings_app_font">Uygulama yazı tipi</string>
+    <string name="font_system">Sistem yazı tipi</string>
+    <string name="font_google_flex">Google Sans Flex</string>
+    <string name="settings_font_category">Yazı tipi</string>
+    <string name="settings_size_category">Boyut</string>
+    <string name="settings_note_notification">Not bildirimi</string>
+    <string name="settings_contribute">Katkıda bulun</string>
+    <string name="settings_translate">Bu uygulamayı çevir</string>
+    <string name="settings_translate_summary">GitHub\'da uygulamayı dilinize çevirerek katkıda bulunun</string>
+    <string name="settings_app_language">Uygulama dili</string>
+    <string name="settings_device_language">Cihaz diliniz</string>
+    <string name="settings_legal">Yasal</string>
+    <string name="settings_support">Proje ve destek</string>
+    <string name="license_google_flex">Google Sans Flex — SIL Open Font License 1.1</string>
+    <string name="language_slovak_english">Slovak</string>
+    <string name="language_spanish_english">Spanish</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_russian_english">Russian</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_german_english">German</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french_english">French</string>
+    <string name="language_french">Français</string>
+    <string name="language_polish_english">Polish</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_chinese_english">Chinese</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english_us">English (US)</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_english">Italian</string>
+    <string name="language_dutch">Nederlands</string>
+    <string name="language_dutch_english">Dutch</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_portuguese_english">Brazilian Portuguese</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_turkish_english">Turkish</string>
+    <string name="notes_swapped">Notlar yer değiştirdi</string>
+    <string name="note_replaced">Not değiştirildi</string>
+    <string name="notification_settings_title">Bildirimleri aç</string>
+    <string name="notification_settings_message">Bu notu sabitlemek için Android ayarlarında Singlenote bildirimlerini açın.</string>
+    <string name="notification_settings_open">Ayarları aç</string>
+    <string name="archive_more">Diğer seçenekler</string>
+    <string name="archive_sort">Notları sırala</string>
+    <string name="archive_sort_title">Sıralama ölçütü</string>
+    <string name="archive_sort_changed">Son değişiklik</string>
+    <string name="archive_sort_archived">Arşivlenme tarihi</string>
+    <string name="archive_sort_name">Başlık</string>
+    <string name="archive_order">Sıra</string>
+    <string name="archive_order_az">A\'dan Z\'ye</string>
+    <string name="archive_order_za">Z\'den A\'ya</string>
+    <string name="archive_order_newest">En yeniler önce</string>
+    <string name="archive_order_oldest">En eskiler önce</string>
+    <string name="archive_just_now">az önce</string>
+    <string name="archive_edited_time">%1$s düzenlendi</string>
+    <string name="archive_archived_time">%1$s arşivlendi</string>
+    <plurals name="archive_minutes_ago"><item quantity="one">%d dakika önce</item><item quantity="other">%d dakika önce</item></plurals>
+    <plurals name="archive_hours_ago"><item quantity="one">%d saat önce</item><item quantity="other">%d saat önce</item></plurals>
+    <plurals name="archive_days_ago"><item quantity="one">%d gün önce</item><item quantity="other">%d gün önce</item></plurals>
+    <string name="archive_import">Notları içe aktar</string>
+    <string name="archive_import_description">Singlenote tarafından dışa aktarılmış bir JSON arşivini içe aktarın. İçe aktarılan notlar arşivinize eklenir.</string>
+    <string name="archive_import_success">Notlar içe aktarıldı</string>
+    <string name="archive_import_failed">Bu arşiv içe aktarılamadı</string>
+    <string name="archive_export_description">JSON başlıkları ve tarihleri içerir ve Singlenote\'a geri aktarılabilir. Düz metin yalnızca not içeriğini içerir.</string>
+    <string name="archive_export_json">JSON (başlıklar ve tarihlerle)</string>
+    <string name="archive_export_text">Düz metin (yalnızca notlar)</string>
+    <string name="accent_icon_restart_notice">Vurgu rengini değiştirmek uygulama simgesini de değiştirir ve Singlenote\'u kapatır. Başlatıcınızdan yeniden açın.</string>
+    <string name="app_icon_restart_notice">Uygulama simgesini değiştirmek Singlenote\'u kapatır. Başlatıcınızdan yeniden açın.</string>
+    <string name="settings_icon_dynamic">Dinamik duvar kağıdı rengi</string>
+    <string name="diagnostics_title">Tanılama</string>
+    <string name="diagnostics_collecting">Toplanıyor…</string>
+    <string name="diagnostics_copy">Kopyala</string>
+    <string name="diagnostics_share">Paylaş</string>
+    <string name="diagnostics_close">Kapat</string>
+    <string name="diagnostics_copied">Tanılama kopyalandı</string>
+    <string name="diagnostics_widget_update">Araç takımı güncellemesini zorla</string>
+    <string name="diagnostics_widget_update_requested">Araç takımı güncellemesi istendi</string>
+    <string name="diagnostics_widget_update_failed">Araç takımı güncellemesi başarısız: %1$s</string>
+</resources>

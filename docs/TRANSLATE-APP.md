@@ -2,16 +2,17 @@
 
 Help make Singlenote available in your language. You can improve an existing
 translation or contribute a new one through a [pull request](https://github.com/yungsamd17/singlenote/pulls).
-English is the source language; German, Spanish, French, Polish, Russian, Slovak
-and Simplified Chinese are already available. The codes below are candidates for
-new contributions, not a list of shipped translations.
+English is the source language; German, Spanish, French, Italian, Dutch, Polish,
+Portuguese (Brazil), Russian, Slovak, Turkish and Simplified Chinese are already
+available. The codes below are candidates for new contributions, not a list of
+shipped translations.
 
 ## Find the source files
 
 | File | Purpose |
 |---|---|
 | `app/src/main/res/values/strings.xml` | Complete English source and resource keys |
-| `app/src/main/res/values-sk/strings.xml` | Shipped translations (`values-de`, `values-es`, `values-fr`, `values-pl`, `values-ru`, `values-sk`, `values-zh`); `values-sk` is a working example |
+| `app/src/main/res/values-sk/strings.xml` | Shipped translations (`values-de`, `values-es`, `values-fr`, `values-it`, `values-nl`, `values-pl`, `values-pt`, `values-ru`, `values-sk`, `values-tr`, `values-zh`); `values-sk` is a working example |
 | `app/src/main/res/xml/locales_config.xml` | Languages advertised to Android 13+ per-app settings |
 | `app/src/main/java/com/yungsamd17/singlenote/ui/SettingsScreen.kt` | Single `languageEntries` list used by the selector and hub summary |
 | `app/src/main/java/com/yungsamd17/singlenote/util/AppLanguage.kt` | Shared locale switching and persistence; normally needs no changes |

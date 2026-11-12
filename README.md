@@ -40,7 +40,8 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 ## Languages
 
 Singlenote supports English, Slovenčina (Slovak), Deutsch, Español, Français,
-Polski, Русский and 简体中文. Open **Settings → Language** to pick one. The app
+Italiano, Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文.
+Open **Settings → Language** to pick one. The app
 initially follows the system language, falling back to English for unsupported
 languages; choosing a language saves an app-specific preference. Language changes
 crossfade in place without restarting the screen.

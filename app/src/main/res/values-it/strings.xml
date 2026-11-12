@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Singlenote</string>
+    <string name="hint_write_one_thing">Scrivi una cosa da ricordare…</string>
+    <string name="cd_archive">Archivia nota</string>
+    <string name="cd_delete">Elimina definitivamente</string>
+    <string name="action_restore">Ripristina</string>
+    <string name="action_delete">Elimina</string>
+    <string name="action_swap">Scambia</string>
+    <string name="action_replace">Sostituisci</string>
+    <string name="archive_empty">Nessuna nota archiviata.</string>
+    <string name="archive_search">Cerca nell\'archivio</string>
+    <string name="archive_search_empty">Nessuna nota corrisponde alla ricerca.</string>
+    <string name="cd_search_archive">Cerca nell\'archivio</string>
+    <string name="cd_clear_search">Cancella ricerca</string>
+    <string name="cd_close_search">Chiudi ricerca</string>
+    <string name="delete_dialog_title">Eliminare per sempre?</string>
+    <string name="delete_dialog_message">Questa nota verrà eliminata definitivamente e non potrà essere recuperata.</string>
+    <string name="delete_dialog_confirm">Elimina</string>
+    <string name="cancel">Annulla</string>
+    <string name="archive_cleared">Archivio svuotato</string>
+    <string name="restore_conflict_title">Ripristinare questa nota?</string>
+    <string name="restore_conflict_message">La vista principale ha già una nota. Scambiare le due note o sostituire la nota principale con questa?</string>
+    <string name="clear_archive">Svuota archivio</string>
+    <string name="clear_archive_title">Svuotare l\'archivio?</string>
+    <string name="clear_archive_message">Tutte le note archiviate verranno eliminate definitivamente e non potranno essere recuperate.</string>
+    <string name="archive_title">Archivio</string>
+    <string name="cd_back">Indietro</string>
+    <string name="cd_open_archive">Apri archivio</string>
+    <string name="empty_note_placeholder">(nota vuota)</string>
+    <string name="cd_pin">Fissa la nota nelle notifiche</string>
+    <string name="cd_unpin">Rimuovi la nota fissa</string>
+    <string name="pin_note">Fissa nota</string>
+    <string name="pinned">Fissata</string>
+    <string name="channel_pinned_name">Nota fissata</string>
+    <string name="channel_pinned_description">Mostra la nota attuale così resta visibile</string>
+    <string name="notification_pinned_title">Singlenote fissato</string>
+    <string name="notification_action_open">Apri</string>
+    <string name="tile_label">Singlenote</string>
+    <string name="tile_no_note">Scrivi prima una nota</string>
+    <string name="tile_content_desc">%1$s: %2$s</string>
+    <string name="widget_config_update">Aggiorna widget</string>
+    <string name="widget_follow_app">Segui il colore dell\'app</string>
+    <string name="widget_section_behavior">Comportamento</string>
+    <string name="widget_tap_action">Al tocco</string>
+    <string name="widget_action_open">Apri l\'app</string>
+    <string name="widget_action_edit">Apri l\'app e modifica</string>
+    <string name="widget_action_archive">Archivia la nota attuale e iniziane una nuova</string>
+    <string name="widget_background_opacity">Opacità dello sfondo</string>
+    <string name="widget_opacity_percent">%1$d%%</string>
+    <string name="widget_note_size">Dimensione testo nota</string>
+    <string name="widget_title_size">Dimensione nome widget</string>
+    <string name="widget_show_title">Mostra nome del widget</string>
+    <string name="widget_size_save">Salva</string>
+    <string name="widget_size_sp">%1$d sp</string>
+    <string name="widget_config_add">Aggiungi widget</string>
+    <string name="widget_config_system">Sistema</string>
+    <string name="widget_config_light">Chiaro</string>
+    <string name="widget_config_dark">Scuro</string>
+    <string name="widget_preview_note">La tua nota a colpo d\'occhio</string>
+    <string name="widget_description">Mostra la nota attuale</string>
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Lingua</string>
+    <string name="language_english">English</string>
+    <string name="language_slovak">Slovenčina</string>
+    <string name="settings_accent">Colore d\'accento</string>
+    <string name="accent_default">Predefinito</string>
+    <string name="accent_blue">Blu</string>
+    <string name="accent_teal">Verde acqua</string>
+    <string name="accent_green">Verde</string>
+    <string name="accent_orange">Arancione</string>
+    <string name="accent_pink">Rosa</string>
+    <string name="settings_font">Tipo di carattere</string>
+    <string name="settings_text_size">Dimensione testo</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Chiaro</string>
+    <string name="theme_dark">Scuro</string>
+    <string name="font_default">Predefinito</string>
+    <string name="font_mono">Monospaziato</string>
+    <string name="font_serif">Serif</string>
+    <string name="size_small">Piccolo</string>
+    <string name="size_medium">Medio</string>
+    <string name="size_large">Grande</string>
+    <string name="more_options">Altre opzioni</string>
+    <string name="menu_share">Condividi nota</string>
+    <string name="menu_copy">Copia nota</string>
+    <string name="action_done">Fatto</string>
+    <string name="action_undo">Annulla</string>
+    <string name="action_retry">Riprova</string>
+    <string name="note_archived">Nota archiviata</string>
+    <string name="note_deleted">Nota eliminata</string>
+    <string name="archived_note_deleted">Nota eliminata dall\'archivio</string>
+    <string name="note_limit_reached">Limite di note raggiunto</string>
+    <string name="note_copied">Nota copiata</string>
+    <string name="menu_settings">Impostazioni</string>
+    <string name="settings_section_appearance">Aspetto</string>
+    <string name="settings_section_notifications">Notifiche</string>
+    <string name="settings_section_about">Informazioni</string>
+    <string name="setting_show_notifications">Notifica fissata</string>
+    <string name="setting_show_notifications_desc">Consenti di fissare la nota attuale come notifica persistente</string>
+    <string name="setting_lockscreen_visible">Mostra la nota nella schermata di blocco</string>
+    <string name="setting_lockscreen_visible_desc">Disattivato nasconde il contenuto della nota nella schermata di blocco</string>
+    <string name="setting_notification_title_first_line">Mostra la prima riga della nota nel titolo</string>
+    <string name="setting_notification_title_first_line_desc">Usa la prima riga della nota come titolo della notifica fissata</string>
+    <string name="change">Cambia</string>
+    <string name="about_title">Informazioni sull\'app</string>
+    <string name="about_subtitle">Versione, termini, privacy e altro</string>
+    <string name="about_version_line">v%1$s • %2$d</string>
+    <string name="about_privacy_blurb">Singlenote è offline-first. La tua nota non lascia mai il dispositivo — nessun account, nessuna analisi, nessun tracciamento. Note e impostazioni sono salvate non crittografate nello spazio privato dell\'app.</string>
+    <string name="about_license">Licenza</string>
+    <string name="license_short">Licenza MIT</string>
+    <string name="license_components_title">Componenti open source</string>
+    <string name="license_full">Licenza completa: [github.com/yungsamd17/singlenote/blob/main/LICENSE](https://github.com/yungsamd17/singlenote/blob/main/LICENSE)</string>
+    <string name="terms_title">Termini e condizioni</string>
+    <string name="terms_subtitle">Regole d\'uso</string>
+    <string name="privacy_subtitle">Resta sul tuo dispositivo</string>
+    <string name="source_title">Codice sorgente</string>
+    <string name="source_subtitle">Repository GitHub</string>
+    <string name="issue_title">Crea una segnalazione</string>
+    <string name="issue_subtitle">Segnala un bug</string>
+    <string name="changelog_title">Novità</string>
+    <string name="changelog_subtitle">Note di rilascio</string>
+    <string name="changelog_version_title">Novità v%1$s</string>
+    <string name="action_ok">OK</string>
+    <string name="changelog_error">Impossibile caricare le novità. Controlla la connessione e riprova.</string>
+    <string name="changelog_empty_notes">Nessuna nota per questa versione.</string>
+    <string name="cd_check_updates">Controlla aggiornamenti</string>
+    <string name="update_available">Nuova versione %1$s disponibile</string>
+    <string name="action_download">Scarica</string>
+    <string name="update_uptodate">Sei aggiornato</string>
+    <string name="update_check_failed">Impossibile controllare gli aggiornamenti. Riprova più tardi.</string>
+    <string name="no_app_to_open_link">Nessuna app trovata per aprire questo link</string>
+    <string name="email_title">Email</string>
+    <string name="email_address">yungsamd@proton.me</string>
+    <string name="privacy_title">Informativa sulla privacy</string>
+    <string name="terms_body">Singlenote è un\'app per note minimale e offline-first di yungsamd17, fornita gratuitamente.
+
+UTILIZZO
+Puoi usare, copiare, modificare, unire, pubblicare e distribuire l\'app secondo i termini della sua licenza MIT. Non puoi falsificare l\'origine dell\'app né usarne il nome per sponsorizzare prodotti derivati.
+
+LE TUE NOTE
+La tua nota non lascia mai il tuo dispositivo. Non ci sono account, analisi o tracciamento.
+
+RESPONSABILITÀ
+L\'app è fornita così com\'è, senza garanzie di alcun tipo. L\'autore non è responsabile per perdite o danni derivanti dal suo utilizzo.
+
+Termini completi: [github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md](https://github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md)</string>
+    <string name="privacy_body">Singlenote è offline-first e non raccoglie nulla.
+
+DATI RACCOLTI
+Nessuno. Nessun account, nessuna analisi, nessuna pubblicità, nessun identificatore di tracciamento.
+
+SUL TUO DISPOSITIVO
+La tua nota e le impostazioni restano nello spazio privato dell\'app sul tuo dispositivo. Sono salvate non crittografate (database e preferenze in chiaro): chiunque abbia accesso al dispositivo sbloccato può leggerle. Il backup automatico è disattivato, quindi nulla viene copiato sul tuo account Google; disinstallare l\'app cancella tutto.
+
+COPIA E CONDIVISIONE
+Copia mette il testo in chiaro negli appunti di sistema: il sistema può mostrarne un\'anteprima e può restare nella cronologia della tastiera. Condividi invia il testo in chiaro all\'app che scegli.
+
+AUTORIZZAZIONI
+Notifiche (facoltative): solo per fissare la nota e mantenerla visibile.
+
+RETE
+Il recupero delle note di rilascio pubbliche e il controllo degli aggiornamenti contattano GitHub, e solo quando li apri. Nessun account, nessuna analisi, nient\'altro viene mai inviato da nessuna parte.
+
+CONTATTI
+Domande: yungsamd@proton.me.
+
+Informativa completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
+    <string name="license_kotlin">Kotlin — Apache License 2.0</string>
+    <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
+    <string name="license_room">Room — Apache License 2.0</string>
+    <string name="license_datastore">DataStore Preferences — Apache License 2.0</string>
+    <string name="license_glance">Glance — Apache License 2.0</string>
+    <string name="license_navigation">Navigation Compose — Apache License 2.0</string>
+    <string name="license_coroutines">Kotlin Coroutines — Apache License 2.0</string>
+    <string name="license_symbols">Material Symbols (license, format_paint) — Apache License 2.0</string>
+    <string name="license_bootstrap">Bootstrap Icons (sticky-fill) — MIT License</string>
+    <string name="license_third_party">Full third-party notices: [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
+    <string name="export_archive">Esporta note</string>
+    <string name="archive_export_success">Archivio salvato</string>
+    <string name="archive_export_failed">Impossibile salvare l\'archivio</string>
+    <string name="settings_typography">Tipografia</string>
+    <string name="settings_appearance_summary">Temi, colori d\'accento e icona</string>
+    <string name="settings_typography_summary">Carattere, stile e dimensione</string>
+    <string name="settings_notifications_summary">Nota fissata e schermata di blocco</string>
+    <string name="settings_app_looks">Aspetto dell\'app</string>
+    <string name="settings_dynamic">Colori dinamici</string>
+    <string name="settings_dynamic_summary">Usa i colori dello sfondo</string>
+    <string name="settings_amoled">AMOLED</string>
+    <string name="settings_amoled_summary">Usa il nero puro nel tema scuro</string>
+    <string name="settings_monochrome">Monocromatico</string>
+    <string name="settings_monochrome_summary">Trasforma ogni colore in una tonalità di grigio</string>
+    <string name="settings_app_icon">Icona dell\'app</string>
+    <string name="settings_icon_accent">Usa il colore d\'accento</string>
+    <string name="settings_app_font">Carattere dell\'app</string>
+    <string name="font_system">Carattere di sistema</string>
+    <string name="font_google_flex">Google Sans Flex</string>
+    <string name="settings_font_category">Carattere</string>
+    <string name="settings_size_category">Dimensione</string>
+    <string name="settings_note_notification">Notifica della nota</string>
+    <string name="settings_contribute">Contribuisci</string>
+    <string name="settings_translate">Traduci questa app</string>
+    <string name="settings_translate_summary">Contribuisci traducendo l\'app nella tua lingua su GitHub</string>
+    <string name="settings_app_language">Lingua dell\'app</string>
+    <string name="settings_device_language">Lingua del dispositivo</string>
+    <string name="settings_legal">Note legali</string>
+    <string name="settings_support">Progetto e supporto</string>
+    <string name="license_google_flex">Google Sans Flex — SIL Open Font License 1.1</string>
+    <string name="language_slovak_english">Slovak</string>
+    <string name="language_spanish_english">Spanish</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_russian_english">Russian</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_german_english">German</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french_english">French</string>
+    <string name="language_french">Français</string>
+    <string name="language_polish_english">Polish</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_chinese_english">Chinese</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english_us">English (US)</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_english">Italian</string>
+    <string name="language_dutch">Nederlands</string>
+    <string name="language_dutch_english">Dutch</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_portuguese_english">Brazilian Portuguese</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_turkish_english">Turkish</string>
+    <string name="notes_swapped">Note scambiate</string>
+    <string name="note_replaced">Nota sostituita</string>
+    <string name="notification_settings_title">Attiva le notifiche</string>
+    <string name="notification_settings_message">Attiva le notifiche per Singlenote nelle impostazioni di Android per fissare questa nota.</string>
+    <string name="notification_settings_open">Apri impostazioni</string>
+    <string name="archive_more">Altre opzioni</string>
+    <string name="archive_sort">Ordina note</string>
+    <string name="archive_sort_title">Ordina per</string>
+    <string name="archive_sort_changed">Ultima modifica</string>
+    <string name="archive_sort_archived">Data di archiviazione</string>
+    <string name="archive_sort_name">Titolo</string>
+    <string name="archive_order">Ordine</string>
+    <string name="archive_order_az">Da A a Z</string>
+    <string name="archive_order_za">Da Z a A</string>
+    <string name="archive_order_newest">Più recenti prima</string>
+    <string name="archive_order_oldest">Più vecchie prima</string>
+    <string name="archive_just_now">adesso</string>
+    <string name="archive_edited_time">Modificata %1$s</string>
+    <string name="archive_archived_time">Archiviata %1$s</string>
+    <plurals name="archive_minutes_ago"><item quantity="one">%d minuto fa</item><item quantity="other">%d minuti fa</item></plurals>
+    <plurals name="archive_hours_ago"><item quantity="one">%d ora fa</item><item quantity="other">%d ore fa</item></plurals>
+    <plurals name="archive_days_ago"><item quantity="one">%d giorno fa</item><item quantity="other">%d giorni fa</item></plurals>
+    <string name="archive_import">Importa note</string>
+    <string name="archive_import_description">Importa un archivio JSON esportato da Singlenote. Le note importate vengono aggiunte al tuo archivio.</string>
+    <string name="archive_import_success">Note importate</string>
+    <string name="archive_import_failed">Impossibile importare questo archivio</string>
+    <string name="archive_export_description">Il JSON include titoli e date e può essere reimportato in Singlenote. Il testo semplice contiene solo il contenuto delle note.</string>
+    <string name="archive_export_json">JSON (con titoli e date)</string>
+    <string name="archive_export_text">Testo semplice (solo note)</string>
+    <string name="accent_icon_restart_notice">Cambiare il colore d\'accento cambia anche l\'icona dell\'app e chiude Singlenote. Riaprila dal launcher.</string>
+    <string name="app_icon_restart_notice">Cambiare l\'icona dell\'app chiude Singlenote. Riaprila dal launcher.</string>
+    <string name="settings_icon_dynamic">Colore dinamico dallo sfondo</string>
+    <string name="diagnostics_title">Diagnostica</string>
+    <string name="diagnostics_collecting">Raccolta…</string>
+    <string name="diagnostics_copy">Copia</string>
+    <string name="diagnostics_share">Condividi</string>
+    <string name="diagnostics_close">Chiudi</string>
+    <string name="diagnostics_copied">Diagnostica copiata</string>
+    <string name="diagnostics_widget_update">Forza aggiornamento widget</string>
+    <string name="diagnostics_widget_update_requested">Aggiornamento widget richiesto</string>
+    <string name="diagnostics_widget_update_failed">Aggiornamento widget non riuscito: %1$s</string>
+</resources>

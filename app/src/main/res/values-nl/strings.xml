@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Singlenote</string>
+    <string name="hint_write_one_thing">Schrijf één ding om te onthouden…</string>
+    <string name="cd_archive">Notitie archiveren</string>
+    <string name="cd_delete">Permanent verwijderen</string>
+    <string name="action_restore">Herstellen</string>
+    <string name="action_delete">Verwijderen</string>
+    <string name="action_swap">Wisselen</string>
+    <string name="action_replace">Vervangen</string>
+    <string name="archive_empty">Nog niets gearchiveerd.</string>
+    <string name="archive_search">Archief doorzoeken</string>
+    <string name="archive_search_empty">Geen notities die bij je zoekopdracht passen.</string>
+    <string name="cd_search_archive">Archief doorzoeken</string>
+    <string name="cd_clear_search">Zoekopdracht wissen</string>
+    <string name="cd_close_search">Zoekopdracht sluiten</string>
+    <string name="delete_dialog_title">Voorgoed verwijderen?</string>
+    <string name="delete_dialog_message">Deze notitie wordt permanent verwijderd en kan niet worden hersteld.</string>
+    <string name="delete_dialog_confirm">Verwijderen</string>
+    <string name="cancel">Annuleren</string>
+    <string name="archive_cleared">Archief geleegd</string>
+    <string name="restore_conflict_title">Deze notitie herstellen?</string>
+    <string name="restore_conflict_message">Het hoofdscherm heeft al een notitie. De twee notities wisselen, of de hoofdnotitie door deze vervangen?</string>
+    <string name="clear_archive">Archief legen</string>
+    <string name="clear_archive_title">Archief legen?</string>
+    <string name="clear_archive_message">Alle gearchiveerde notities worden permanent verwijderd en kunnen niet worden hersteld.</string>
+    <string name="archive_title">Archief</string>
+    <string name="cd_back">Terug</string>
+    <string name="cd_open_archive">Archief openen</string>
+    <string name="empty_note_placeholder">(lege notitie)</string>
+    <string name="cd_pin">Notitie aan meldingen vastmaken</string>
+    <string name="cd_unpin">Notitie losmaken</string>
+    <string name="pin_note">Notitie vastmaken</string>
+    <string name="pinned">Vastgemaakt</string>
+    <string name="channel_pinned_name">Vastgemaakte notitie</string>
+    <string name="channel_pinned_description">Toont je huidige notitie zodat die zichtbaar blijft</string>
+    <string name="notification_pinned_title">Singlenote vastgemaakt</string>
+    <string name="notification_action_open">Openen</string>
+    <string name="tile_label">Singlenote</string>
+    <string name="tile_no_note">Schrijf eerst een notitie</string>
+    <string name="tile_content_desc">%1$s: %2$s</string>
+    <string name="widget_config_update">Widget bijwerken</string>
+    <string name="widget_follow_app">App-accent volgen</string>
+    <string name="widget_section_behavior">Gedrag</string>
+    <string name="widget_tap_action">Bij tikken</string>
+    <string name="widget_action_open">App openen</string>
+    <string name="widget_action_edit">App openen en bewerken</string>
+    <string name="widget_action_archive">Huidige notitie archiveren en een nieuwe beginnen</string>
+    <string name="widget_background_opacity">Dekking van de achtergrond</string>
+    <string name="widget_opacity_percent">%1$d%%</string>
+    <string name="widget_note_size">Tekstgrootte van de notitie</string>
+    <string name="widget_title_size">Grootte van de widgetnaam</string>
+    <string name="widget_show_title">Widgetnaam tonen</string>
+    <string name="widget_size_save">Opslaan</string>
+    <string name="widget_size_sp">%1$d sp</string>
+    <string name="widget_config_add">Widget toevoegen</string>
+    <string name="widget_config_system">Systeem</string>
+    <string name="widget_config_light">Licht</string>
+    <string name="widget_config_dark">Donker</string>
+    <string name="widget_preview_note">Je notitie in één oogopslag</string>
+    <string name="widget_description">Toont je huidige notitie</string>
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_theme">Thema</string>
+    <string name="settings_language">Taal</string>
+    <string name="language_english">English</string>
+    <string name="language_slovak">Slovenčina</string>
+    <string name="settings_accent">Accentkleur</string>
+    <string name="accent_default">Standaard</string>
+    <string name="accent_blue">Blauw</string>
+    <string name="accent_teal">Blauwgroen</string>
+    <string name="accent_green">Groen</string>
+    <string name="accent_orange">Oranje</string>
+    <string name="accent_pink">Roze</string>
+    <string name="settings_font">Lettertype</string>
+    <string name="settings_text_size">Tekstgrootte</string>
+    <string name="theme_system">Systeem</string>
+    <string name="theme_light">Licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="font_default">Standaard</string>
+    <string name="font_mono">Monospace</string>
+    <string name="font_serif">Serif</string>
+    <string name="size_small">Klein</string>
+    <string name="size_medium">Gemiddeld</string>
+    <string name="size_large">Groot</string>
+    <string name="more_options">Meer opties</string>
+    <string name="menu_share">Notitie delen</string>
+    <string name="menu_copy">Notitie kopiëren</string>
+    <string name="action_done">Klaar</string>
+    <string name="action_undo">Ongedaan maken</string>
+    <string name="action_retry">Opnieuw proberen</string>
+    <string name="note_archived">Notitie gearchiveerd</string>
+    <string name="note_deleted">Notitie verwijderd</string>
+    <string name="archived_note_deleted">Notitie uit archief verwijderd</string>
+    <string name="note_limit_reached">Notitielimiet bereikt</string>
+    <string name="note_copied">Notitie gekopieerd</string>
+    <string name="menu_settings">Instellingen</string>
+    <string name="settings_section_appearance">Uiterlijk</string>
+    <string name="settings_section_notifications">Meldingen</string>
+    <string name="settings_section_about">Over</string>
+    <string name="setting_show_notifications">Vastgemaakte melding</string>
+    <string name="setting_show_notifications_desc">Toestaan de huidige notitie als blijvende melding vast te maken</string>
+    <string name="setting_lockscreen_visible">Notitie op vergrendelscherm tonen</string>
+    <string name="setting_lockscreen_visible_desc">Uit verbergt de notitie-inhoud op het vergrendelscherm</string>
+    <string name="setting_notification_title_first_line">Eerste regel van de notitie in de titel tonen</string>
+    <string name="setting_notification_title_first_line_desc">De eerste regel van je notitie als titel van de vastgemaakte melding gebruiken</string>
+    <string name="change">Wijzigen</string>
+    <string name="about_title">Over de app</string>
+    <string name="about_subtitle">Versie, voorwaarden, privacy en meer</string>
+    <string name="about_version_line">v%1$s • %2$d</string>
+    <string name="about_privacy_blurb">Singlenote werkt offline-first. Je notitie verlaat je apparaat nooit — geen accounts, geen analyses, geen tracking. Notities en instellingen worden onversleuteld opgeslagen in de privéopslag van de app.</string>
+    <string name="about_license">Licentie</string>
+    <string name="license_short">MIT-licentie</string>
+    <string name="license_components_title">Open-sourcecomponenten</string>
+    <string name="license_full">Volledige licentie: [github.com/yungsamd17/singlenote/blob/main/LICENSE](https://github.com/yungsamd17/singlenote/blob/main/LICENSE)</string>
+    <string name="terms_title">Algemene voorwaarden</string>
+    <string name="terms_subtitle">Gebruiksregels</string>
+    <string name="privacy_subtitle">Blijft op je apparaat</string>
+    <string name="source_title">Broncode</string>
+    <string name="source_subtitle">GitHub-repository</string>
+    <string name="issue_title">Een issue aanmaken</string>
+    <string name="issue_subtitle">Een bug melden</string>
+    <string name="changelog_title">Wijzigingen</string>
+    <string name="changelog_subtitle">Releaseopmerkingen</string>
+    <string name="changelog_version_title">Wijzigingen v%1$s</string>
+    <string name="action_ok">OK</string>
+    <string name="changelog_error">Kan de wijzigingen niet laden. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="changelog_empty_notes">Geen opmerkingen voor deze release.</string>
+    <string name="cd_check_updates">Controleren op updates</string>
+    <string name="update_available">Nieuwe versie %1$s beschikbaar</string>
+    <string name="action_download">Downloaden</string>
+    <string name="update_uptodate">Je bent up-to-date</string>
+    <string name="update_check_failed">Kon niet controleren op updates. Probeer het later opnieuw.</string>
+    <string name="no_app_to_open_link">Geen app gevonden om deze link te openen</string>
+    <string name="email_title">E-mail</string>
+    <string name="email_address">yungsamd@proton.me</string>
+    <string name="privacy_title">Privacybeleid</string>
+    <string name="terms_body">Singlenote is een minimalistische, offline-first notitie-app van yungsamd17, gratis beschikbaar gesteld.
+
+GEBRUIK
+Je mag de app gebruiken, kopiëren, wijzigen, samenvoegen, publiceren en verspreiden onder de voorwaarden van de MIT-licentie. Je mag de herkomst van de app niet verkeerd voorstellen of de naam gebruiken om afgeleide producten aan te bevelen.
+
+JE NOTITIES
+Je notitie verlaat je apparaat nooit. Er zijn geen accounts, geen analyses en geen tracking.
+
+AANSPRAKELIJKHEID
+De app wordt geleverd zoals die is, zonder enige garantie. De auteur is niet aansprakelijk voor verlies of schade die voortvloeit uit het gebruik.
+
+Volledige voorwaarden: [github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md](https://github.com/yungsamd17/singlenote/blob/main/docs/TERMS.md)</string>
+    <string name="privacy_body">Singlenote werkt offline-first en verzamelt niets.
+
+VERZAMELDE GEGEVENS
+Geen. Geen accounts, geen analyses, geen advertenties, geen tracking-identificatoren.
+
+OP JE APPARAAT
+Je notitie en instellingen blijven in de privéopslag van de app op je apparaat. Ze worden onversleuteld opgeslagen (database en voorkeuren als platte tekst): iedereen met toegang tot je ontgrendelde apparaat kan ze lezen. Automatische back-up staat uit, dus er wordt niets naar je Google-account gekopieerd — als je de app verwijdert, is alles weg.
+
+KOPIËREN EN DELEN
+Kopiëren zet platte tekst op het klembord van het systeem — het systeem kan een voorbeeld tonen en de tekst kan in de toetsenbordgeschiedenis blijven staan. Delen stuurt platte tekst naar de app die je kiest.
+
+MACHTIGINGEN
+Meldingen (optioneel): alleen om je notitie vast te maken zodat die zichtbaar blijft.
+
+NETWERK
+Het ophalen van openbare releaseopmerkingen en het controleren op updates neemt contact op met GitHub, en alleen wanneer je die opent. Geen accounts, geen analyses, niets anders wordt ooit ergens heen gestuurd.
+
+CONTACT
+Vragen: yungsamd@proton.me.
+
+Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
+    <string name="license_kotlin">Kotlin — Apache License 2.0</string>
+    <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
+    <string name="license_room">Room — Apache License 2.0</string>
+    <string name="license_datastore">DataStore Preferences — Apache License 2.0</string>
+    <string name="license_glance">Glance — Apache License 2.0</string>
+    <string name="license_navigation">Navigation Compose — Apache License 2.0</string>
+    <string name="license_coroutines">Kotlin Coroutines — Apache License 2.0</string>
+    <string name="license_symbols">Material Symbols (license, format_paint) — Apache License 2.0</string>
+    <string name="license_bootstrap">Bootstrap Icons (sticky-fill) — MIT License</string>
+    <string name="license_third_party">Full third-party notices: [github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES](https://github.com/yungsamd17/singlenote/blob/main/THIRD_PARTY_LICENSES)</string>
+    <string name="export_archive">Notities exporteren</string>
+    <string name="archive_export_success">Archief opgeslagen</string>
+    <string name="archive_export_failed">Kon het archief niet opslaan</string>
+    <string name="settings_typography">Typografie</string>
+    <string name="settings_appearance_summary">Thema\'s, accentkleuren en app-pictogram</string>
+    <string name="settings_typography_summary">Lettertype, stijl en grootte</string>
+    <string name="settings_notifications_summary">Vastgemaakte notitie en vergrendelscherm</string>
+    <string name="settings_app_looks">Uiterlijk van de app</string>
+    <string name="settings_dynamic">Dynamische kleuren</string>
+    <string name="settings_dynamic_summary">Achtergrondkleuren gebruiken</string>
+    <string name="settings_amoled">AMOLED</string>
+    <string name="settings_amoled_summary">Puur zwart in het donkere thema gebruiken</string>
+    <string name="settings_monochrome">Monochroom</string>
+    <string name="settings_monochrome_summary">Elke kleur in een grijstint veranderen</string>
+    <string name="settings_app_icon">App-pictogram</string>
+    <string name="settings_icon_accent">Accentkleur gebruiken</string>
+    <string name="settings_app_font">App-lettertype</string>
+    <string name="font_system">Systeemlettertype</string>
+    <string name="font_google_flex">Google Sans Flex</string>
+    <string name="settings_font_category">Lettertype</string>
+    <string name="settings_size_category">Grootte</string>
+    <string name="settings_note_notification">Notitiemelding</string>
+    <string name="settings_contribute">Bijdragen</string>
+    <string name="settings_translate">Deze app vertalen</string>
+    <string name="settings_translate_summary">Draag bij door de app op GitHub in je taal te vertalen</string>
+    <string name="settings_app_language">App-taal</string>
+    <string name="settings_device_language">Taal van je apparaat</string>
+    <string name="settings_legal">Juridisch</string>
+    <string name="settings_support">Project en ondersteuning</string>
+    <string name="license_google_flex">Google Sans Flex — SIL Open Font License 1.1</string>
+    <string name="language_slovak_english">Slovak</string>
+    <string name="language_spanish_english">Spanish</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_russian_english">Russian</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_german_english">German</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_french_english">French</string>
+    <string name="language_french">Français</string>
+    <string name="language_polish_english">Polish</string>
+    <string name="language_polish">Polski</string>
+    <string name="language_chinese_english">Chinese</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english_us">English (US)</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_english">Italian</string>
+    <string name="language_dutch">Nederlands</string>
+    <string name="language_dutch_english">Dutch</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_portuguese_english">Brazilian Portuguese</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_turkish_english">Turkish</string>
+    <string name="notes_swapped">Notities gewisseld</string>
+    <string name="note_replaced">Notitie vervangen</string>
+    <string name="notification_settings_title">Meldingen inschakelen</string>
+    <string name="notification_settings_message">Schakel meldingen voor Singlenote in bij de Android-instellingen om deze notitie vast te maken.</string>
+    <string name="notification_settings_open">Instellingen openen</string>
+    <string name="archive_more">Meer opties</string>
+    <string name="archive_sort">Notities sorteren</string>
+    <string name="archive_sort_title">Sorteren op</string>
+    <string name="archive_sort_changed">Laatst gewijzigd</string>
+    <string name="archive_sort_archived">Datum gearchiveerd</string>
+    <string name="archive_sort_name">Titel</string>
+    <string name="archive_order">Volgorde</string>
+    <string name="archive_order_az">A tot Z</string>
+    <string name="archive_order_za">Z tot A</string>
+    <string name="archive_order_newest">Nieuwste eerst</string>
+    <string name="archive_order_oldest">Oudste eerst</string>
+    <string name="archive_just_now">zojuist</string>
+    <string name="archive_edited_time">Bewerkt %1$s</string>
+    <string name="archive_archived_time">Gearchiveerd %1$s</string>
+    <plurals name="archive_minutes_ago"><item quantity="one">%d minuut geleden</item><item quantity="other">%d minuten geleden</item></plurals>
+    <plurals name="archive_hours_ago"><item quantity="one">%d uur geleden</item><item quantity="other">%d uur geleden</item></plurals>
+    <plurals name="archive_days_ago"><item quantity="one">%d dag geleden</item><item quantity="other">%d dagen geleden</item></plurals>
+    <string name="archive_import">Notities importeren</string>
+    <string name="archive_import_description">Importeer een JSON-archief dat door Singlenote is geëxporteerd. Geïmporteerde notities worden aan je archief toegevoegd.</string>
+    <string name="archive_import_success">Notities geïmporteerd</string>
+    <string name="archive_import_failed">Kon dit archief niet importeren</string>
+    <string name="archive_export_description">JSON bevat titels en datums en kan weer in Singlenote worden geïmporteerd. Platte tekst bevat alleen de inhoud van de notities.</string>
+    <string name="archive_export_json">JSON (met titels en datums)</string>
+    <string name="archive_export_text">Platte tekst (alleen notities)</string>
+    <string name="accent_icon_restart_notice">Het wijzigen van de accentkleur wijzigt ook het app-pictogram en sluit Singlenote. Open de app opnieuw via je launcher.</string>
+    <string name="app_icon_restart_notice">Het wijzigen van het app-pictogram sluit Singlenote. Open de app opnieuw via je launcher.</string>
+    <string name="settings_icon_dynamic">Dynamische achtergrondkleur</string>
+    <string name="diagnostics_title">Diagnostiek</string>
+    <string name="diagnostics_collecting">Verzamelen…</string>
+    <string name="diagnostics_copy">Kopiëren</string>
+    <string name="diagnostics_share">Delen</string>
+    <string name="diagnostics_close">Sluiten</string>
+    <string name="diagnostics_copied">Diagnostiek gekopieerd</string>
+    <string name="diagnostics_widget_update">Widget-update forceren</string>
+    <string name="diagnostics_widget_update_requested">Widget-update aangevraagd</string>
+    <string name="diagnostics_widget_update_failed">Widget-update mislukt: %1$s</string>
+</resources>

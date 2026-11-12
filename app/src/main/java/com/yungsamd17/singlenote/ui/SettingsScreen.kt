@@ -548,10 +548,14 @@ internal val languageEntries =
         LanguageEntry("de-DE", R.string.language_german, R.string.language_german_english),
         LanguageEntry("es-ES", R.string.language_spanish, R.string.language_spanish_english),
         LanguageEntry("fr-FR", R.string.language_french, R.string.language_french_english),
+        LanguageEntry("it-IT", R.string.language_italian, R.string.language_italian_english),
+        LanguageEntry("nl-NL", R.string.language_dutch, R.string.language_dutch_english),
         LanguageEntry("pl-PL", R.string.language_polish, R.string.language_polish_english),
+        LanguageEntry("pt-BR", R.string.language_portuguese, R.string.language_portuguese_english),
         LanguageEntry("ru-RU", R.string.language_russian, R.string.language_russian_english),
         LanguageEntry("zh-CN", R.string.language_chinese, R.string.language_chinese_english),
         LanguageEntry("sk-SK", R.string.language_slovak, R.string.language_slovak_english),
+        LanguageEntry("tr-TR", R.string.language_turkish, R.string.language_turkish_english),
     )
 
 @Composable

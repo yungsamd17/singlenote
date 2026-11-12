@@ -191,6 +191,14 @@
     <string name="language_chinese_english">Chinese</string>
     <string name="language_chinese">中文</string>
     <string name="language_english_us">English (US)</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_italian_english">Italian</string>
+    <string name="language_dutch">Nederlands</string>
+    <string name="language_dutch_english">Dutch</string>
+    <string name="language_portuguese">Português (Brasil)</string>
+    <string name="language_portuguese_english">Brazilian Portuguese</string>
+    <string name="language_turkish">Türkçe</string>
+    <string name="language_turkish_english">Turkish</string>
     <string name="notes_swapped">Poznámky vymenené</string>
     <string name="note_replaced">Poznámka nahradená</string>
     <string name="notification_settings_title">Povoliť upozornenia</string>
