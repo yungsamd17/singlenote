@@ -8,6 +8,11 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [1.0.0] - 2026-11-13
+
+The first stable release of Singlenote: one active note, an archive, a widget,
+a quick-settings tile and an optional pinned notification — all offline.
+
 ### Added
 
 - **Quick capture from the notification shade.** The pinned notification gained a "New note" action: tap it and Singlenote opens with an empty note and the cursor in it. A note that is already on screen is **archived**, never deleted, so nothing you wrote is thrown away — and the Undo bar still offers it back.
@@ -35,6 +40,8 @@ Changes for the next release will be listed here.
 - The archive no longer flashes in the wrong order when it opens: it paints the list once, already sorted by the order you chose, instead of showing the default order for a frame and animating every card into place.
 - TalkBack improvements: status messages such as "Note archived" are announced, screen headings and the pinned-note button are described correctly, and small controls meet the 48 dp touch target.
 - Widget settings are remembered: removing a widget and adding it again starts with the same theme, accent, sizes and tap action instead of the defaults.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v1.0.0) · [Changes since v0.5.1](https://github.com/yungsamd17/singlenote/compare/v0.5.1...v1.0.0)
 
 ## [0.5.1] - 2026-11-09
 

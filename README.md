@@ -48,7 +48,7 @@ crossfade in place without restarting the screen.
 
 ## Roadmap
 
-`v0.5.1` is the current release. Track the checklist for the first stable release in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md) — features, improvements, fixes and release steps for `v1.0.0`. Portrait is locked on phones for 1.0.0; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0.0. The archive JSON/text export is the only backup for 1.0.0, and uninstalling the app deletes the active note.
+`v1.0.0` is the current release — the first stable one. The remaining checklist for the next steps (full backup/restore, tablet and foldable layouts, archive swipe actions) lives in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md). Portrait is locked on phones for 1.0.0; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0.0. The archive JSON/text export is the only backup for 1.0.0, and uninstalling the app deletes the active note.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 
