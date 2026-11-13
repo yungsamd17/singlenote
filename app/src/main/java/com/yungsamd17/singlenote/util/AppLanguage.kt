@@ -5,6 +5,7 @@ import android.app.LocaleManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
 
@@ -13,19 +14,42 @@ object AppLanguage {
     private const val PREFERENCES_NAME = "app_language"
     private const val LANGUAGE_KEY = "language_tag"
 
-    fun getLanguageTag(context: Context): String =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.getSystemService(LocaleManager::class.java)
-                .applicationLocales
-                .toLanguageTags()
-        } else {
-            preferences(context).getString(LANGUAGE_KEY, "").orEmpty()
-        }
+    /**
+     * The language the app runs in.
+     *
+     * Our own stored choice is the truth. The platform keeps an explicit
+     * locale even after the app asked to follow the device again, and when
+     * that locale matches the device language no configuration change is
+     * dispatched — so a picker that reads the platform would keep showing
+     * the old language as selected and "Your device language" could never be
+     * picked again. An empty choice means "follow the device".
+     *
+     * A language chosen through the system settings (the per-app language
+     * picker) still wins, as long as it differs from the device language.
+     */
+    fun getLanguageTag(context: Context): String {
+        val stored = preferences(context).getString(LANGUAGE_KEY, "").orEmpty()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return stored
+        val platform = context.getSystemService(LocaleManager::class.java)
+            .applicationLocales
+            .toLanguageTags()
+        if (stored.isNotEmpty()) return stored
+        if (platform.isEmpty()) return ""
+        // The platform may still hold the locale the app asked to drop. When
+        // it matches the device language, the app follows the device anyway.
+        return if (platform == systemLanguageTag()) "" else platform
+    }
 
     private val transitions = java.util.WeakHashMap<Activity, android.widget.ImageView>()
 
     fun setLanguage(context: Context, languageTag: String) {
-        if (getLanguageTag(context) == languageTag) return
+        val changed = getLanguageTag(context) != languageTag
+        // Store the choice ourselves on every platform: it is the source of
+        // truth for the picker, and the only way back to the device language
+        // when the platform locale matches the device language (the platform
+        // would not dispatch a configuration change then).
+        preferences(context).edit().putString(LANGUAGE_KEY, languageTag).apply()
+        if (!changed && !platformNeedsReset(context, languageTag)) return
         val activity = context.findActivity()
         val content = activity?.findViewById<android.view.ViewGroup>(android.R.id.content)
         if (activity == null || content == null || content.width == 0 || content.height == 0) {
@@ -71,6 +95,26 @@ object AppLanguage {
         )
         content.invalidate()
     }
+
+    /**
+     * True when the platform still holds a locale the app no longer wants:
+     * an explicit language that differs from the choice, or a leftover
+     * locale after the app asked to follow the device again.
+     */
+    private fun platformNeedsReset(context: Context, languageTag: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        val platform = context.getSystemService(LocaleManager::class.java)
+            .applicationLocales
+            .toLanguageTags()
+        if (languageTag.isBlank()) {
+            return platform.isNotEmpty() && platform != systemLanguageTag()
+        }
+        return platform != languageTag
+    }
+
+    /** The language the device itself runs in. */
+    private fun systemLanguageTag(): String =
+        Resources.getSystem().configuration.locales[0].toLanguageTag()
 
     private fun applyLanguage(context: Context, languageTag: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

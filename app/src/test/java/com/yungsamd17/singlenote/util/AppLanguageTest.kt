@@ -54,6 +54,40 @@ class AppLanguageTest {
     }
 
     @Test
+    @Config(sdk = [34])
+    fun pickingTheDeviceLanguageAgainSticks() {
+        // The device language is English here: picking English and going back
+        // to "Your device language" must stick, even though the platform
+        // keeps the locale and dispatches no configuration change.
+        AppLanguage.setLanguage(context, "en-US")
+        assertEquals("en-US", AppLanguage.getLanguageTag(context))
+
+        AppLanguage.setLanguage(context, "")
+
+        assertEquals("", AppLanguage.getLanguageTag(context))
+    }
+
+    @Test
+    @Config(sdk = [34])
+    fun theDeviceLanguageIsNotAnExplicitChoice() {
+        // The stored choice is the truth: an empty choice means the app
+        // follows the device, whatever the platform still holds.
+        AppLanguage.setLanguage(context, "")
+
+        assertEquals("", AppLanguage.getLanguageTag(context))
+    }
+
+    @Test
+    @Config(sdk = [30])
+    fun pickingTheDeviceLanguageAgainSticksBelowAndroid13() {
+        AppLanguage.setLanguage(context, "en-US")
+
+        AppLanguage.setLanguage(context, "")
+
+        assertEquals("", AppLanguage.getLanguageTag(context))
+    }
+
+    @Test
     @Config(sdk = [30])
     fun theOverrideIsStoredBelowAndroid13() {
         assertEquals("", AppLanguage.getLanguageTag(context))

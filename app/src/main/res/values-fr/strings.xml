@@ -63,6 +63,7 @@
     <string name="settings_title">Paramètres</string>
     <string name="settings_theme">Thème</string>
     <string name="settings_language">Langue</string>
+    <string name="settings_language_system">Système (%1$s)</string>
     <string name="language_english">English</string>
     <string name="language_slovak">Slovenčina</string>
     <string name="language_spanish_english">Spanish</string>

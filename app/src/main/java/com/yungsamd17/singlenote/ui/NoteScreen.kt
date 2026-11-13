@@ -184,7 +184,12 @@ fun NoteScreen(
         val capture = quickCapture
         if (!ready) return@LaunchedEffect
         if (action == null && !capture) return@LaunchedEffect
-        if (action == "archive") viewModel.archiveCurrent().join()
+        if (action == "archive") {
+            // The widget and the quick-settings tile archive the note and
+            // start a new one: a pinned note stays pinned, the new note
+            // takes over the notification.
+            viewModel.archiveCurrent(keepPinned = true).join()
+        }
         // Quick capture from the notification shade: the note on screen is
         // archived, never deleted, and the editor starts empty with the
         // cursor in it.

@@ -195,6 +195,43 @@ class NoteViewModelTest {
     }
 
     @Test
+    fun quickCapture_keepsThePinnedNotePinned() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.onTextChange("to do")
+        advanceUntilIdle()
+        vm.quickCapture()
+        advanceUntilIdle()
+
+        // The new note takes over the pin: the notification stays alive.
+        assertTrue(store.archiveRequested)
+        assertTrue(store.pinned.value)
+    }
+
+    @Test
+    fun theQuickActionArchiveKeepsThePinnedNotePinned() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        store.pinned.value = true
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.onTextChange("to do")
+        advanceUntilIdle()
+        // The widget and the quick-settings tile archive the note and start
+        // a new one: the pin moves to the new note.
+        vm.archiveCurrent(keepPinned = true)
+        advanceUntilIdle()
+
+        assertTrue(store.archiveRequested)
+        assertTrue(store.pinned.value)
+    }
+
+    @Test
     fun delete_clearsEditorWithoutResaving() = runTest {        installMain()
         val store = FakeNoteStore()
         val vm = NoteViewModel(store)

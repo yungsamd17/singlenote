@@ -20,15 +20,18 @@ Changes for the next release will be listed here.
 - **The accent picker shows the colours.** Every accent option carries a round colour preview next to its name, so the palette can be picked by sight instead of by name. In monochrome mode the previews turn gray along with the rest of the app.
 - **The language list is alphabetical.** The picker shows the device-language row first, then English, then the remaining languages in alphabetical order by their English name, so a language is easy to find.
 - **The language rows read like a language list.** Each row now leads with the English name ("German"), shows the native name underneath ("Deutsch") and carries a round badge with the region code, the way other apps present their language pickers.
-- **The selected language is marked in its badge.** The picked row swaps the region code for a check mark on an accent-tinted circle, and the radio buttons on the right are gone.
+- **The selected language is marked in its badge.** The picked row swaps the region code for a check mark on a light accent tint, and the radio buttons on the right are gone.
 - **Cleaner language names.** English is just "English" (the badge already carries the region), Brazilian Portuguese reads "Portuguese (Brazil)" and the Chinese translation reads "Chinese (Simplified)" — and Chinese moved to the end of the list, next to the other regional variants.
-- **The Settings hub names the language you are reading.** With "Your device language" selected, the Language row shows the language the phone actually uses instead of just "System".
+- **The Settings hub names the language you are reading.** With "Your device language" selected, the Language row reads "System (English)" — the language the phone actually uses, even one the app does not ship.
+- **The quick actions keep your note pinned.** A pinned note stays pinned when you start a new one from the notification, the quick-settings tile or the widget: the new note takes over the notification instead of leaving you without one.
+- **The archive search fades the notes back in.** Clearing or closing the search brings the notes back with an animation instead of popping them onto the screen.
 - **The archive search button appears only when it helps.** With no archived note or just one, the search action is left out of the app bar; from two notes on, it shows up on its own.
 - **The archive always starts at the top.** Opening the archive returns to the first note, and changing the sort, opening the search or clearing it jumps back to the first row instead of keeping an offset that belonged to the old list.
 - **Clearing the archive search closes the keyboard.** The clear button in the search field empties the query and puts the keyboard away, so the list gets the screen back right away.
 
 ### Fixed
 
+- Picking "Your device language" now sticks: switching from the device language to the same language in the app and back leaves the app following the device, instead of getting stuck on the old choice until you picked a third language.
 - The archive no longer flashes in the wrong order when it opens: it paints the list once, already sorted by the order you chose, instead of showing the default order for a frame and animating every card into place.
 - TalkBack improvements: status messages such as "Note archived" are announced, screen headings and the pinned-note button are described correctly, and small controls meet the 48 dp touch target.
 - Widget settings are remembered: removing a widget and adding it again starts with the same theme, accent, sizes and tap action instead of the defaults.

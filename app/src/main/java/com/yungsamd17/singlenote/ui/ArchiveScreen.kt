@@ -396,32 +396,45 @@ fun ArchiveScreen(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     )
                 }
-                if (visibleNotes.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            // Distinguish "the archive is empty" from "nothing
-                            // matches the current search".
-                            text = stringResource(
-                                if (sortedNotes.isEmpty()) R.string.archive_empty
-                                else R.string.archive_search_empty
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                // The list stays composed while the search filters it away.
+                // A list that is created at the very moment the search is
+                // cleared has no previous state to animate from, so the notes
+                // would pop in instead of fading back.
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(start = NoteCardHorizontalPadding, top = NoteCardTopPadding, end = NoteCardHorizontalPadding, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (visibleNotes.isEmpty()) {
+                        item(key = "archive-empty") {
+                            Box(
+                                modifier = Modifier.fillParentMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    // Distinguish "the archive is empty" from
+                                    // "nothing matches the current search".
+                                    text = stringResource(
+                                        if (sortedNotes.isEmpty()) R.string.archive_empty
+                                        else R.string.archive_search_empty
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else {
                         items(visibleNotes, key = { it.id }, contentType = { "archivedNote" }) { note ->
                             androidx.compose.animation.AnimatedContent(
                                 targetState = archiveHeader(context, note, loadedSort, now),
-                                modifier = Modifier.animateItem(),
+                                // The notes fade back in when the search is
+                                // cleared and slide into their place when the
+                                // filter changes, instead of popping.
+                                modifier = Modifier.animateItem(
+                                    fadeInSpec = motionSpec(AppMotion.MEDIUM_MS),
+                                    placementSpec = motionOffsetSpec(AppMotion.MEDIUM_MS),
+                                    fadeOutSpec = motionSpec(AppMotion.FAST_MS),
+                                ),
                                 // Fade only: a size transform would make every row
                                 // jump when its timestamp changes.
                                 transitionSpec = {
