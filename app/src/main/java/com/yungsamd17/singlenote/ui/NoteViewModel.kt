@@ -77,6 +77,11 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
 
     private var currentNoteId: Long? = null
     private var saveJob: Job? = null
+    // True while a quick action (the notification, the tile, the widget)
+    // puts a new note in the place of a pinned one. The new note takes the
+    // pin, so the blank editor must not unpin it the way an emptied note
+    // does.
+    private var keepPinnedForNextNote = false
     // Serializes persist against archive/delete: a flush racing an archive
     // must not interleave, and archive/delete join (rather than orphan) the
     // pending write by holding the same mutex.
@@ -135,9 +140,15 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         flushSave().join()
     }
 
-    fun archiveCurrent(): Job {
+    /**
+     * Archives the note on screen. A quick action (the notification, the
+     * quick-settings tile, the widget) passes [keepPinned]: the new note
+     * takes over the pin of the note it replaces, so the pinned
+     * notification never goes dark.
+     */
+    fun archiveCurrent(keepPinned: Boolean = false): Job {
         saveJob?.cancel()
-        return viewModelScope.launch { archiveNow() }
+        return viewModelScope.launch { archiveNow(keepPinned) }
     }
 
     /**
@@ -147,24 +158,35 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
      *
      * An empty note has nothing worth keeping, so its empty row is dropped
      * instead of filling the archive with a blank entry.
+     *
+     * A pinned note stays pinned: the new note takes its place.
      */
     fun quickCapture(): Job {
         saveJob?.cancel()
         return viewModelScope.launch {
-            if (_text.value.isNotBlank()) archiveNow() else clearEmptyNote()
+            if (_text.value.isNotBlank()) archiveNow(keepPinned = true) else clearEmptyNote()
         }
     }
 
-    private suspend fun archiveNow() {
+    private suspend fun archiveNow(keepPinned: Boolean = false) {
         val snapshot = _text.value
         val snapshotId = currentNoteId
-        val wasPinned = try { pinned.first() } catch (_: Exception) { false }
+        val wasPinned = try { store.pinned.first() } catch (_: Exception) { false }
+        // The note is replaced by a new one: a pinned note stays pinned, the
+        // new note takes over the notification.
+        val keepPin = keepPinned && wasPinned
+        keepPinnedForNextNote = keepPin
         // Persist-then-archive under one lock: the shade-Archive path
         // and this FAB share the store, so the archive must see the
         // flushed text, never the still-debouncing keystrokes.
         persistMutex.withLock {
             persist()
             store.archiveActive()
+        }
+        // The archive unpins the note it moved (the next note starts fresh).
+        // Put the pin back for a quick action.
+        if (keepPin) {
+            try { store.setPinned(true) } catch (_: Exception) { }
         }
         currentNoteId = null
         _text.value = ""
@@ -177,7 +199,12 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     }
 
     private suspend fun clearEmptyNote() {
+        val wasPinned = try { store.pinned.first() } catch (_: Exception) { false }
+        keepPinnedForNextNote = wasPinned
         persistMutex.withLock { store.deleteActive() }
+        if (wasPinned) {
+            try { store.setPinned(true) } catch (_: Exception) { }
+        }
         currentNoteId = null
         _text.value = ""
     }
@@ -186,7 +213,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         saveJob?.cancel()
         viewModelScope.launch {
             val snapshot = _text.value
-            val wasPinned = try { pinned.first() } catch (_: Exception) { false }
+            val wasPinned = try { store.pinned.first() } catch (_: Exception) { false }
             // Hold the mutex (without re-saving) so an in-flight flush
             // can't resurrect the note after the delete lands.
             persistMutex.withLock { store.deleteActive() }
@@ -292,7 +319,18 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
         // characters than a larger font allows, and must survive relaunch
         // unchanged regardless of the current text-size setting.
         _text.value = note?.content.orEmpty()
-        if (note?.content.isNullOrBlank()) unpinIfPinned()
+        if (note?.content.isNullOrBlank()) {
+            if (keepPinnedForNextNote) {
+                // A quick action put a new note in the place of the pinned
+                // one: the new note takes the pin, so the notification comes
+                // back as soon as there is something to show.
+                keepPinnedForNextNote = false
+            } else {
+                unpinIfPinned()
+            }
+        } else {
+            keepPinnedForNextNote = false
+        }
     }
 
     // Clearing the main note manually unpins it, same as archiving or

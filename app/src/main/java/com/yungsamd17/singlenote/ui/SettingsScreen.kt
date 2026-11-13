@@ -408,12 +408,16 @@ fun SettingsScreen(
                     })
                 )
                 SettingsSectionHeader(stringResource(R.string.settings_app_language))
-                val selected = AppLanguage.getLanguageTag(context)
+                // The picked language lives in the composable: choosing a
+                // language the device already uses changes no configuration,
+                // so the platform never notifies the app and the check mark
+                // would stay on the old row.
+                var selectedTag by remember { mutableStateOf(AppLanguage.getLanguageTag(context)) }
                 Column(Modifier.selectableGroup()) {
                     SettingsGroup(
                         languageEntries.map { entry ->
                             {
-                                val checked = selected == entry.code
+                                val checked = selectedTag == entry.code
                                 Row(
                                     Modifier.fillMaxWidth()
                                         .background(
@@ -425,6 +429,7 @@ fun SettingsScreen(
                                             checked,
                                             role = Role.RadioButton,
                                             onClick = {
+                                                selectedTag = entry.code
                                                 AppLanguage.setLanguage(context, entry.code)
                                             },
                                         )
@@ -534,19 +539,23 @@ fun SettingsScreen(
  * Round badge in front of a language row: the region code of the locale
  * (`en-US` → `US`) like the language pickers of other apps, or a language
  * glyph for the device row, which has no locale of its own. The selected row
- * swaps the code for a check mark on an accent-tinted circle, so the badge
- * itself carries the selection.
+ * swaps the code for a check mark, so the badge itself carries the
+ * selection.
+ *
+ * The selected badge is a light tint of the accent — the same accent the
+ * section headers use, but softened — with the check in the accent color
+ * itself, so the badge never reads as a solid accent blob.
  */
 @Composable
 private fun LanguageBadge(entry: LanguageEntry, selected: Boolean) {
     val region = entry.code.substringAfter('-', "")
     val container = if (selected) {
-        MaterialTheme.colorScheme.primaryContainer
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
     } else {
         MaterialTheme.colorScheme.surfaceVariant
     }
     val content = if (selected) {
-        MaterialTheme.colorScheme.onPrimaryContainer
+        MaterialTheme.colorScheme.primary
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -821,9 +830,9 @@ private fun sizeLabel(key: String): String =
 
 /**
  * Name of the active language for the Settings hub row. An explicit choice
- * shows its own name; following the system shows the language the device
- * actually uses, so the row never just says "System" — the user wants to know
- * which language they are looking at.
+ * shows its own name; following the device shows "System (<language>)", so
+ * the row never just says "System" — the user wants to know which language
+ * they are looking at.
  */
 @Composable
 private fun languageLabel(context: android.content.Context, languageTag: String): String {
@@ -835,10 +844,11 @@ private fun languageLabel(context: android.content.Context, languageTag: String)
     val device = context.resources.configuration.locales[0]
     val entry = languageEntries.firstOrNull { it.code == device.toLanguageTag() }
         ?: languageEntries.firstOrNull { it.code.startsWith("${device.language}-") }
-    return if (entry != null) {
+    val name = if (entry != null) {
         stringResource(entry.englishName)
     } else {
         // A language the app does not ship: name it as the device does.
         device.getDisplayName(java.util.Locale.ENGLISH)
     }
+    return stringResource(R.string.settings_language_system, name)
 }
