@@ -61,9 +61,10 @@ reconciled with v1.0.0 on 2026-11-13.
   1.1.1, WorkManager 2.7.1, Navigation 2.8.5, lifecycle 2.8.7, activity-compose
   1.9.3, core-ktx 1.15.0. The v1.0.0 release ships this tested set; the bump
   rides the next release. Dependabot stays security-only until then.
-- [ ] **16 KB page sizes** — confirm the release APK aligns 16 KB ELF segments
-  (`zipalign -c -P 16` or the Play pre-launch report). Pure Kotlin should pass,
-  but Play requires it for apps targeting 35+.
+- [x] **16 KB page sizes** — checked against the published `v1.0.0` release APK:
+  `zipalign -c -P 16` passes and every native library in it (the AndroidX
+  `libandroidx.graphics.path.so` and `libdatastore_shared_counter.so`) has
+  16 KB (0x4000) ELF LOAD alignment. Play requires this for apps targeting 35+.
 - [ ] **Performance guardrail** — no StrictMode run and no startup measurement.
   Add a debug-only StrictMode harness and record a cold-start baseline.
 - [ ] **Widget regression watch** — re-test on MIUI/One UI after any Glance bump;
