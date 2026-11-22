@@ -19,10 +19,6 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 </div>
 
-<p align="center">
-  <img src="docs/showcase/hero.png" alt="Singlenote: one note in the editor, on the home screen and on the lock screen" width="100%">
-</p>
-
 ## Features
 
 See the [changelog](CHANGELOGS.md) for release history and pending changes.
@@ -36,10 +32,20 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 - **Theming** — light / dark / system, accent palettes, dynamic colors and AMOLED
 - **Typography** — system or bundled Google Sans Flex app font, default / monospace / serif note styles, three text sizes
 - **Changelog & updates** — per-version release notes and update checks in About
+- **Languages** — English, Slovenčina, Deutsch, Español, Français, Italiano,
+  Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文. Follows
+  the system language (English fallback); pick one in **Settings → Language** to
+  save it for the app.
 - **Privacy first** — offline-first; no accounts, no analytics, no tracking.
   Notes and settings are stored unencrypted in the app's private storage.
   Permissions: notifications (pinned note), and internet solely for release
   notes and update checks, only when you open them
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/showcase/hero.png" alt="Singlenote: one note in the editor, on the home screen and on the lock screen" width="100%">
+</p>
 
 <p align="center">
   <img src="docs/showcase/features.png" alt="Singlenote archive, appearance, language and privacy screens" width="100%">
@@ -48,15 +54,6 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 <p align="center">
   <img src="docs/showcase/notification.png" alt="The pinned note on the lock screen and in the notification shade" width="100%">
 </p>
-
-## Languages
-
-Singlenote supports English, Slovenčina (Slovak), Deutsch, Español, Français,
-Italiano, Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文.
-Open **Settings → Language** to pick one. The app
-initially follows the system language, falling back to English for unsupported
-languages; choosing a language saves an app-specific preference. Language changes
-crossfade in place without restarting the screen.
 
 ## Download
 
