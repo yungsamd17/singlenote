@@ -108,7 +108,8 @@ See [translation instructions](docs/TRANSLATE-APP.md) and the
 ## Documentation
 
 Find setup, contribution, translation, archive, release, and project guides in
-the [documentation index](docs/README.md).
+the [documentation index](docs/README.md). README imagery, the social preview,
+and the Play Store assets live in [`docs/showcase`](docs/showcase/README.md).
 
 ## Credits
 

@@ -191,6 +191,8 @@ Rules:
 
 ## Gotchas
 
+- Showcase and store artwork lives in `docs/showcase/`. Read
+  `docs/showcase/AGENTS.md` before adding, replacing or reviewing an image.
 - Do not commit secrets, keystores, or local-only files (e.g. `.and-code/`).
 - `BuildConfig.VERSION_NAME` is used in the About screen (header + changelog matching) — keep `buildConfig = true`.
 - Release builds sign with `signingConfigs.release`, backed by the `RELEASE_KEYSTORE_*` repo secrets (key backup lives outside git); the debug keystore must never sign releases.
