@@ -19,6 +19,10 @@ visible everywhere — home screen widget, pinned notification, and quick settin
 
 </div>
 
+<p align="center">
+  <img src="docs/showcase/hero.png" alt="Singlenote: one note in the editor, on the home screen and on the lock screen" width="100%">
+</p>
+
 ## Features
 
 See the [changelog](CHANGELOGS.md) for release history and pending changes.
@@ -36,6 +40,14 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
   Notes and settings are stored unencrypted in the app's private storage.
   Permissions: notifications (pinned note), and internet solely for release
   notes and update checks, only when you open them
+
+<p align="center">
+  <img src="docs/showcase/features.png" alt="Singlenote archive, appearance, language and privacy screens" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/showcase/notification.png" alt="The pinned note on the lock screen and in the notification shade" width="100%">
+</p>
 
 ## Languages
 
