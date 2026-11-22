@@ -89,16 +89,6 @@ installable APKs to [Releases](https://github.com/yungsamd17/singlenote/releases
 | Async | Kotlin Coroutines |
 | SDK / JVM | minSdk 29 · target/compile SDK 36 · JVM 17 |
 
-## Credits
-
-Inspired by [Mononote](https://www.digitalminimalist.com/apps/mononote), rebuilt from
-scratch for Android by [yungsamd17](https://github.com/yungsamd17).
-
-- Launcher glyph: [Bootstrap Icons](https://icons.getbootstrap.com) (`sticky-fill`, MIT),
-  composed with [s17 Labs Icon Maker](https://s17labs.github.io/tools/icon-maker)
-- Settings and action glyphs, including `license` and `format_paint`: [Material Symbols](https://fonts.google.com/icons)
-  by Google (Apache License 2.0)
-
 ## Settings and behavior
 
 Settings has separate Appearance, Typography, Language, Notifications, and About
@@ -118,7 +108,18 @@ See [translation instructions](docs/TRANSLATE-APP.md) and the
 ## Documentation
 
 Find setup, contribution, translation, archive, release, and project guides in
-the [documentation index](docs/README.md).
+the [documentation index](docs/README.md). README imagery, the social preview,
+and the Play Store assets live in [`docs/showcase`](docs/showcase/README.md).
+
+## Credits
+
+Inspired by [Mononote](https://www.digitalminimalist.com/apps/mononote), rebuilt from
+scratch for Android by [yungsamd17](https://github.com/yungsamd17).
+
+- Launcher glyph: [Bootstrap Icons](https://icons.getbootstrap.com) (`sticky-fill`, MIT),
+  composed with [s17 Labs Icon Maker](https://s17labs.github.io/tools/icon-maker)
+- Settings and action glyphs, including `license` and `format_paint`: [Material Symbols](https://fonts.google.com/icons)
+  by Google (Apache License 2.0)
 
 ## License
 
