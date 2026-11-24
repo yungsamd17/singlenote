@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Закреплённая заметка</string>
     <string name="channel_pinned_description">Показывает текущую заметку, чтобы она оставалась видимой</string>
     <string name="notification_pinned_title">Закреплённый Singlenote</string>
+    <string name="notification_hidden_body">Разблокируйте, чтобы прочитать заметку</string>
     <string name="notification_action_new_note">Новая заметка</string>
     <string name="notification_action_open">Открыть</string>
     <string name="tile_label">Singlenote</string>
@@ -122,8 +123,8 @@
     <string name="settings_section_about">О приложении</string>
     <string name="setting_show_notifications">Закреплённое уведомление</string>
     <string name="setting_show_notifications_desc">Разрешить закрепление текущей заметки как постоянного уведомления</string>
-    <string name="setting_lockscreen_visible">Показывать заметку на экране блокировки</string>
-    <string name="setting_lockscreen_visible_desc">Выкл. скрывает содержимое заметки на экране блокировки</string>
+    <string name="setting_lockscreen_visible">Скрывать заметку до разблокировки</string>
+    <string name="setting_lockscreen_visible_desc">Скрывать заметку на экране блокировки до разблокировки устройства</string>
     <string name="setting_notification_title_first_line">Показывать первую строку заметки в заголовке</string>
     <string name="setting_notification_title_first_line_desc">Использовать первую строку заметки как заголовок закреплённого уведомления</string>
     <string name="change">Изменить</string>
@@ -153,6 +154,17 @@
     <string name="action_download">Скачать</string>
     <string name="update_uptodate">У вас последняя версия</string>
     <string name="update_check_failed">Не удалось проверить обновления. Попробуйте позже.</string>
+    <string name="update_prompt_title">Доступна новая версия</string>
+    <string name="update_prompt_message">Версия %1$s доступна на GitHub.</string>
+    <string name="update_prompt_later">Позже</string>
+    <string name="update_test_name">Тестовая версия</string>
+    <string name="update_test_body">Это **тест** диалога обновления. Кнопка открывает реальную страницу выпусков.</string>
+    <string name="update_prompt_dont_show">Больше не показывать это окно</string>
+    <string name="settings_section_updates">Обновления</string>
+    <string name="updates_check_now_desc">Проверить GitHub на наличие новой версии</string>
+    <string name="settings_updates_summary">Проверка обновлений и списки изменений</string>
+    <string name="settings_update_checks">Проверять обновления при запуске</string>
+    <string name="settings_update_checks_desc">Искать новую версию при каждом запуске</string>
     <string name="no_app_to_open_link">Не найдено приложение для открытия этой ссылки</string>
     <string name="email_title">Эл. почта</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Копировать</string>
     <string name="diagnostics_share">Поделиться</string>
     <string name="diagnostics_close">Закрыть</string>
+    <string name="diagnostics_save">Сохранить в файл</string>
+    <string name="diagnostics_saved">Диагностика сохранена</string>
+    <string name="diagnostics_save_failed">Не удалось сохранить: %1$s</string>
+    <string name="diagnostics_test_update">Проверить окно обновления</string>
     <string name="diagnostics_copied">Диагностика скопирована</string>
     <string name="diagnostics_widget_update">Принудительное обновление виджета</string>
     <string name="diagnostics_widget_update_requested">Обновление виджета запрошено</string>

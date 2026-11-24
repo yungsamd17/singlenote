@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">固定笔记</string>
     <string name="channel_pinned_description">显示当前笔记使其保持可见</string>
     <string name="notification_pinned_title">固定的 Singlenote</string>
+    <string name="notification_hidden_body">解锁后查看你的笔记</string>
     <string name="notification_action_new_note">新建笔记</string>
     <string name="notification_action_open">打开</string>
     <string name="tile_label">Singlenote</string>
@@ -122,8 +123,8 @@
     <string name="settings_section_about">关于应用</string>
     <string name="setting_show_notifications">固定通知</string>
     <string name="setting_show_notifications_desc">允许将当前笔记固定为持久通知</string>
-    <string name="setting_lockscreen_visible">锁屏显示笔记</string>
-    <string name="setting_lockscreen_visible_desc">关闭则在锁屏隐藏笔记内容</string>
+    <string name="setting_lockscreen_visible">解锁前隐藏笔记</string>
+    <string name="setting_lockscreen_visible_desc">在解锁设备前，将笔记隐藏在锁屏上</string>
     <string name="setting_notification_title_first_line">在标题中显示笔记首行</string>
     <string name="setting_notification_title_first_line_desc">使用笔记的第一行作为固定通知的标题</string>
     <string name="change">更改</string>
@@ -153,6 +154,17 @@
     <string name="action_download">下载</string>
     <string name="update_uptodate">已是最新版本</string>
     <string name="update_check_failed">检查更新失败。稍后重试。</string>
+    <string name="update_prompt_title">有新版本可用</string>
+    <string name="update_prompt_message">版本 %1$s 已在 GitHub 发布。</string>
+    <string name="update_prompt_later">稍后</string>
+    <string name="update_test_name">测试版本</string>
+    <string name="update_test_body">这是更新对话框的**测试**。按钮将打开真实的版本页面。</string>
+    <string name="update_prompt_dont_show">不再显示此对话框</string>
+    <string name="settings_section_updates">更新</string>
+    <string name="updates_check_now_desc">在 GitHub 上查找新版本</string>
+    <string name="settings_updates_summary">更新检查与版本说明</string>
+    <string name="settings_update_checks">启动时检查更新</string>
+    <string name="settings_update_checks_desc">每次启动时查找新版本</string>
     <string name="no_app_to_open_link">未找到可打开此链接的应用</string>
     <string name="email_title">邮箱</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">复制</string>
     <string name="diagnostics_share">分享</string>
     <string name="diagnostics_close">关闭</string>
+    <string name="diagnostics_save">保存到文件</string>
+    <string name="diagnostics_saved">诊断已保存</string>
+    <string name="diagnostics_save_failed">保存失败：%1$s</string>
+    <string name="diagnostics_test_update">测试更新提示</string>
     <string name="diagnostics_copied">诊断已复制</string>
     <string name="diagnostics_widget_update">强制小部件更新</string>
     <string name="diagnostics_widget_update_requested">小部件更新已请求</string>

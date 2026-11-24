@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Pripnutá poznámka</string>
     <string name="channel_pinned_description">Zobrazuje aktuálnu poznámku, aby bola stále na očiach</string>
     <string name="notification_pinned_title">Pripnutá poznámka v Singlenote</string>
+    <string name="notification_hidden_body">Odomkni si na prečítanie poznámky</string>
     <string name="notification_action_new_note">Nová poznámka</string>
     <string name="notification_action_open">Otvoriť</string>
     <string name="tile_label">Singlenote</string>
@@ -101,8 +102,8 @@
     <string name="settings_section_about">O aplikácii</string>
     <string name="setting_show_notifications">Pripnuté upozornenie</string>
     <string name="setting_show_notifications_desc">Povoľte pripnutie aktuálnej poznámky ako trvalého upozornenia</string>
-    <string name="setting_lockscreen_visible">Zobrazovať poznámku na uzamknutej obrazovke</string>
-    <string name="setting_lockscreen_visible_desc">Ak je možnosť vypnutá, obsah poznámky sa na uzamknutej obrazovke skryje</string>
+    <string name="setting_lockscreen_visible">Skryť poznámku až po odomknutí</string>
+    <string name="setting_lockscreen_visible_desc">Nechaj poznámku skrytú na uzamknutej obrazovke, kým neodomkneš zariadenie</string>
     <string name="setting_notification_title_first_line">Zobrazovať prvý riadok poznámky v názve</string>
     <string name="setting_notification_title_first_line_desc">Použiť prvý riadok poznámky ako názov pripnutého upozornenia</string>
     <string name="change">Zmeniť</string>
@@ -132,6 +133,17 @@
     <string name="action_download">Stiahnuť</string>
     <string name="update_uptodate">Používate najnovšiu verziu</string>
     <string name="update_check_failed">Aktualizácie sa nepodarilo skontrolovať. Skúste to neskôr.</string>
+    <string name="update_prompt_title">K dispozícii je nová verzia</string>
+    <string name="update_prompt_message">Verzia %1$s je k dispozícii na GitHube.</string>
+    <string name="update_prompt_later">Neskôr</string>
+    <string name="update_test_name">Skúšobná verzia</string>
+    <string name="update_test_body">Toto je **test** dialógu aktualizácie. Tlačidlo otvorí skutočnú stránku vydaní.</string>
+    <string name="update_prompt_dont_show">Už nezobrazovať toto okno</string>
+    <string name="settings_section_updates">Aktualizácie</string>
+    <string name="updates_check_now_desc">Skontrolovať GitHub pre novú verziu</string>
+    <string name="settings_updates_summary">Kontrola aktualizácií a poznámky</string>
+    <string name="settings_update_checks">Kontrolovať aktualizácie pri spustení</string>
+    <string name="settings_update_checks_desc">Pri každom spustení hľadať novú verziu</string>
     <string name="no_app_to_open_link">Nenašla sa aplikácia na otvorenie tohto odkazu</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Kopírovať</string>
     <string name="diagnostics_share">Zdieľať</string>
     <string name="diagnostics_close">Zavrieť</string>
+    <string name="diagnostics_save">Uložiť do súboru</string>
+    <string name="diagnostics_saved">Diagnostika uložená</string>
+    <string name="diagnostics_save_failed">Nepodarilo sa uložiť: %1$s</string>
+    <string name="diagnostics_test_update">Otestovať výzvu na aktualizáciu</string>
     <string name="diagnostics_copied">Diagnostika skopírovaná</string>
     <string name="diagnostics_widget_update">Vynútiť aktualizáciu widgetu</string>
     <string name="diagnostics_widget_update_requested">Aktualizácia widgetu vyžiadaná</string>

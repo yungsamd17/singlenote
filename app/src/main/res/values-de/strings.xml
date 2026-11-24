@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Angeheftete Notiz</string>
     <string name="channel_pinned_description">Zeigt deine aktuelle Notiz an, damit sie sichtbar bleibt</string>
     <string name="notification_pinned_title">Angeheftete Singlenote</string>
+    <string name="notification_hidden_body">Entsperren, um deine Notiz zu lesen</string>
     <string name="notification_action_new_note">Neue Notiz</string>
     <string name="notification_action_open">Öffnen</string>
     <string name="tile_label">Singlenote</string>
@@ -122,8 +123,8 @@
     <string name="settings_section_about">Über die App</string>
     <string name="setting_show_notifications">Angeheftete Benachrichtigung</string>
     <string name="setting_show_notifications_desc">Erlaube das Anheften der aktuellen Notiz als permanente Benachrichtigung</string>
-    <string name="setting_lockscreen_visible">Notiz auf Sperrbildschirm anzeigen</string>
-    <string name="setting_lockscreen_visible_desc">Aus blendet den Notizinhalt auf dem Sperrbildschirm aus</string>
+    <string name="setting_lockscreen_visible">Notiz bis zum Entsperren verbergen</string>
+    <string name="setting_lockscreen_visible_desc">Die Notiz auf dem Sperrbildschirm verbergen, bis du das Gerät entsperrst</string>
     <string name="setting_notification_title_first_line">Erste Notizzeile im Titel anzeigen</string>
     <string name="setting_notification_title_first_line_desc">Die erste Zeile deiner Notiz als Titel der angehefteten Benachrichtigung verwenden</string>
     <string name="change">Ändern</string>
@@ -153,6 +154,17 @@
     <string name="action_download">Herunterladen</string>
     <string name="update_uptodate">Du bist auf dem neuesten Stand</string>
     <string name="update_check_failed">Update-Prüfung fehlgeschlagen. Später erneut versuchen.</string>
+    <string name="update_prompt_title">Neue Version verfügbar</string>
+    <string name="update_prompt_message">Version %1$s ist auf GitHub verfügbar.</string>
+    <string name="update_prompt_later">Später</string>
+    <string name="update_test_name">Testversion</string>
+    <string name="update_test_body">Dies ist ein **Test** des Update-Dialogs. Die Schaltfläche öffnet die echte Releases-Seite.</string>
+    <string name="update_prompt_dont_show">Dieses Dialogfenster nicht mehr anzeigen</string>
+    <string name="settings_section_updates">Updates</string>
+    <string name="updates_check_now_desc">Auf GitHub nach einer neuen Version suchen</string>
+    <string name="settings_updates_summary">Update-Prüfung und Versionshinweise</string>
+    <string name="settings_update_checks">Beim Start nach Updates suchen</string>
+    <string name="settings_update_checks_desc">Bei jedem Start nach einer neuen Version suchen</string>
     <string name="no_app_to_open_link">Keine App zum Öffnen dieses Links gefunden</string>
     <string name="email_title">E-Mail</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Kopieren</string>
     <string name="diagnostics_share">Teilen</string>
     <string name="diagnostics_close">Schließen</string>
+    <string name="diagnostics_save">In Datei speichern</string>
+    <string name="diagnostics_saved">Diagnose gespeichert</string>
+    <string name="diagnostics_save_failed">Speichern fehlgeschlagen: %1$s</string>
+    <string name="diagnostics_test_update">Update-Dialog testen</string>
     <string name="diagnostics_copied">Diagnose kopiert</string>
     <string name="diagnostics_widget_update">Widget-Update erzwingen</string>
     <string name="diagnostics_widget_update_requested">Widget-Update angefordert</string>

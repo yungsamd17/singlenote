@@ -1,5 +1,6 @@
 package com.yungsamd17.singlenote.widget
 
+import android.app.WallpaperManager
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
@@ -317,6 +318,26 @@ private fun widgetSize(context: Context, appWidgetId: Int): DpSize {
 private const val WORK_TIMEOUT_SECONDS = 5L
 private const val GLANCE_UPDATE_TIMEOUT_MS = 5_000L
 
+/**
+ * The wallpaper color behind the widget, or null when unavailable. The primary
+ * swatch is used rather than the system's light/dark hints: a wallpaper with a
+ * small bright subject (e.g. a light car on a dark background) gets a "light"
+ * hint even where the widget actually sits, which produced unreadable text.
+ */
+private fun wallpaperBackdrop(context: Context): Color? =
+    try {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) null
+        else {
+            val primary =
+                WallpaperManager.getInstance(context)
+                    .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+                    ?.primaryColor ?: return null
+            Color(primary.red(), primary.green(), primary.blue())
+        }
+    } catch (_: Exception) {
+        null
+    }
+
 @Composable
 internal fun WidgetContent(
     openIntent: Intent?,
@@ -334,6 +355,9 @@ internal fun WidgetContent(
     // items while the app process lives. Previews and the in-process render
     // use one text block instead, so the note stays visible either way.
     scrollable: Boolean = true,
+    // The surface actually behind the widget. The config preview passes its
+    // own background; the real widget falls back to the wallpaper color.
+    backdropColor: Color? = null,
 ) {
     val followApp = widgetAccentSetting(style.accent) == "app"
     val accentKey = if (followApp) appAccent else style.accent
@@ -361,8 +385,33 @@ internal fun WidgetContent(
             else -> androidx.glance.color.ColorProvider(day = light, night = dark)
         }
     val background = colors(lightBackground, darkBackground)
-    val foreground = colors(lightText, darkText)
-    val accent = colors(lightAccent, darkAccent)
+
+    // Pick the ink by WCAG contrast against the color the text actually sits
+    // on: the theme card composited over the real backdrop at this opacity.
+    // At full opacity that's the card color itself, so opaque widgets keep the
+    // theme's intended colors.
+    val systemDark =
+        context.resources.configuration.uiMode and
+            android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+    val usesDarkBackground =
+        when (style.theme) {
+            "light" -> false
+            "dark" -> true
+            else -> systemDark
+        }
+    val themeBackground = if (usesDarkBackground) darkBackground else lightBackground
+    val backdrop = backdropColor ?: wallpaperBackdrop(context)
+    val effectiveBackground =
+        backdrop?.let { WidgetContrast.composite(themeBackground.copy(alpha = 1f), it, opacity) }
+    val prefersDarkInk =
+        effectiveBackground?.let { WidgetContrast.prefersDarkInk(lightText, darkText, it) }
+    val foreground =
+        if (prefersDarkInk == null) colors(lightText, darkText)
+        else ColorProvider(if (prefersDarkInk) lightText else darkText)
+    val accent =
+        if (prefersDarkInk == null) colors(lightAccent, darkAccent)
+        else ColorProvider(widgetAccent(context, accentKey, !prefersDarkInk, materialYou, monochrome))
     val textSize = widgetFontSize(style.size)
     val noteText = content.ifBlank { fallbackHint }
     val topPadding = if (style.showTitle) 10.dp else widgetNoteTopPadding(context, textSize)

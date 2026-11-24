@@ -240,7 +240,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val brand = stringResource(R.string.app_name)
             val renderer = remember { GlanceRemoteViews() }
             var previewViews by remember { mutableStateOf<android.widget.RemoteViews?>(null) }
-            LaunchedEffect(options, appAccent, dynamic, monochrome, previewText, brand) {
+            LaunchedEffect(options, appAccent, dynamic, monochrome, previewText, brand, scheme.background) {
                 previewViews =
                     renderer
                         .compose(
@@ -258,6 +258,9 @@ class WidgetConfigurationActivity : ComponentActivity() {
                                 appDynamicColors = dynamic,
                                 appMonochrome = monochrome,
                                 scrollable = false,
+                                // The preview sits on the activity background,
+                                // not on the home-screen wallpaper.
+                                backdropColor = scheme.background,
                             )
                         }
                         .remoteViews

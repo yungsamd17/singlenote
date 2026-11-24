@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -117,10 +118,16 @@ fun SettingsSectionHeader(text: String) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsPage(title: String, onBack: () -> Unit, content: @Composable () -> Unit) {
+fun SettingsPage(
+    title: String,
+    onBack: () -> Unit,
+    snackbarHost: @Composable () -> Unit = {},
+    content: @Composable () -> Unit,
+) {
     val scroll = rememberSettingsScrollState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = snackbarHost,
         topBar = {
             // Centered like the note and archive toolbars: the title sits in
             // the middle, and the bar stays put. It never collapses on
@@ -223,18 +230,23 @@ fun SettingsScreen(
                                 { onOpenScreen("language") },
                             )
                         },
+                        {
+                            ValueRow(
+                                Icons.Outlined.Notifications,
+                                stringResource(R.string.settings_section_notifications),
+                                stringResource(R.string.settings_notifications_summary),
+                                { onOpenScreen("notifications") },
+                            )
+                        },
+                        {
+                            ValueRow(
+                                Icons.Outlined.Refresh,
+                                stringResource(R.string.settings_section_updates),
+                                stringResource(R.string.settings_updates_summary),
+                                { onOpenScreen("updates") },
+                            )
+                        },
                     )
-                )
-                androidx.compose.foundation.layout.Spacer(Modifier.size(16.dp))
-                SettingsGroup(
-                    listOf({
-                        ValueRow(
-                            Icons.Outlined.Notifications,
-                            stringResource(R.string.settings_section_notifications),
-                            stringResource(R.string.settings_notifications_summary),
-                            { onOpenScreen("notifications") },
-                        )
-                    })
                 )
                 androidx.compose.foundation.layout.Spacer(Modifier.size(16.dp))
                 SettingsGroup(
@@ -369,12 +381,15 @@ fun SettingsScreen(
                             )
                         },
                         {
+                            // The stored pref is "show on lock screen"; the row
+                            // is presented as "hide until unlocked", so the
+                            // checked state and setter are inverted.
                             ToggleRow(
                                 painterResource(R.drawable.ic_symbol_notifications_unread),
                                 stringResource(R.string.setting_lockscreen_visible),
                                 stringResource(R.string.setting_lockscreen_visible_desc),
-                                lockscreen,
-                                viewModel::setLockscreenVisible,
+                                !lockscreen,
+                                { value -> viewModel.setLockscreenVisible(!value) },
                                 enabled = notifications,
                             )
                         },
@@ -695,7 +710,7 @@ internal fun ToggleRow(
 @Composable
 internal fun ToggleRow(
     icon: Painter, title: String, subtitle: String, checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, summaryAccent: Boolean = false,
+    onCheckedChange: (Boolean) -> Unit, enabled: Boolean = true, summaryAccent: Boolean = true,
 ) {
     Row(
         modifier =

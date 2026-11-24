@@ -5,6 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +35,9 @@ import androidx.compose.ui.unit.sp
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.launch
 
 /**
@@ -42,11 +47,29 @@ import kotlinx.coroutines.launch
  * need it most, since they cannot be attached to a debugger.
  */
 @Composable
-fun DiagnosticsDialog(onDismiss: () -> Unit) {
+fun DiagnosticsDialog(onDismiss: () -> Unit, onTestUpdate: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var report by remember { mutableStateOf<String?>(null) }
     var refreshing by remember { mutableStateOf(false) }
+
+    // SAF keeps this permission-free: the user picks where the report lands,
+    // and a real file is ready to hand to an agent or attach to a bug report.
+    val saveLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
+            if (uri == null) return@rememberLauncherForActivityResult
+            val message =
+                try {
+                    context.contentResolver.openOutputStream(uri)?.use {
+                        it.write(report.orEmpty().toByteArray(Charsets.UTF_8))
+                    }
+                    context.getString(R.string.diagnostics_saved)
+                } catch (e: Exception) {
+                    context.getString(R.string.diagnostics_save_failed, e.javaClass.simpleName)
+                }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+
     LaunchedEffect(Unit) { report = Diagnostics.report(context) }
 
     AlertDialog(
@@ -104,6 +127,14 @@ fun DiagnosticsDialog(onDismiss: () -> Unit) {
                     ) {
                         Text(stringResource(R.string.diagnostics_widget_update))
                     }
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            onTestUpdate()
+                        },
+                    ) {
+                        Text(stringResource(R.string.diagnostics_test_update))
+                    }
                 }
             }
         },
@@ -136,6 +167,15 @@ fun DiagnosticsDialog(onDismiss: () -> Unit) {
                 TextButton(
                     enabled = report != null,
                     onClick = {
+                        val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
+                        saveLauncher.launch("singlenote-diagnostics-$stamp.txt")
+                    },
+                ) {
+                    Text(stringResource(R.string.diagnostics_save))
+                }
+                TextButton(
+                    enabled = report != null,
+                    onClick = {
                         val send =
                             Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
@@ -152,3 +192,4 @@ fun DiagnosticsDialog(onDismiss: () -> Unit) {
         },
     )
 }
+

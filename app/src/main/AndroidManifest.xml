@@ -3,6 +3,11 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Keeps the process alive while a note is pinned so the lock/unlock
+        receiver can hide and restore the note on OEM ROMs that kill background
+        processes and drop their manifest receivers. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- On-demand only: public release notes (changelog) and update checks.
         No analytics, no tracking; see the Privacy Policy in the app. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -95,6 +100,10 @@
             android:label="${appLabel}">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <!-- System theme switch: Glance bakes day/night colors into
+                    RemoteViews at compose time, so re-render on a real change. -->
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED" />
+                <action android:name="android.intent.action.WALLPAPER_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
@@ -113,6 +122,20 @@
             android:name=".notify.PinActionReceiver"
             android:exported="false" />
 
+        <!-- Hides the pinned note while the keyguard is up and restores it
+            on unlock. Screen on/off and USER_PRESENT are exempt from the
+            implicit-broadcast limits, so this runs with the app in the
+            background. -->
+        <receiver
+            android:name=".notify.LockScreenReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.SCREEN_ON" />
+                <action android:name="android.intent.action.SCREEN_OFF" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
         <receiver
             android:name=".notify.PinBootReceiver"
             android:exported="false">
@@ -123,6 +146,15 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".notify.PinnedNoteService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="pinned_note" />
+        </service>
 
         <service
             android:name=".tile.NoteTileService"

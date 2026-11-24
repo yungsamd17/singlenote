@@ -75,11 +75,13 @@ class NotePreferencesTest {
         prefs.setNotificationsEnabled(false)
         prefs.setLockscreenVisible(false)
         prefs.setNotificationTitleFirstLine(true)
+        prefs.setUpdateChecksEnabled(false)
 
         assertEquals(true, prefs.pinned.first())
         assertEquals(false, prefs.notificationsEnabled.first())
         assertEquals(false, prefs.lockscreenVisible.first())
         assertEquals(true, prefs.notificationTitleFirstLine.first())
+        assertEquals(false, prefs.updateChecksEnabled.first())
     }
 
     @Test

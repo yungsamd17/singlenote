@@ -43,6 +43,7 @@ class NoteViewModelTest {
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
         override val notificationTitleFirstLine = MutableStateFlow(false)
+        override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -89,6 +90,10 @@ class NoteViewModelTest {
 
         override suspend fun setNotificationTitleFirstLine(value: Boolean) {
             notificationTitleFirstLine.value = value
+        }
+
+        override suspend fun setUpdateChecksEnabled(value: Boolean) {
+            updateChecksEnabled.value = value
         }
 
         override suspend fun setThemeMode(value: String) {}
