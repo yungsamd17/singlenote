@@ -10,8 +10,13 @@
    **Release** workflow validates that the tag matches `versionName` and belongs
    to main, then builds, tests, lints, signs, and publishes both APKs.
 3. Curate the generated release notes into user-facing sections and bullets.
-   Keep the APK attachments and a Full Changelog comparison link. Omit PR
-   numbers, internal chores, and AI attribution.
+   Include only changes to the app itself — what a user gets in the installed
+   APK: features, fixes, UI and copy, translations, behavior, and device-facing
+   compatibility. Drop repo-only work (docs, tests, refactors, CI, tooling,
+   build chores), even when GitHub's generated list includes those PRs. The only
+   exception is work that affects installs or running on a device, such as
+   signing, target SDK, or minimum OS. Keep the APK attachments and a Full
+   Changelog comparison link. Omit PR numbers and AI attribution.
 
 To retry an existing tag, run **Release** manually and enter that tag. This does
 not move tags or bump versions. Signing uses the existing `RELEASE_KEYSTORE_*`
