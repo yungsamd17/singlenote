@@ -1,8 +1,8 @@
 # Singlenote TODO
 
 Backlog from the 2026-09-18 outside-scrutiny pass, last re-verified against
-source on 2026-11-13 for `v1.0.0` and carried into the current `v1.0.1`
-(`versionCode 24`). Every open item below was confirmed in code; the closed list
+source on 2026-11-13 for `v1.0.0` and carried into the current `v1.0.2`
+(`versionCode 25`). Every open item below was confirmed in code; the closed list
 at the bottom records what shipped and where. The 1.0 gate lives in
 [`V1.0.0-PLAN.md`](V1.0.0-PLAN.md).
 

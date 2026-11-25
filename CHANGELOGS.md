@@ -8,6 +8,14 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [1.0.2] - 2026-11-25
+
+### Fixed
+
+- **The in-app privacy policy matches the app.** It now documents the foreground service and boot receiver that keep a pinned note accurate, and states that update checks can contact GitHub once at launch — on by default, switchable off in Settings → Updates — instead of only when release notes are opened. The correction ships in all 12 languages.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v1.0.2) · [Changes since v1.0.1](https://github.com/yungsamd17/singlenote/compare/v1.0.1...v1.0.2)
+
 ## [1.0.1] - 2026-11-25
 
 A small stable update: better lock-screen privacy for the pinned note and
