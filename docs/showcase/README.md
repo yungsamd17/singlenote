@@ -79,10 +79,51 @@ card. Both are 24-bit PNG and keep clean gradients after platform compression.
 
 ## Regenerating
 
-These files are exports, not editable artwork. Change the screenshots in the app,
-then rebuild the scenes with the rules in [AGENTS.md](AGENTS.md), capture at 2×
-and downscale with Lanczos. Keep the dimensions in the table above exact. Do not
-upscale a screenshot, add a fake screen, or paint over a UI edge.
+These files are exports, not editable artwork. Capture at 2× and downscale with
+Lanczos. Keep the dimensions in the table above exact. Do not upscale a
+screenshot, add a fake screen, or paint over a UI edge.
+
+### Routine refresh
+
+No design decisions are needed. Drop one screenshot per slot into
+`docs/showcase/source/` (gitignored), named exactly:
+
+| Slot | Screenshot |
+|---|---|
+| `editor` | note editor (also used for hero, social preview and feature graphic) |
+| `archive` | archive screen |
+| `settings` | **Settings main screen** (the "Make it yours" shot) |
+| `language` | Language screen |
+| `about` | About app screen |
+| `widget-settings` | widget settings screen |
+| `lock` | lock screen with the pinned notification |
+| `shade` | notification shade |
+| `widget-src` | square home-screen widget source, ~500px or larger |
+
+Any `.jpg`/`.jpeg`/`.png` extension works. The six phone screens should be
+9:20; other resolutions are fitted automatically, with a warning if the aspect
+ratio is unusual. Then run:
+
+```sh
+python3 docs/showcase/build.py
+```
+
+Or pass a different folder: `python3 docs/showcase/build.py <source-directory>`.
+
+The script reads the approved templates from git HEAD, pastes only the new
+screen content, and rewrites all eleven PNGs. It checks each export's
+dimensions, mode and size and stops on a mismatch. Scene layout, headlines,
+captions, colours, frames, corner radii, rims and shadows stay as they are —
+change them only when the developer explicitly asks for a visual update. Once
+the new assets are approved, commit them so they become the next baseline.
+
+Requires Pillow, numpy and scipy.
+
+Refresh the set when the **minor version increments** — `vX.Y.0` → `vX.(Y+1).0`
+(and on a major bump) — not for the patch releases between them (`vX.Y.1`,
+`vX.Y.2`, …). Also refresh it when a build changes more than two of the screens
+shown here, so the assets no longer match the installed app. A patch-only
+release that leaves those screens unchanged keeps the current set.
 
 Before replacing an asset, check its dimensions, mode and file size:
 

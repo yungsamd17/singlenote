@@ -169,6 +169,12 @@ PR rules:
 2. Tag on `main`: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 3. The workflow builds APKs and creates the GitHub Release (`generate_release_notes: true`); curate the notes afterwards with `gh release edit vX.Y.Z` (keep the attached APKs).
 
+Refresh the showcase assets before tagging a minor or major bump (the middle
+number +1, e.g. `v1.0.0` → `v1.1.0`, or a new major version): drop the new
+screenshots into `docs/showcase/source/` and run `python3 docs/showcase/build.py`
+— see `docs/showcase/README.md`. Patch releases between them keep the current
+set, unless more than two of the screens shown there changed materially.
+
 ### Release notes format
 
 Replace the auto-generated PR list with grouped, user-facing bullets:

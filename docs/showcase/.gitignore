@@ -1,0 +1,2 @@
+# Drop-in screenshot folder for build.py (local-only, never commit the inputs)
+source/
