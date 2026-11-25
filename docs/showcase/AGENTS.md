@@ -46,10 +46,10 @@ Read [`README.md`](README.md) for the asset map, sizes and upload steps.
 - Every visible corner must be genuinely round. Do not clip a corner by accident.
   If a phone bleeds off an edge, do it deliberately and keep the other corners
   intact. Store screenshots show the whole phone, including the bottom corners.
-- Widget: crop the card at its exact bounds (`x=64 y=145 w=544 h=371` in the
-  664×664 source), then scale. Give it the same 4px rim as the phones plus a
-  strong drop shadow, so it clearly floats above the editor. No black margin
-  between the image and the rim, no double outline.
+- Widget: crop the card at its exact surface bounds in whatever resolution the
+  source arrives (the build script scales the approved crop coordinates).
+  Keep the 4px rim and drop shadow from the template so the card floats above
+  the editor. No black margin between the image and the rim, no double outline.
 - The settings screen is the Play Store "Make it yours." shot. The README
   gallery may keep the accent-color dialog because that image is about seeing
   the actual colors.
@@ -64,11 +64,56 @@ Read [`README.md`](README.md) for the asset map, sizes and upload steps.
 - Lock screen: the carrier label at the left of the status bar is not part of
   the product. Mask it with pure `#000000` matching the status bar and keep the
   right-side status icons. Leave no visible rectangle seam.
-- Notification shade: crop the notification card at its exact bounds and add a
-  6px matte in the notification surface color (`#202020`) so the cut line and
-  corners disappear. No white hairline around the crop.
+- Notification shade: crop the notification card at its exact bounds and use
+  its own rounded corners as the alpha mask; float it over the lock screen
+  with a soft drop shadow. No white hairline around the crop.
 - Never paint over a UI control, label or icon to fix a crop. Recrop, or choose
   a different screenshot.
+
+## Rebuilding from new screenshots
+
+**Routine refresh:** drop the new screenshots into `docs/showcase/source/`
+using the slot names in [README.md](README.md) and run
+`python3 docs/showcase/build.py` with no arguments. No design decisions are
+needed. Commit the approved results so they become the next baseline. Do not
+touch styling: headlines, captions, copy, colours, frames, corner radii, rims,
+shadows and scene layout stay as they are. Change them only when the developer
+explicitly asks for a visual update.
+
+The committed PNGs are the approved scenes. `build.py` reads templates from git
+HEAD, never from the working tree, so it cannot compound an earlier pass. Do
+not regenerate by hand from a file you just wrote.
+
+- Paste screenshots into the **inner screen** only, through a rounded mask. The
+  inner radius is `frame width × 0.092` minus the bezel/rim inset. A plain
+  rectangular paste leaves square corners over the template's rounded screen.
+- A card that overlaps a phone owns its frame, rim and soft drop shadow — the
+  widget in hero, social preview and the feature graphic, the shade card in the
+  notification image. After pasting the new phone screen, recover the shadow as
+  a black alpha layer from how much the template darkens the flat screen
+  background, and apply it only where the new screenshot is still plain
+  background. Paste the template's own frame/rim artwork on top. Neither the
+  shadow nor its mask may have an artificial rectangular boundary: derive them
+  from the template's actual pixels and let them fade out naturally. Include
+  the 1px light rim **outside** the dark bezel in the frame crop — a box tight
+  to the bezel drops that rim and leaves the card looking half-outlined.
+  Take the frame layer's alpha from the template pixels too (difference from
+  the screen background), not from a computed radius: `width * 0.092` rounds
+  the outer corners slightly too tight and makes them visibly differ.
+- Change an overlapping widget's content *inside its inner screen box*. Do not
+  fill or redraw the whole widget: that erases its rounded corners and shadow.
+- The notification card is a **true crop of the shade screenshot**: crop it at
+  its exact bounds, use its rounded corners as the alpha mask, and float it over
+  the new lock screen with a drop shadow. Do not stretch new card content into
+  the old card's mask — that misaligns the card background with its corners.
+- Keep the widget's single 4px frame and shadow from the template; paste only
+  the cropped card surface, with no black margin on any edge.
+- Widget content is fitted inside the existing inner box; the notification
+  card keeps its own aspect ratio when scaled. Never stretch a frame or move a
+  card.
+- `build.py` checks every export's dimensions, mode and size. For the overlap,
+  sample the card's bezel, rim and shadow pixels against the committed file —
+  they must match exactly; a missing rim is easy to miss on a small screen.
 
 ## Copy
 
@@ -161,6 +206,10 @@ Avoid:
 - Every visible phone corner is round; no elliptical or square corners.
 - The widget crop is exact, the rim is a single clean 4px, and it reads above
   the phone.
+- Every overlapping card still has its bezel, rim and drop shadow, with round
+  corners (widget in hero/social/feature graphic, shade in notification).
+- No hard seam or misaligned background is visible where an overlapping card
+  meets the phone screenshot; the shadow fades smoothly into the new screen.
 - The lock-screen carrier area is pure black with no seam.
 - The shade crop is matted in its own surface color with no white ring.
 - The headline and subline are true, literal and free of banned patterns.
