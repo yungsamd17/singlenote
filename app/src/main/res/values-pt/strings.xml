@@ -172,10 +172,10 @@ COPIAR E COMPARTILHAR
 Copiar coloca texto simples na área de transferência do sistema — o sistema pode mostrar uma prévia e ele pode permanecer no histórico do teclado. Compartilhar envia texto simples para o app que você escolher.
 
 PERMISSÕES
-Notificações (opcional): apenas para fixar sua nota e mantê-la visível.
+Notificações (opcional): apenas para fixar sua nota e mantê-la visível. Serviço em primeiro plano (apenas com uma nota fixada): mantém a notificação e suas atualizações na tela de bloqueio ativas mesmo em dispositivos que encerram tarefas em segundo plano. Receptor de inicialização: restaura a nota fixada após reiniciar. Sem acesso à localização, câmera ou microfone.
 
 REDE
-Buscar notas de versão públicas e verificar atualizações contata o GitHub, e somente quando você abre esses recursos. Sem contas, sem análises, nada mais é enviado a lugar nenhum.
+A verificação de atualizações contata o GitHub uma vez na inicialização quando "Verificar atualizações ao iniciar" está ativado (padrão), e ao abrir as notas de versão ou tocar em "Verificar atualizações" em Configurações → Atualizações. Você pode desativar a verificação na inicialização lá. Sem contas, sem análises, nada mais é enviado a lugar nenhum.
 
 CONTATO
 Dúvidas: yungsamd@proton.me.

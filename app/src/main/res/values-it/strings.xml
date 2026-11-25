@@ -172,10 +172,10 @@ COPIA E CONDIVISIONE
 Copia mette il testo in chiaro negli appunti di sistema: il sistema può mostrarne un\'anteprima e può restare nella cronologia della tastiera. Condividi invia il testo in chiaro all\'app che scegli.
 
 AUTORIZZAZIONI
-Notifiche (facoltative): solo per fissare la nota e mantenerla visibile.
+Notifiche (facoltative): solo per fissare la nota e mantenerla visibile. Servizio in primo piano (solo con una nota fissata): mantiene attive la notifica e le modifiche sulla schermata di blocco anche sui dispositivi che interrompono le attività in background. Ricevitore all\'avvio: ripristina la nota fissata dopo un riavvio. Nessun accesso a posizione, fotocamera o microfono.
 
 RETE
-Il recupero delle note di rilascio pubbliche e il controllo degli aggiornamenti contattano GitHub, e solo quando li apri. Nessun account, nessuna analisi, nient\'altro viene mai inviato da nessuna parte.
+Il controllo degli aggiornamenti contatta GitHub una volta all\'avvio se «Controlla gli aggiornamenti all\'avvio» è attivo (impostazione predefinita), e quando apri le note di rilascio o tocchi «Controlla gli aggiornamenti» in Impostazioni → Aggiornamenti. Puoi disattivare il controllo all\'avvio lì. Nessun account, nessuna analisi, nient\'altro viene mai inviato da nessuna parte.
 
 CONTATTI
 Domande: yungsamd@proton.me.

@@ -16,11 +16,15 @@ Copy puts plain text on the system clipboard — the system may show a preview, 
 
 ## Permissions
 
-Notifications (optional): only to pin your note so it stays visible.
+- **Notifications (optional):** only to pin your note so it stays visible.
+- **Foreground service (only while a note is pinned):** keeps the pinned notification and its lock/unlock updates alive on devices that stop background work. It only shows the pinned-note notification.
+- **Boot receiver:** re-posts the pinned note after a restart.
+
+The app never asks for location, camera or microphone access.
 
 ## Network
 
-Fetching public release notes and checking for updates contacts GitHub, and only when you open them. No accounts, no analytics, nothing else is ever sent anywhere.
+Checking for updates contacts GitHub once at launch when **Check for updates on launch** is on (the default in Settings → Updates), and whenever you open the changelog or tap **Check for updates**. Turn launch checks off in Settings → Updates to stop the automatic request. No accounts, no analytics, no tracking — your note and settings are never sent anywhere.
 
 ## Contact
 

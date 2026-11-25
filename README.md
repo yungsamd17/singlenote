@@ -38,8 +38,9 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
   save it for the app.
 - **Privacy first** — offline-first; no accounts, no analytics, no tracking.
   Notes and settings are stored unencrypted in the app's private storage.
-  Permissions: notifications (pinned note), and internet solely for release
-  notes and update checks, only when you open them
+  Permissions: notifications and, while a note is pinned, a foreground service
+  (plus boot receiver) to keep the pin accurate; internet for release notes and
+  update checks, with the launch-time check switchable off in Settings → Updates
 
 ## Screenshots
 

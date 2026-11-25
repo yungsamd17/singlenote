@@ -172,10 +172,10 @@ KOPIËREN EN DELEN
 Kopiëren zet platte tekst op het klembord van het systeem — het systeem kan een voorbeeld tonen en de tekst kan in de toetsenbordgeschiedenis blijven staan. Delen stuurt platte tekst naar de app die je kiest.
 
 MACHTIGINGEN
-Meldingen (optioneel): alleen om je notitie vast te maken zodat die zichtbaar blijft.
+Meldingen (optioneel): alleen om je notitie vast te maken zodat die zichtbaar blijft. Voorgrondservice (alleen met een vastgemaakte notitie): houdt de melding en de updates voor het vergrendelscherm actief, ook op apparaten die achtergrondtaken stoppen. Ontvanger bij opstarten: herstelt de vastgemaakte notitie na een herstart. Geen toegang tot locatie, camera of microfoon.
 
 NETWERK
-Het ophalen van openbare releaseopmerkingen en het controleren op updates neemt contact op met GitHub, en alleen wanneer je die opent. Geen accounts, geen analyses, niets anders wordt ooit ergens heen gestuurd.
+Bij het controleren op updates wordt eenmaal bij het opstarten contact met GitHub opgenomen als «Bij opstarten controleren op updates» aan staat (standaard), en wanneer je releaseopmerkingen opent of «Controleren op updates» tikt in Instellingen → Updates. Je kunt de controle bij opstarten daar uitzetten. Geen accounts, geen analyses, niets anders wordt ooit ergens heen gestuurd.
 
 CONTACT
 Vragen: yungsamd@proton.me.

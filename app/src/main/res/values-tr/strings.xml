@@ -172,10 +172,10 @@ KOPYALAMA VE PAYLAŞMA
 Kopyala, düz metni sistem panosuna koyar — sistem bir önizleme gösterebilir ve metin klavye geçmişinde kalabilir. Paylaş, düz metni seçtiğiniz uygulamaya gönderir.
 
 İZİNLER
-Bildirimler (isteğe bağlı): yalnızca notunuzu sabitleyip görünür tutmak için.
+Bildirimler (isteğe bağlı): yalnızca notunuzu sabitleyip görünür tutmak için. Ön plan servisi (yalnızca bir not sabitlenmişken): arka plan işlerini durduran cihazlarda bile bildirimi ve kilit ekranı güncellemelerini etkin tutar. Açılış alıcısı: yeniden başlatmadan sonra sabitlenmiş notu geri getirir. Konum, kamera veya mikrofon erişimi yoktur.
 
 AĞ
-Herkese açık sürüm notlarını getirmek ve güncellemeleri denetlemek GitHub ile iletişim kurar ve yalnızca bunları açtığınızda. Hesap yok, analiz yok, başka hiçbir şey hiçbir yere gönderilmez.
+Güncelleme denetimi, "Başlatma sırasında güncellemeleri denetle" açıksa (varsayılan) başlatmada bir kez, ayrıca sürüm notlarını açtığınızda veya Ayarlar → Güncellemeler bölümünde "Güncellemeleri denetle"ye dokunduğunuzda GitHub ile iletişim kurar. Başlatmadaki denetimi oradan kapatabilirsiniz. Hesap yok, analiz yok, başka hiçbir şey hiçbir yere gönderilmez.
 
 İLETİŞİM
 Sorular: yungsamd@proton.me.

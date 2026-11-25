@@ -22,5 +22,6 @@
 - [ ] CI build passes
 - [ ] Tests/lint pass
 - [ ] Verified the change works as described
+- [ ] Legal/privacy copy and all translations updated if permissions, data use, dependencies or assets changed
 
 Built with {model} in the {agent} harness.
