@@ -184,8 +184,12 @@ Replace the auto-generated PR list with grouped, user-facing bullets:
 
 Rules:
 
-- User-facing changes only. Skip internal refactors and CI chores unless
-  they affect installs (e.g. signing changes).
+- Only changes to the app itself — what a user gets in the installed APK:
+  features, fixes, UI and copy, translations, behavior, and device-facing
+  compatibility. Ignore repo-only work such as docs, tests, refactors, CI,
+  tooling, and build chores, even when GitHub's generated list includes those
+  PRs. The only exception is work that affects installs or running on a device
+  (e.g. signing, target SDK, minimum OS) even if no screen changes.
 - No PR numbers/links, no AI attribution — releases stay clean.
 - Never remove the attached APKs.
 
