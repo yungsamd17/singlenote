@@ -8,6 +8,29 @@ project follows [Semantic Versioning](https://semver.org/).
 
 Changes for the next release will be listed here.
 
+## [1.0.1] - 2026-11-25
+
+A small stable update: better lock-screen privacy for the pinned note and
+optional new-version prompts. The note core is unchanged.
+
+### Added
+
+- **New-version prompts.** With "Check for updates on launch" on (the default), Singlenote makes one quiet GitHub request at launch and, when a newer release exists, offers a dialog with **Later** and **Download** plus a "Don't show this dialog again" checkbox. The download button opens the release page, never a bare APK.
+- **An Updates settings page.** Settings → Updates holds the launch-check toggle, a manual "Check for updates" action, and the release notes for the installed version. The changelog moved here from About, so About stays focused on app identity and legal links.
+
+### Changed
+
+- **"Hide note until unlocked" is now a lock-screen privacy switch.** The old "Show note on lock screen" row is inverted: with the new switch on, the pinned notification shows only "Unlock to read your note" while the device is locked, and your note appears after an explicit unlock. The default keeps the current behaviour — the note is visible on the lock screen until you turn the switch on.
+- **The pinned notification follows the lock screen reliably.** Screen-off and unlock events re-post it right away, a generic public version prevents the note text from flashing onto the lock screen before concealment, and a foreground service keeps the live receiver working on ROMs that drop broadcasts. Opening the notification always lands on the note with a clean back stack.
+- **"System" theme widgets follow day/night changes**, and widget text now picks light or dark ink by contrast against the effective background, so it stays readable over wallpapers and translucent cards.
+- **The Settings hub is regrouped** around five sections in one card — appearance, typography, language, notifications and the new Updates page — with About in its own card. Rapid taps no longer stack duplicate screens.
+
+### Fixed
+
+- A locked or screen-off device no longer briefly shows the pinned note's content on the lock screen, including on HyperOS.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v1.0.1) · [Changes since v1.0.0](https://github.com/yungsamd17/singlenote/compare/v1.0.0...v1.0.1)
+
 ## [1.0.0] - 2026-11-13
 
 The first stable release of Singlenote: one active note, an archive, a widget,
