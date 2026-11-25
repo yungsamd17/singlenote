@@ -1,11 +1,13 @@
 package com.yungsamd17.singlenote
 
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -30,10 +32,14 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.data.NotePreferences
+import com.yungsamd17.singlenote.notify.PinNotification
+import com.yungsamd17.singlenote.notify.PinnedNoteService
 import com.yungsamd17.singlenote.ui.AboutScreen
 import com.yungsamd17.singlenote.ui.AppMotion
 import com.yungsamd17.singlenote.ui.ArchiveScreen
@@ -45,6 +51,8 @@ import com.yungsamd17.singlenote.ui.PrivacyScreen
 import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
+import com.yungsamd17.singlenote.ui.UpdateDialog
+import com.yungsamd17.singlenote.ui.UpdatesScreen
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.ui.motionSpec
 import com.yungsamd17.singlenote.ui.motionOffsetSpec
@@ -53,6 +61,7 @@ import com.yungsamd17.singlenote.ui.toMonochrome
 import com.yungsamd17.singlenote.util.AppLanguage
 import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.util.ActionSecurity
+import com.yungsamd17.singlenote.util.GithubReleases
 import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -60,6 +69,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     companion object {
@@ -71,9 +81,25 @@ class MainActivity : ComponentActivity() {
          * screen and start a new one, with the cursor in it.
          */
         const val EXTRA_QUICK_CAPTURE = "quick_capture"
+
+        /** The pinned notification's Open action: always land on the note. */
+        const val EXTRA_OPEN_FROM_NOTIFICATION = "open_from_notification"
+
+        internal fun testRelease(context: Context) =
+            GithubReleases.Release(
+                tag = "v99.0.0",
+                name = context.getString(R.string.update_test_name),
+                body = context.getString(R.string.update_test_body),
+                htmlUrl = "https://github.com/yungsamd17/singlenote/releases",
+                apkUrl = null,
+            )
     }
     private var widgetAction by mutableStateOf<String?>(null)
     private var quickCapture by mutableStateOf(false)
+    private var updateRelease by mutableStateOf<GithubReleases.Release?>(null)
+    private var openFromNotification by mutableStateOf(false)
+    private var navControllerRef: NavController? = null
+    private var testUpdateJob: Job? = null
 
     /**
      * Reads the actions our own widgets, tiles and notification can trigger.
@@ -87,8 +113,23 @@ class MainActivity : ComponentActivity() {
             }
             quickCapture = intent?.getBooleanExtra(EXTRA_QUICK_CAPTURE, false) == true
         }
+        // Notification opens are navigation only: no token needed, and they
+        // must reset the back stack to the editor even from recents.
+        if (intent?.getBooleanExtra(EXTRA_OPEN_FROM_NOTIFICATION, false) == true) {
+            // A warm start (singleTask onNewIntent) has a live NavController:
+            // pop back to the note with the same transition as the system back
+            // button before the next frame can show the previous screen.
+            val controller = navControllerRef
+            if (controller != null) {
+                controller.popBackStack("note", inclusive = false)
+            } else {
+                // Cold start: the graph doesn't exist yet, handle it in Compose.
+                openFromNotification = true
+            }
+        }
         intent?.removeExtra(EXTRA_WIDGET_ACTION)
         intent?.removeExtra(EXTRA_QUICK_CAPTURE)
+        intent?.removeExtra(EXTRA_OPEN_FROM_NOTIFICATION)
         intent?.removeExtra(ActionSecurity.EXTRA_TOKEN)
     }
 
@@ -127,7 +168,25 @@ class MainActivity : ComponentActivity() {
         applyBarAppearance(startDark)
         val repository = (application as SinglenoteApplication).repository
 
+        // One on-demand GitHub read per launch, only while the user has the
+        // update prompt enabled. Failures are silent — the manual check in
+        // About still covers offline / rate-limited cases.
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (!NotePreferences.get(applicationContext).updateChecksEnabled.first()) {
+                    return@launch
+                }
+                val latest = GithubReleases.fetch(limit = 5).firstOrNull() ?: return@launch
+                if (GithubReleases.isNewerTag(latest.tag, BuildConfig.VERSION_NAME)) {
+                    withContext(Dispatchers.Main) { updateRelease = latest }
+                }
+            } catch (_: Exception) {
+                // Offline or GitHub unavailable: nothing to prompt about.
+            }
+        }
+
         setContent {
+            val release = updateRelease
             val themeMode by produceState<String?>(
                 initialValue = null,
                 producer = {
@@ -187,6 +246,20 @@ class MainActivity : ComponentActivity() {
                     surface = androidx.compose.ui.graphics.Color.Black
                 ) else colorScheme
             ) {
+                // Dialogs must be composed inside MaterialTheme so they pick
+                // up the stored theme, accent, monochrome/AMOLED mode and font.
+                if (release != null) {
+                    UpdateDialog(
+                        release = release,
+                        onDismiss = { updateRelease = null },
+                        onDontShowAgain = {
+                            updateRelease = null
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                NotePreferences.get(applicationContext).setUpdateChecksEnabled(false)
+                            }
+                        },
+                    )
+                }
                 val background = MaterialTheme.colorScheme.background.toArgb()
                 SideEffect {
                     window.setBackgroundDrawable(ColorDrawable(background))
@@ -194,6 +267,12 @@ class MainActivity : ComponentActivity() {
                 }
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
+                    SideEffect { navControllerRef = navController }
+                    // Rapid taps on a settings row must not stack duplicate
+                    // destinations: singleTop reuses the existing top entry.
+                    fun navigateOnce(route: String) {
+                        navController.navigate(route) { launchSingleTop = true }
+                    }
                     LaunchedEffect(widgetAction, quickCapture) {
                         if ((widgetAction != null || quickCapture) && navController.currentDestination?.route != "note") {
                             navController.navigate("note") { popUpTo("note") { inclusive = false }; launchSingleTop = true }
@@ -210,6 +289,15 @@ class MainActivity : ComponentActivity() {
                         viewModel(factory = ArchiveViewModel.factory(repository))
                     val settingsViewModel: SettingsViewModel =
                         viewModel(factory = SettingsViewModel.factory(repository))
+                    LaunchedEffect(openFromNotification) {
+                        if (openFromNotification) {
+                            // Pop rather than navigate: this plays the same
+                            // pop transition as pressing system back and drops
+                            // the stale screens from the back stack.
+                            navController.popBackStack("note", inclusive = false)
+                            openFromNotification = false
+                        }
+                    }
                     NavHost(
                         navController = navController,
                         startDestination = "note",
@@ -283,8 +371,8 @@ class MainActivity : ComponentActivity() {
                                 onWidgetActionHandled = { widgetAction = null },
                                 quickCapture = quickCapture,
                                 onQuickCaptureHandled = { quickCapture = false },
-                                onOpenArchive = { navController.navigate("archive") },
-                                onOpenSettings = { navController.navigate("settings") }
+                                onOpenArchive = { navigateOnce("archive") },
+                                onOpenSettings = { navigateOnce("settings") }
                             )
                         }
                         composable(
@@ -317,21 +405,41 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 viewModel = settingsViewModel,
                                 onBack = { navController.popBackStack() },
-                                onOpenScreen = { navController.navigate("settings/$it") }
+                                onOpenScreen = { navigateOnce("settings/$it") }
                             )
                         }
                         listOf("appearance", "typography", "language", "notifications").forEach { screen ->
                             composable("settings/$screen") {
                                 SettingsScreen(settingsViewModel, { navController.popBackStack() },
-                                    { navController.navigate("settings/$it") }, screen)
+                                    { navigateOnce("settings/$it") }, screen)
                             }
+                        }
+                        composable("settings/updates") {
+                            UpdatesScreen(
+                                viewModel = settingsViewModel,
+                                onBack = { navController.popBackStack() },
+                            )
                         }
                         composable("settings/about") {
                             AboutScreen(
                                 onBack = { navController.popBackStack() },
-                                onOpenTerms = { navController.navigate("terms") },
-                                onOpenPrivacy = { navController.navigate("privacy") },
-                                onOpenLicense = { navController.navigate("license") }
+                                onOpenTerms = { navigateOnce("terms") },
+                                onOpenPrivacy = { navigateOnce("privacy") },
+                                onOpenLicense = { navigateOnce("license") },
+                                onTestUpdate = {
+                                    // Stay in the app: go to the note screen,
+                                    // then show the simulated prompt 3s later.
+                                    navController.navigate("note") {
+                                        popUpTo("note") { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                    testUpdateJob?.cancel()
+                                    testUpdateJob =
+                                        lifecycleScope.launch {
+                                            delay(3_000L)
+                                            updateRelease = testRelease(applicationContext)
+                                        }
+                                }
                             )
                         }
                         composable("terms") {
@@ -359,6 +467,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        // HyperOS can resume the activity while the keyguard is still up, so
+        // verify with a synchronous check before revealing anything.
+        val locked = (getSystemService(KeyguardManager::class.java)?.isKeyguardLocked ?: false) ||
+            !(getSystemService(PowerManager::class.java)?.isInteractive ?: true)
+        PinNotification.setAppInForeground(!locked)
+        if (locked) PinNotification.markConcealed(applicationContext)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                PinNotification.refresh(applicationContext, forceConcealed = locked)
+                val prefs = NotePreferences.get(applicationContext)
+                if (prefs.pinned.first() && prefs.notificationsEnabled.first()) {
+                    PinnedNoteService.start(applicationContext)
+                }
+                Diagnostics.event("lifecycle", "onResume locked=$locked")
+            } catch (e: Exception) {
+                Diagnostics.failure("pin", e)
+            }
+        }
         // Glance renders each widget in a WorkManager worker that must find
         // the in-memory session of the process that enqueued the update. When
         // the OS reclaims that process first (aggressive background reaping,
@@ -395,6 +521,49 @@ class MainActivity : ComponentActivity() {
             lastDarkTheme = dark
             applyBarAppearance(dark)
         }
+    }
+
+    /**
+     * Keeps the pinned notification in sync when the activity leaves the
+     * foreground. Both callbacks conceal only when the screen is really off or
+     * the keyguard is up, so closing the app or pulling down the shade while
+     * unlocked leaves the note visible. [PinnedNoteService] keeps the process
+     * (and its live receiver) alive to handle the later lock/unlock events.
+     */
+    private fun syncNotificationOnBackground(where: String, alwaysConceal: Boolean) {
+        val keyguard = getSystemService(KeyguardManager::class.java)
+            ?.isKeyguardLocked ?: false
+        val interactive = getSystemService(PowerManager::class.java)
+            ?.isInteractive ?: true
+        val shouldConceal = alwaysConceal || keyguard || !interactive
+        Diagnostics.event("lifecycle", "$where keyguard=$keyguard interactive=$interactive")
+        // Do this before the lock screen renders: the async refresh below has
+        // to read prefs and Room, which is slow enough to show the note for a
+        // fraction of a second otherwise.
+        PinNotification.setAppInForeground(false)
+        if (shouldConceal) PinNotification.markConcealed(applicationContext)
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                if (shouldConceal) {
+                    PinNotification.refresh(applicationContext, forceConcealed = true)
+                }
+            } catch (e: Exception) {
+                Diagnostics.failure("pin", e)
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Minimizing with the screen on and no keyguard leaves the note visible;
+        // locking (screen off / keyguard up) conceals it. The SECRET visibility
+        // on the full note covers any gap before SCREEN_OFF is delivered.
+        syncNotificationOnBackground("onPause", alwaysConceal = false)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        syncNotificationOnBackground("onStop", alwaysConceal = false)
     }
 
     // singleTask relaunches (launcher icon, notification Open action)

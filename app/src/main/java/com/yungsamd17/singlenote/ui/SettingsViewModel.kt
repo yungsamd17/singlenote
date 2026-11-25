@@ -41,9 +41,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
     val notificationsEnabled: StateFlow<Boolean> = store.notificationsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    // Initial matches the DataStore default (on): the toggle's own flow
-    // starts cold when the rows first compose, so a mismatched initial
-    // would flash the wrong state for a frame on fresh launch.
+    // Initial matches the DataStore default (on = visible on the lock screen,
+    // i.e. the inverted "Hide note until unlocked" toggle starts off): the
+    // toggle's own flow starts cold when the rows first compose, so a
+    // mismatched initial would flash the wrong state for a frame.
     val lockscreenVisible: StateFlow<Boolean> = store.lockscreenVisible
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
@@ -54,6 +55,15 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setNotificationTitleFirstLine(value: Boolean) {
         viewModelScope.launch { store.setNotificationTitleFirstLine(value) }
+    }
+
+    // On by default, matching the DataStore default: a launch-time GitHub
+    // check offers a "new version" dialog until the user opts out.
+    val updateChecksEnabled: StateFlow<Boolean> = store.updateChecksEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    fun setUpdateChecksEnabled(value: Boolean) {
+        viewModelScope.launch { store.setUpdateChecksEnabled(value) }
     }
 
     val dynamicColors: StateFlow<Boolean> = store.dynamicColors
@@ -108,6 +118,7 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             // flows, so the new pref is awaited on its own.
             store.lockscreenVisible.first()
             store.notificationTitleFirstLine.first()
+            store.updateChecksEnabled.first()
             store.dynamicColors.first()
             store.amoled.first()
             store.monochrome.first()

@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Sabitlenmiş not</string>
     <string name="channel_pinned_description">Geçerli notunuzu görünür kalması için gösterir</string>
     <string name="notification_pinned_title">Singlenote sabitlendi</string>
+    <string name="notification_hidden_body">Notunu okumak için kilidi aç</string>
     <string name="notification_action_new_note">Yeni not</string>
     <string name="notification_action_open">Aç</string>
     <string name="tile_label">Singlenote</string>
@@ -101,8 +102,8 @@
     <string name="settings_section_about">Hakkında</string>
     <string name="setting_show_notifications">Sabitlenmiş bildirim</string>
     <string name="setting_show_notifications_desc">Geçerli notun kalıcı bildirim olarak sabitlenmesine izin ver</string>
-    <string name="setting_lockscreen_visible">Notu kilit ekranında göster</string>
-    <string name="setting_lockscreen_visible_desc">Kapalıyken not içeriğini kilit ekranında gizler</string>
+    <string name="setting_lockscreen_visible">Kilidi açana kadar notu gizle</string>
+    <string name="setting_lockscreen_visible_desc">Cihazın kilidini açana kadar notu kilit ekranında gizli tut</string>
     <string name="setting_notification_title_first_line">Notun ilk satırını başlıkta göster</string>
     <string name="setting_notification_title_first_line_desc">Notunuzun ilk satırını sabitlenmiş bildirim başlığı olarak kullan</string>
     <string name="change">Değiştir</string>
@@ -132,6 +133,17 @@
     <string name="action_download">İndir</string>
     <string name="update_uptodate">Güncelsiniz</string>
     <string name="update_check_failed">Güncellemeler denetlenemedi. Daha sonra tekrar deneyin.</string>
+    <string name="update_prompt_title">Yeni sürüm mevcut</string>
+    <string name="update_prompt_message">%1$s sürümü GitHub\'da mevcut.</string>
+    <string name="update_prompt_later">Sonra</string>
+    <string name="update_test_name">Test sürümü</string>
+    <string name="update_test_body">Bu, güncelleme iletişim kutusunun bir **testidir**. Düğme gerçek sürümler sayfasını açar.</string>
+    <string name="update_prompt_dont_show">Bu iletişim kutusunu tekrar gösterme</string>
+    <string name="settings_section_updates">Güncellemeler</string>
+    <string name="updates_check_now_desc">GitHub\'da yeni sürüm ara</string>
+    <string name="settings_updates_summary">Güncelleme kontrolü ve sürüm notları</string>
+    <string name="settings_update_checks">Açılışta güncellemeleri kontrol et</string>
+    <string name="settings_update_checks_desc">Her açılışta yeni bir sürüm ara</string>
     <string name="no_app_to_open_link">Bu bağlantıyı açacak uygulama bulunamadı</string>
     <string name="email_title">E-posta</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -269,6 +281,10 @@ Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVA
     <string name="diagnostics_copy">Kopyala</string>
     <string name="diagnostics_share">Paylaş</string>
     <string name="diagnostics_close">Kapat</string>
+    <string name="diagnostics_save">Dosyaya kaydet</string>
+    <string name="diagnostics_saved">Tanılama kaydedildi</string>
+    <string name="diagnostics_save_failed">Kaydedilemedi: %1$s</string>
+    <string name="diagnostics_test_update">Güncelleme istemini test et</string>
     <string name="diagnostics_copied">Tanılama kopyalandı</string>
     <string name="diagnostics_widget_update">Araç takımı güncellemesini zorla</string>
     <string name="diagnostics_widget_update_requested">Araç takımı güncellemesi istendi</string>

@@ -183,6 +183,14 @@ object Diagnostics {
             appendLine("dynamic colors: ${read(prefs.dynamicColors)?.toString() ?: "unavailable"}")
             appendLine("amoled: ${read(prefs.amoled)?.toString() ?: "unavailable"}")
             appendLine("theme: ${read(prefs.themeMode)?.toString() ?: "unavailable"}")
+            appendLine("pinned: ${read(prefs.pinned)?.toString() ?: "unavailable"}")
+            appendLine("notifications: ${read(prefs.notificationsEnabled)?.toString() ?: "unavailable"}")
+            val showOnLockscreen = read(prefs.lockscreenVisible)
+            appendLine(
+                "hide until unlocked: " +
+                    if (showOnLockscreen == null) "unavailable" else (!showOnLockscreen).toString()
+            )
+            appendLine("update alerts: ${read(prefs.updateChecksEnabled)?.toString() ?: "unavailable"}")
             appendLine("language override: ${AppLanguage.getLanguageTag(context).ifBlank { "system" }}")
         }
     }

@@ -109,6 +109,7 @@ class NoteRepositoryTest {
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(false)
         override val notificationTitleFirstLine = MutableStateFlow(false)
+        override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -128,6 +129,10 @@ class NoteRepositoryTest {
 
         override suspend fun setNotificationTitleFirstLine(value: Boolean) {
             notificationTitleFirstLine.value = value
+        }
+
+        override suspend fun setUpdateChecksEnabled(value: Boolean) {
+            updateChecksEnabled.value = value
         }
 
         override suspend fun setThemeMode(value: String) {
@@ -701,5 +706,16 @@ class NoteRepositoryTest {
         advanceUntilIdle()
 
         assertTrue(prefs.notificationTitleFirstLine.value)
+    }
+
+    @Test
+    fun theUpdateCheckPreferenceReachesTheStore() = runTest(UnconfinedTestDispatcher()) {
+        val prefs = FakePrefs()
+        val repo = NoteRepository(FakeDao(), prefs, {}, { 10_000L }, backgroundScope, 0L)
+
+        repo.setUpdateChecksEnabled(false)
+        advanceUntilIdle()
+
+        assertFalse(prefs.updateChecksEnabled.value)
     }
 }

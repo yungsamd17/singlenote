@@ -36,6 +36,7 @@ class SettingsViewModelTest {
         override val notificationsEnabled = MutableStateFlow(true)
         override val lockscreenVisible = MutableStateFlow(true)
         override val notificationTitleFirstLine = MutableStateFlow(false)
+        override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
@@ -54,6 +55,7 @@ class SettingsViewModelTest {
         override suspend fun setNotificationsEnabled(value: Boolean) { notificationsEnabled.value = value }
         override suspend fun setLockscreenVisible(value: Boolean) { lockscreenVisible.value = value }
         override suspend fun setNotificationTitleFirstLine(value: Boolean) { notificationTitleFirstLine.value = value }
+        override suspend fun setUpdateChecksEnabled(value: Boolean) { updateChecksEnabled.value = value }
         override suspend fun setThemeMode(value: String) { themeMode.value = value }
         override suspend fun setFontFamily(value: String) { fontFamily.value = value }
         override suspend fun setTextSize(value: String) { textSize.value = value }
@@ -127,6 +129,7 @@ class SettingsViewModelTest {
         model.setNotificationsEnabled(false)
         model.setLockscreenVisible(false)
         model.setNotificationTitleFirstLine(true)
+        model.setUpdateChecksEnabled(false)
         model.setDynamicColors(true)
         model.setAmoled(true)
         model.setMonochrome(true)
@@ -141,6 +144,7 @@ class SettingsViewModelTest {
         assertFalse(store.notificationsEnabled.value)
         assertFalse(store.lockscreenVisible.value)
         assertTrue(store.notificationTitleFirstLine.value)
+        assertFalse(store.updateChecksEnabled.value)
         assertTrue(store.dynamicColors.value)
         assertTrue(store.amoled.value)
         assertTrue(store.monochrome.value)

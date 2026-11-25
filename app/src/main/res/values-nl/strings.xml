@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Vastgemaakte notitie</string>
     <string name="channel_pinned_description">Toont je huidige notitie zodat die zichtbaar blijft</string>
     <string name="notification_pinned_title">Singlenote vastgemaakt</string>
+    <string name="notification_hidden_body">Ontgrendel om je notitie te lezen</string>
     <string name="notification_action_new_note">Nieuwe notitie</string>
     <string name="notification_action_open">Openen</string>
     <string name="tile_label">Singlenote</string>
@@ -101,8 +102,8 @@
     <string name="settings_section_about">Over</string>
     <string name="setting_show_notifications">Vastgemaakte melding</string>
     <string name="setting_show_notifications_desc">Toestaan de huidige notitie als blijvende melding vast te maken</string>
-    <string name="setting_lockscreen_visible">Notitie op vergrendelscherm tonen</string>
-    <string name="setting_lockscreen_visible_desc">Uit verbergt de notitie-inhoud op het vergrendelscherm</string>
+    <string name="setting_lockscreen_visible">Notitie verbergen tot ontgrendelen</string>
+    <string name="setting_lockscreen_visible_desc">Houd de notitie verborgen op het vergrendelscherm totdat je het apparaat ontgrendelt</string>
     <string name="setting_notification_title_first_line">Eerste regel van de notitie in de titel tonen</string>
     <string name="setting_notification_title_first_line_desc">De eerste regel van je notitie als titel van de vastgemaakte melding gebruiken</string>
     <string name="change">Wijzigen</string>
@@ -132,6 +133,17 @@
     <string name="action_download">Downloaden</string>
     <string name="update_uptodate">Je bent up-to-date</string>
     <string name="update_check_failed">Kon niet controleren op updates. Probeer het later opnieuw.</string>
+    <string name="update_prompt_title">Nieuwe versie beschikbaar</string>
+    <string name="update_prompt_message">Versie %1$s is beschikbaar op GitHub.</string>
+    <string name="update_prompt_later">Later</string>
+    <string name="update_test_name">Testversie</string>
+    <string name="update_test_body">Dit is een **test** van het updatedialoogvenster. De knop opent de echte releasespagina.</string>
+    <string name="update_prompt_dont_show">Dit dialoogvenster niet meer tonen</string>
+    <string name="settings_section_updates">Updates</string>
+    <string name="updates_check_now_desc">Op GitHub naar een nieuwe versie zoeken</string>
+    <string name="settings_updates_summary">Updates controleren en release notes</string>
+    <string name="settings_update_checks">Bij opstarten controleren op updates</string>
+    <string name="settings_update_checks_desc">Bij elke start naar een nieuwe versie zoeken</string>
     <string name="no_app_to_open_link">Geen app gevonden om deze link te openen</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -269,6 +281,10 @@ Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY
     <string name="diagnostics_copy">Kopiëren</string>
     <string name="diagnostics_share">Delen</string>
     <string name="diagnostics_close">Sluiten</string>
+    <string name="diagnostics_save">Opslaan in bestand</string>
+    <string name="diagnostics_saved">Diagnose opgeslagen</string>
+    <string name="diagnostics_save_failed">Kan niet opslaan: %1$s</string>
+    <string name="diagnostics_test_update">Updatemelding testen</string>
     <string name="diagnostics_copied">Diagnostiek gekopieerd</string>
     <string name="diagnostics_widget_update">Widget-update forceren</string>
     <string name="diagnostics_widget_update_requested">Widget-update aangevraagd</string>

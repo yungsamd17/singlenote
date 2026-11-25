@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Przypięta notatka</string>
     <string name="channel_pinned_description">Pokazuje aktualną notatkę, by była zawsze widoczna</string>
     <string name="notification_pinned_title">Przypięta Singlenote</string>
+    <string name="notification_hidden_body">Odblokuj, aby przeczytać notatkę</string>
     <string name="notification_action_new_note">Nowa notatka</string>
     <string name="notification_action_open">Otwórz</string>
     <string name="tile_label">Singlenote</string>
@@ -122,8 +123,8 @@
     <string name="settings_section_about">O aplikacji</string>
     <string name="setting_show_notifications">Przypnięte powiadomienie</string>
     <string name="setting_show_notifications_desc">Zezwól na przypinanie aktualnej notatki jako trwałego powiadomienia</string>
-    <string name="setting_lockscreen_visible">Pokaż notatkę na ekranie blokady</string>
-    <string name="setting_lockscreen_visible_desc">Wyłączone ukrywa treść notatki na ekranie blokady</string>
+    <string name="setting_lockscreen_visible">Ukryj notatkę do odblokowania</string>
+    <string name="setting_lockscreen_visible_desc">Ukrywaj notatkę na ekranie blokady do czasu odblokowania urządzenia</string>
     <string name="setting_notification_title_first_line">Pokaż pierwszy wiersz notatki w tytule</string>
     <string name="setting_notification_title_first_line_desc">Użyj pierwszego wiersza notatki jako tytułu przypiętego powiadomienia</string>
     <string name="change">Zmień</string>
@@ -153,6 +154,17 @@
     <string name="action_download">Pobierz</string>
     <string name="update_uptodate">Masz najnowszą wersję</string>
     <string name="update_check_failed">Nie udało się sprawdzić aktualizacji. Spróbuj później.</string>
+    <string name="update_prompt_title">Nowa wersja jest dostępna</string>
+    <string name="update_prompt_message">Wersja %1$s jest dostępna na GitHubie.</string>
+    <string name="update_prompt_later">Później</string>
+    <string name="update_test_name">Wersja testowa</string>
+    <string name="update_test_body">To jest **test** okna aktualizacji. Przycisk otwiera prawdziwą stronę wydań.</string>
+    <string name="update_prompt_dont_show">Nie pokazuj ponownie tego okna</string>
+    <string name="settings_section_updates">Aktualizacje</string>
+    <string name="updates_check_now_desc">Sprawdź GitHub pod kątem nowej wersji</string>
+    <string name="settings_updates_summary">Sprawdzanie aktualizacji i informacje</string>
+    <string name="settings_update_checks">Sprawdzaj aktualizacje przy starcie</string>
+    <string name="settings_update_checks_desc">Szukaj nowej wersji przy każdym starcie</string>
     <string name="no_app_to_open_link">Nie znaleziono aplikacji do otwarcia tego linku</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Kopiuj</string>
     <string name="diagnostics_share">Udostępnij</string>
     <string name="diagnostics_close">Zamknij</string>
+    <string name="diagnostics_save">Zapisz do pliku</string>
+    <string name="diagnostics_saved">Diagnostyka zapisana</string>
+    <string name="diagnostics_save_failed">Nie udało się zapisać: %1$s</string>
+    <string name="diagnostics_test_update">Test monitu o aktualizacji</string>
     <string name="diagnostics_copied">Diagnostyka skopiowana</string>
     <string name="diagnostics_widget_update">Wymuś aktualizację widgetu</string>
     <string name="diagnostics_widget_update_requested">Aktualizacja widgetu żądana</string>

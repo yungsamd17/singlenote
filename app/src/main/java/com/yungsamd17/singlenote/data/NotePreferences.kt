@@ -20,6 +20,7 @@ interface PreferencesStore {
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
     val notificationTitleFirstLine: Flow<Boolean>
+    val updateChecksEnabled: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -37,6 +38,8 @@ interface PreferencesStore {
     suspend fun setLockscreenVisible(value: Boolean)
 
     suspend fun setNotificationTitleFirstLine(value: Boolean)
+
+    suspend fun setUpdateChecksEnabled(value: Boolean)
 
     suspend fun setThemeMode(value: String)
 
@@ -123,14 +126,19 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_PINNED] ?: false }
     override val notificationsEnabled: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATIONS] ?: true }
-    // On by default: showing on the lock screen is the point of pinning,
-    // and the toggle stays one tap away in Settings for opting out.
+    // On by default: the note is visible on the lock screen, so the inverted
+    // "Hide note until unlocked" Setting starts off. Users who changed the
+    // setting keep their stored choice.
     override val lockscreenVisible: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_LOCKSCREEN_VISIBLE] ?: true }
     // Off by default: the pinned notification keeps its own title until the
     // user asks for the note's first line to take its place.
     override val notificationTitleFirstLine: Flow<Boolean> =
         context.settingsDataStore.data.map { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] ?: false }
+    // On by default: a launch-time check offers a "new version" dialog, which
+    // can be dismissed forever from the dialog or from Settings.
+    override val updateChecksEnabled: Flow<Boolean> =
+        context.settingsDataStore.data.map { it[KEY_UPDATE_CHECKS] ?: true }
     override val themeMode: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
@@ -154,6 +162,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setNotificationTitleFirstLine(value: Boolean) {
         context.settingsDataStore.edit { it[KEY_NOTIFICATION_TITLE_FIRST_LINE] = value }
+    }
+
+    override suspend fun setUpdateChecksEnabled(value: Boolean) {
+        context.settingsDataStore.edit { it[KEY_UPDATE_CHECKS] = value }
     }
 
     override suspend fun setThemeMode(value: String) {
@@ -205,6 +217,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         val KEY_NOTIFICATIONS = booleanPreferencesKey("notifications_enabled")
         val KEY_LOCKSCREEN_VISIBLE = booleanPreferencesKey("lockscreen_visible")
         val KEY_NOTIFICATION_TITLE_FIRST_LINE = booleanPreferencesKey("notification_title_first_line")
+        val KEY_UPDATE_CHECKS = booleanPreferencesKey("update_checks_enabled")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")

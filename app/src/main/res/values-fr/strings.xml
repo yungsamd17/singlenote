@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Note épinglée</string>
     <string name="channel_pinned_description">Affiche votre note actuelle pour qu\'elle reste visible</string>
     <string name="notification_pinned_title">Singlenote épinglée</string>
+    <string name="notification_hidden_body">Déverrouillez pour lire votre note</string>
     <string name="notification_action_new_note">Nouvelle note</string>
     <string name="notification_action_open">Ouvrir</string>
     <string name="tile_label">Singlenote</string>
@@ -122,8 +123,8 @@
     <string name="settings_section_about">À propos</string>
     <string name="setting_show_notifications">Notification épinglée</string>
     <string name="setting_show_notifications_desc">Autoriser l\'épinglage de la note actuelle comme notification persistante</string>
-    <string name="setting_lockscreen_visible">Afficher la note sur l\'écran de verrouillage</string>
-    <string name="setting_lockscreen_visible_desc">Désactivé masque le contenu de la note sur l\'écran de verrouillage</string>
+    <string name="setting_lockscreen_visible">Masquer la note jusqu\'au déverrouillage</string>
+    <string name="setting_lockscreen_visible_desc">Gardez la note masquée sur l\'écran verrouillé jusqu\'au déverrouillage</string>
     <string name="setting_notification_title_first_line">Afficher la première ligne de la note dans le titre</string>
     <string name="setting_notification_title_first_line_desc">Utiliser la première ligne de votre note comme titre de la notification épinglée</string>
     <string name="change">Changer</string>
@@ -153,6 +154,17 @@
     <string name="action_download">Télécharger</string>
     <string name="update_uptodate">Vous êtes à jour</string>
     <string name="update_check_failed">Impossible de vérifier les mises à jour. Réessayez plus tard.</string>
+    <string name="update_prompt_title">Nouvelle version disponible</string>
+    <string name="update_prompt_message">La version %1$s est disponible sur GitHub.</string>
+    <string name="update_prompt_later">Plus tard</string>
+    <string name="update_test_name">Version de test</string>
+    <string name="update_test_body">Ceci est un **test** de la boîte de dialogue de mise à jour. Le bouton ouvre la page des versions réelles.</string>
+    <string name="update_prompt_dont_show">Ne plus afficher cette boîte de dialogue</string>
+    <string name="settings_section_updates">Mises à jour</string>
+    <string name="updates_check_now_desc">Rechercher une nouvelle version sur GitHub</string>
+    <string name="settings_updates_summary">Vérification des mises à jour et notes</string>
+    <string name="settings_update_checks">Vérifier les mises à jour au lancement</string>
+    <string name="settings_update_checks_desc">Rechercher une nouvelle version à chaque lancement</string>
     <string name="no_app_to_open_link">Aucune application trouvée pour ouvrir ce lien</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Copier</string>
     <string name="diagnostics_share">Partager</string>
     <string name="diagnostics_close">Fermer</string>
+    <string name="diagnostics_save">Enregistrer dans un fichier</string>
+    <string name="diagnostics_saved">Diagnostic enregistré</string>
+    <string name="diagnostics_save_failed">Impossible d\'enregistrer : %1$s</string>
+    <string name="diagnostics_test_update">Tester l\'invite de mise à jour</string>
     <string name="diagnostics_copied">Diagnostics copiés</string>
     <string name="diagnostics_widget_update">Forcer la mise à jour du widget</string>
     <string name="diagnostics_widget_update_requested">Mise à jour du widget demandée</string>

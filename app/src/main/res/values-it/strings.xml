@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Nota fissata</string>
     <string name="channel_pinned_description">Mostra la nota attuale così resta visibile</string>
     <string name="notification_pinned_title">Singlenote fissato</string>
+    <string name="notification_hidden_body">Sblocca per leggere la tua nota</string>
     <string name="notification_action_new_note">Nuova nota</string>
     <string name="notification_action_open">Apri</string>
     <string name="tile_label">Singlenote</string>
@@ -101,8 +102,8 @@
     <string name="settings_section_about">Informazioni</string>
     <string name="setting_show_notifications">Notifica fissata</string>
     <string name="setting_show_notifications_desc">Consenti di fissare la nota attuale come notifica persistente</string>
-    <string name="setting_lockscreen_visible">Mostra la nota nella schermata di blocco</string>
-    <string name="setting_lockscreen_visible_desc">Disattivato nasconde il contenuto della nota nella schermata di blocco</string>
+    <string name="setting_lockscreen_visible">Nascondi la nota fino allo sblocco</string>
+    <string name="setting_lockscreen_visible_desc">Mantieni la nota nascosta sulla schermata di blocco fino allo sblocco del dispositivo</string>
     <string name="setting_notification_title_first_line">Mostra la prima riga della nota nel titolo</string>
     <string name="setting_notification_title_first_line_desc">Usa la prima riga della nota come titolo della notifica fissata</string>
     <string name="change">Cambia</string>
@@ -132,6 +133,17 @@
     <string name="action_download">Scarica</string>
     <string name="update_uptodate">Sei aggiornato</string>
     <string name="update_check_failed">Impossibile controllare gli aggiornamenti. Riprova più tardi.</string>
+    <string name="update_prompt_title">Nuova versione disponibile</string>
+    <string name="update_prompt_message">La versione %1$s è disponibile su GitHub.</string>
+    <string name="update_prompt_later">Dopo</string>
+    <string name="update_test_name">Versione di prova</string>
+    <string name="update_test_body">Questo è un **test** della finestra di aggiornamento. Il pulsante apre la pagina delle versioni reali.</string>
+    <string name="update_prompt_dont_show">Non mostrare più questa finestra</string>
+    <string name="settings_section_updates">Aggiornamenti</string>
+    <string name="updates_check_now_desc">Cerca una nuova versione su GitHub</string>
+    <string name="settings_updates_summary">Controllo aggiornamenti e note</string>
+    <string name="settings_update_checks">Controlla gli aggiornamenti all\'avvio</string>
+    <string name="settings_update_checks_desc">Cerca una nuova versione a ogni avvio</string>
     <string name="no_app_to_open_link">Nessuna app trovata per aprire questo link</string>
     <string name="email_title">Email</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -269,6 +281,10 @@ Informativa completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.m
     <string name="diagnostics_copy">Copia</string>
     <string name="diagnostics_share">Condividi</string>
     <string name="diagnostics_close">Chiudi</string>
+    <string name="diagnostics_save">Salva su file</string>
+    <string name="diagnostics_saved">Diagnostica salvata</string>
+    <string name="diagnostics_save_failed">Impossibile salvare: %1$s</string>
+    <string name="diagnostics_test_update">Prova avviso aggiornamento</string>
     <string name="diagnostics_copied">Diagnostica copiata</string>
     <string name="diagnostics_widget_update">Forza aggiornamento widget</string>
     <string name="diagnostics_widget_update_requested">Aggiornamento widget richiesto</string>

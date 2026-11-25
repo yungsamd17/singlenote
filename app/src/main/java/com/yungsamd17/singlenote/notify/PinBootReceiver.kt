@@ -32,6 +32,9 @@ class PinBootReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 try {
+                    // BOOT_COMPLETED and MY_PACKAGE_REPLACED both arrive while
+                    // the device is unlocked, so the note may be shown again.
+                    PinNotification.markRevealed()
                     PinNotification.refresh(app)
                 } catch (e: Exception) {
                     Log.w(TAG, "re-posting pinned note after boot failed", e)

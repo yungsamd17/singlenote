@@ -35,6 +35,7 @@
     <string name="channel_pinned_name">Pinned note</string>
     <string name="channel_pinned_description">Shows your current note so it stays visible</string>
     <string name="notification_pinned_title">Pinned Singlenote</string>
+    <string name="notification_hidden_body">Unlock to read your note</string>
     <string name="notification_action_new_note">New note</string>
     <string name="notification_action_open">Open</string>
     <string name="tile_label">Singlenote</string>
@@ -101,8 +102,8 @@
     <string name="settings_section_about">About</string>
     <string name="setting_show_notifications">Pinned notification</string>
     <string name="setting_show_notifications_desc">Allow pinning the current note as a persistent notification</string>
-    <string name="setting_lockscreen_visible">Show note on lock screen</string>
-    <string name="setting_lockscreen_visible_desc">Off hides the note content on the lock screen</string>
+    <string name="setting_lockscreen_visible">Hide note until unlocked</string>
+    <string name="setting_lockscreen_visible_desc">Keep the note hidden on the lock screen until you unlock the device</string>
     <string name="setting_notification_title_first_line">Show first line of note in title</string>
     <string name="setting_notification_title_first_line_desc">Use the first line of your note as the pinned notification title</string>
     <string name="change">Change</string>
@@ -132,6 +133,17 @@
     <string name="action_download">Download</string>
     <string name="update_uptodate">You’re up to date</string>
     <string name="update_check_failed">Couldn’t check for updates. Try again later.</string>
+    <string name="update_prompt_title">New version available</string>
+    <string name="update_prompt_message">Version %1$s is available on GitHub.</string>
+    <string name="update_prompt_later">Later</string>
+    <string name="update_test_name">Test release</string>
+    <string name="update_test_body">This is a **test** of the new-release dialog. The button opens the real releases page.</string>
+    <string name="update_prompt_dont_show">Don\'t show this dialog again</string>
+    <string name="settings_section_updates">Updates</string>
+    <string name="updates_check_now_desc">Check GitHub for a newer version</string>
+    <string name="settings_updates_summary">Update checks and release notes</string>
+    <string name="settings_update_checks">Check for updates on launch</string>
+    <string name="settings_update_checks_desc">Look for a newer version on every launch</string>
     <string name="no_app_to_open_link">No app found to open this link</string>
     <string name="email_title">Email</string>
     <string name="email_address">yungsamd@proton.me</string>
@@ -238,6 +250,10 @@
     <string name="diagnostics_copy">Copy</string>
     <string name="diagnostics_share">Share</string>
     <string name="diagnostics_close">Close</string>
+    <string name="diagnostics_save">Save to file</string>
+    <string name="diagnostics_saved">Diagnostics saved</string>
+    <string name="diagnostics_save_failed">Could not save: %1$s</string>
+    <string name="diagnostics_test_update">Test update prompt</string>
     <string name="diagnostics_copied">Diagnostics copied</string>
     <string name="diagnostics_widget_update">Force widget update</string>
     <string name="diagnostics_widget_update_requested">Widget update requested</string>

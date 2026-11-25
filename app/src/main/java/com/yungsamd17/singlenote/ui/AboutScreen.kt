@@ -6,21 +6,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.SystemClock
 import android.widget.Toast
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -31,36 +24,26 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.NorthEast
 import androidx.compose.material.icons.outlined.PrivacyTip
-import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onSizeChanged
@@ -71,11 +54,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.yungsamd17.singlenote.BuildConfig
 import com.yungsamd17.singlenote.R
-import com.yungsamd17.singlenote.util.GithubReleases
 import com.yungsamd17.singlenote.util.LinkedText
-import com.yungsamd17.singlenote.util.MarkdownText
-import com.yungsamd17.singlenote.util.stripLeadingVersionHeading
-import kotlinx.coroutines.launch
 
 private const val GITHUB_URL = "https://github.com/yungsamd17/singlenote"
 private const val ISSUES_URL = "https://github.com/yungsamd17/singlenote/issues/new/choose"
@@ -87,106 +66,17 @@ fun AboutScreen(
     onOpenTerms: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenLicense: () -> Unit,
+    onTestUpdate: () -> Unit,
 ) {
     val context = LocalContext.current
     val email = stringResource(R.string.email_address)
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    var checkingUpdate by remember { mutableStateOf(false) }
-    var showChangelog by remember { mutableStateOf(false) }
-    var changelogRelease by remember { mutableStateOf<GithubReleases.Release?>(null) }
-    var changelogFailed by remember { mutableStateOf(false) }
     var showDiagnostics by remember { mutableStateOf(false) }
     // Hidden unlock: five quick taps on the version line open Diagnostics.
     var versionTaps by remember { mutableIntStateOf(0) }
     var lastVersionTap by remember { mutableLongStateOf(0L) }
-    fun openChangelog() {
-        showChangelog = true
-        changelogRelease = null
-        changelogFailed = false
-        scope.launch {
-            try {
-                val releases = GithubReleases.fetch()
-                val installed = BuildConfig.VERSION_NAME
-                // Only this install's notes: match vX.Y.Z or plain X.Y.Z,
-                // fall back to the newest release on dev builds.
-                val picked =
-                    releases.firstOrNull {
-                        it.tag.equals("v$installed", ignoreCase = true) ||
-                            it.tag.equals(installed, ignoreCase = true)
-                    } ?: releases.firstOrNull()
-                // The sheet title already carries the version: drop the
-                // duplicate leading line from the notes themselves.
-                val core = (picked?.tag ?: installed).trimStart('v', 'V')
-                changelogRelease =
-                    picked?.copy(
-                        body =
-                            stripLeadingVersionHeading(
-                                picked.body,
-                                listOf(picked.tag, core, "v$core"),
-                            )
-                    )
-                if (changelogRelease == null) changelogFailed = true
-            } catch (_: Exception) {
-                changelogFailed = true
-            }
-        }
-    }
-    fun checkForUpdates() {
-        if (checkingUpdate) return
-        checkingUpdate = true
-        scope.launch {
-            try {
-                val latest = GithubReleases.fetch(limit = 5).firstOrNull()
-                if (latest == null) {
-                    snackbarHostState.showSnackbar(context.getString(R.string.update_check_failed))
-                } else if (GithubReleases.isNewerTag(latest.tag, BuildConfig.VERSION_NAME)) {
-                    val result =
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.update_available, latest.tag),
-                            actionLabel = context.getString(R.string.action_download),
-                        )
-                    if (result == SnackbarResult.ActionPerformed) {
-                        // Release page, never a raw APK: no SHA-256 pinning,
-                        // so the user verifies the asset in the browser.
-                        openUrl(context, latest.htmlUrl)
-                    }
-                } else {
-                    snackbarHostState.showSnackbar(context.getString(R.string.update_uptodate))
-                }
-            } catch (_: Exception) {
-                snackbarHostState.showSnackbar(context.getString(R.string.update_check_failed))
-            } finally {
-                checkingUpdate = false
-            }
-        }
-    }
     val scroll = rememberSettingsScrollState()
-    // The update button spins while it checks: the request can take a
-    // moment, and a still icon reads as a dead button.
-    val updateSpin = remember { Animatable(0f) }
-    LaunchedEffect(checkingUpdate) {
-        if (checkingUpdate) {
-            updateSpin.snapTo(0f)
-            updateSpin.animateTo(
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(tween(900, easing = LinearEasing)),
-            )
-        } else {
-            // A cancelled spin must not leave the icon tilted: finish the
-            // turn it was on.
-            val remainder = updateSpin.value % 360f
-            if (remainder > 0.5f) {
-                updateSpin.animateTo(
-                    targetValue = updateSpin.value + (360f - remainder),
-                    animationSpec = tween(180, easing = FastOutSlowInEasing),
-                )
-            }
-        }
-    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
-        snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
         topBar = {
             // Centered like the note and archive toolbars, and opaque so the
             // content scrolls under the title instead of through it. The bar
@@ -265,17 +155,6 @@ fun AboutScreen(
                                                 showDiagnostics = true
                                             }
                                         },
-                                )
-                            }
-                            TooltipIconButton(
-                                onClick = ::checkForUpdates,
-                                tooltip = stringResource(R.string.cd_check_updates),
-                                enabled = !checkingUpdate,
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Refresh,
-                                    contentDescription = stringResource(R.string.cd_check_updates),
-                                    modifier = Modifier.graphicsLayer { rotationZ = updateSpin.value },
                                 )
                             }
                         }
@@ -360,88 +239,18 @@ fun AboutScreen(
                             onClick = { openUrl(context, "mailto:$email") },
                         )
                     },
-                    {
-                        AboutRow(
-                            icon = Icons.Outlined.History,
-                            title = stringResource(R.string.changelog_title),
-                            subtitle = stringResource(R.string.changelog_subtitle),
-                            onClick = ::openChangelog,
-                        )
-                    },
                 )
             )
         }
     }
 
     if (showDiagnostics) {
-        DiagnosticsDialog(onDismiss = { showDiagnostics = false })
+        DiagnosticsDialog(
+            onDismiss = { showDiagnostics = false },
+            onTestUpdate = onTestUpdate,
+        )
     }
 
-    if (showChangelog) {
-        ModalBottomSheet(onDismissRequest = { showChangelog = false }, sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-            val release = changelogRelease
-            Column(
-                modifier =
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text =
-                        stringResource(
-                            R.string.changelog_version_title,
-                            release?.tag?.trimStart('v', 'V') ?: BuildConfig.VERSION_NAME,
-                        ),
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-                when {
-                    changelogFailed ->
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.changelog_error),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                            Button(
-                                onClick = ::openChangelog,
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
-                            ) {
-                                Text(stringResource(R.string.action_retry))
-                            }
-                        }
-                    // Blank while the notes load: no spinner flash for a
-                    // fetch that usually resolves in a beat.
-                    release == null ->
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
-                        ) {}
-                    else ->
-                        MarkdownText(
-                            markdown =
-                                release.body.ifBlank {
-                                    context.getString(R.string.changelog_empty_notes)
-                                },
-                            bodyColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
-                        )
-                }
-                Button(
-                    onClick = { showChangelog = false },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        ),
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(56.dp),
-                ) {
-                    Text(stringResource(R.string.action_ok))
-                }
-            }
-        }
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -636,7 +445,7 @@ private fun LicenseRow(textRes: Int) {
 
 // No browser or mail app installed (or no handler at all): tell the
 // user instead of crashing with ActivityNotFoundException.
-private fun openUrl(context: Context, url: String) {
+internal fun openUrl(context: Context, url: String) {
     try {
         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
     } catch (_: ActivityNotFoundException) {

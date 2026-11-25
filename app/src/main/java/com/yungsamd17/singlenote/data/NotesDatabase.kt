@@ -76,6 +76,7 @@ interface NoteStore {
     val notificationsEnabled: Flow<Boolean>
     val lockscreenVisible: Flow<Boolean>
     val notificationTitleFirstLine: Flow<Boolean>
+    val updateChecksEnabled: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
     val textSize: Flow<String>
@@ -94,6 +95,7 @@ interface NoteStore {
     suspend fun setNotificationsEnabled(value: Boolean)
     suspend fun setLockscreenVisible(value: Boolean)
     suspend fun setNotificationTitleFirstLine(value: Boolean)
+    suspend fun setUpdateChecksEnabled(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
     suspend fun setTextSize(value: String)
@@ -170,6 +172,7 @@ class NoteRepository(
     override val notificationsEnabled: Flow<Boolean> = preferences.notificationsEnabled
     override val lockscreenVisible: Flow<Boolean> = preferences.lockscreenVisible
     override val notificationTitleFirstLine: Flow<Boolean> = preferences.notificationTitleFirstLine
+    override val updateChecksEnabled: Flow<Boolean> = preferences.updateChecksEnabled
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
     override val textSize: Flow<String> = preferences.textSize
@@ -282,6 +285,8 @@ class NoteRepository(
         // instead of waiting for the next note change.
         notifyNow()
     }
+
+    override suspend fun setUpdateChecksEnabled(value: Boolean) = preferences.setUpdateChecksEnabled(value)
 
     override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
 
