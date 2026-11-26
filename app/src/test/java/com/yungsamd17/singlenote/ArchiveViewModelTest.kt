@@ -9,6 +9,8 @@ import com.yungsamd17.singlenote.ui.archiveSearchAvailable
 import com.yungsamd17.singlenote.ui.filterArchivedNotes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -95,6 +97,22 @@ class ArchiveViewModelTest {
         }
     }
 
+    /** A store whose first Room snapshot can be delayed, like a cold start. */
+    private class DeferredArchiveStore : ArchiveStore {
+        private val flow = MutableSharedFlow<List<Note>>()
+        override val archivedNotes: Flow<List<Note>> = flow
+        suspend fun emit(notes: List<Note>) = flow.emit(notes)
+        override suspend fun restore(noteId: Long): Boolean = false
+        override suspend fun deleteArchived(noteId: Long) = Unit
+        override suspend fun hasActiveNote(): Boolean = false
+        override suspend fun swapWithActive(noteId: Long) = Unit
+        override suspend fun replaceActive(noteId: Long) = Unit
+        override suspend fun clearArchived() = Unit
+        override suspend fun importArchived(notes: List<Note>) = Unit
+        override suspend fun restoreWithUndo(noteId: Long, replace: Boolean): ArchiveRestoreUndo? = null
+        override suspend fun undoRestore(undo: ArchiveRestoreUndo): Boolean = false
+    }
+
     private fun archived(id: Long, content: String) =
         Note(id = id, content = content, createdAt = 0, updatedAt = 0, state = Note.STATE_ARCHIVED)
 
@@ -111,6 +129,25 @@ class ArchiveViewModelTest {
         val received = mutableListOf<ArchiveEvent>()
         backgroundScope.launch { vm.events.collect { received += it } }
         return received
+    }
+
+    @Test
+    fun loadedIsFalseUntilRoomProducesItsFirstSnapshot() = runTest {
+        installMain()
+        val store = DeferredArchiveStore()
+        val vm = ArchiveViewModel(store)
+        val observed = mutableListOf<Boolean>()
+        val noteLists = mutableListOf<List<Note>>()
+        backgroundScope.launch { vm.loaded.collect { observed += it } }
+        backgroundScope.launch { vm.notes.collect { noteLists += it } }
+        runCurrent()
+        assertEquals(listOf(false), observed)
+        assertTrue(noteLists.single().isEmpty())
+
+        store.emit(listOf(archived(1, "one")))
+        runCurrent()
+        assertEquals(listOf(false, true), observed)
+        assertEquals(1, noteLists.last().size)
     }
 
     @Test

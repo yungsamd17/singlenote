@@ -57,6 +57,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -107,6 +108,7 @@ fun ArchiveScreen(
     onRestored: () -> Unit,
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
+    val loaded by viewModel.loaded.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     var searchActive by rememberSaveable { mutableStateOf(false) }
@@ -350,12 +352,21 @@ fun ArchiveScreen(
             )
         }
     ) { innerPadding ->
-        // Keep the content area empty until the stored sort/order are known so
-        // the first painted list is already in the right order.
+        // Wait for the stored sort/order and Room's first snapshot. Painting
+        // the list before either arrives flashes "Nothing archived yet" on a
+        // cold start — most visibly from the Archive launcher shortcut — and
+        // then swaps that message for the real notes.
         val loadedSort = sort
         val loadedOrder = order
-        if (loadedSort == null || loadedOrder == null) {
-            // Loading preferences; the screen's slide transition covers it.
+        if (loadedSort == null || loadedOrder == null || !loaded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
         } else {
             Column(
                 modifier = Modifier

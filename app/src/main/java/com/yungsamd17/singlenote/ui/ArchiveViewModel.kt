@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -31,6 +32,16 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
     val notes: StateFlow<List<Note>> = archiveStore.archivedNotes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * True once Room has produced its first snapshot. Until then the initial
+     * empty list in [notes] is not a real empty archive — most visibly on a
+     * cold start through the Archive launcher shortcut, where the screen is
+     * the first thing the user sees.
+     */
+    val loaded: StateFlow<Boolean> = archiveStore.archivedNotes
+        .map { true }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     private val _events = Channel<ArchiveEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
