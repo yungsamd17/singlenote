@@ -93,6 +93,7 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.util.buildArchiveJson
 import com.yungsamd17.singlenote.util.buildArchiveText
+import com.yungsamd17.singlenote.util.isPlainTextArchive
 import com.yungsamd17.singlenote.util.parseArchive
 import java.text.DateFormat
 import java.util.Date
@@ -192,15 +193,20 @@ fun ArchiveScreen(
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
-            val imported = withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 try {
                     val raw = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("empty")
                     val notes = parseArchive(raw)
-                    viewModel.importArchived(notes)
-                    true
-                } catch (_: Exception) { false }
+                    viewModel.importArchived(notes, matchContentOnly = isPlainTextArchive(raw))
+                } catch (_: Exception) { null }
             }
-            snackbarHostState.showSnackbar(context.getString(if (imported) R.string.archive_import_success else R.string.archive_import_failed))
+            snackbarHostState.showSnackbar(
+                if (result != null) {
+                    context.getString(R.string.archive_import_result, result.added, result.skipped)
+                } else {
+                    context.getString(R.string.archive_import_failed)
+                }
+            )
         }
     }
 

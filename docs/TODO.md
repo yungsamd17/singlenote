@@ -45,9 +45,10 @@ reconciled with v1.0.0 on 2026-11-13.
   `util/ArchiveFile.kt` (`buildArchiveJson` / `parseArchiveJson`) with
   `ArchiveFileTest` covering the round trip, malformed JSON, a foreign format,
   an unsupported version and notes without content or timestamps.
-- [ ] **Duplicate imports** — importing the same export twice appends the notes
-  a second time. Decide whether an import should skip notes that are already in
-  the archive (same content and creation time) and report how many were added.
+- [x] **Duplicate imports** — `filterDuplicateNotes` skips notes already in the
+  archive (content + creation time for JSON, content only for text backups),
+  including duplicates inside the imported file. The import snackbar reports
+  how many were added and how many were skipped.
 - [x] **Real DAO tests** — `NoteDaoTest` runs `NoteDao` against a real SQLite
   database (Robolectric): the unique `activeSlot` guard, archive/restore/swap/
   replace/undo transactions and the import path. `MigrationTest` covers

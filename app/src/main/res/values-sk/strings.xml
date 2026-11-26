@@ -240,6 +240,7 @@
     <string name="archive_import">Importovať poznámky</string>
     <string name="archive_import_description">Importujte archív JSON alebo čistého textu exportovaný aplikáciou Singlenote. Poznámky sa pridajú do archívu.</string>
     <string name="archive_import_success">Poznámky importované</string>
+    <string name="archive_import_result">Pridané %1$d poznámky; %2$d už v archíve preskočených.</string>
     <string name="archive_import_failed">Archív sa nepodarilo importovať</string>
     <string name="archive_export_description">JSON obsahuje názvy a dátumy a možno ho znova importovať do Singlenote. Obyčajný text obsahuje iba poznámky.</string>
     <string name="archive_export_json">JSON (s názvami a dátumami)</string>

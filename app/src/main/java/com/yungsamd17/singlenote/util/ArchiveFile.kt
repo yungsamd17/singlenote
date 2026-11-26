@@ -129,9 +129,38 @@ fun parseArchiveText(raw: String, now: Long = System.currentTimeMillis()): List<
     }
 }
 
+/** True when [raw] is a text backup rather than a JSON archive. */
+fun isPlainTextArchive(raw: String): Boolean = !raw.trimStart().startsWith("{")
+
 /**
  * Parses either export format. JSON is detected by its leading brace; a
  * malformed JSON file is rejected instead of being imported as one text note.
  */
 fun parseArchive(raw: String, now: Long = System.currentTimeMillis()): List<Note> =
-    if (raw.trimStart().startsWith("{")) parseArchiveJson(raw) else parseArchiveText(raw, now)
+    if (isPlainTextArchive(raw)) parseArchiveText(raw, now) else parseArchiveJson(raw)
+
+/** Result of filtering an import against the archive that is already stored. */
+data class ImportFilterResult(val accepted: List<Note>, val skipped: Int)
+
+/**
+ * Drops notes that are already in the archive, and duplicates inside the
+ * imported file itself. JSON notes are identified by content + creation time;
+ * text backups carry no timestamps, so [matchContentOnly] identifies them by
+ * content alone.
+ */
+fun filterDuplicateNotes(
+    imported: List<Note>,
+    existing: List<Note>,
+    matchContentOnly: Boolean = false,
+): ImportFilterResult {
+    fun key(note: Note) =
+        if (matchContentOnly) note.content else "${note.content}\u0000${note.createdAt}"
+
+    val seen = existing.mapTo(mutableSetOf()) { key(it) }
+    val accepted = mutableListOf<Note>()
+    var skipped = 0
+    imported.forEach { note ->
+        if (seen.add(key(note))) accepted += note else skipped++
+    }
+    return ImportFilterResult(accepted, skipped)
+}

@@ -240,6 +240,7 @@
     <string name="archive_import">Importuj notatki</string>
     <string name="archive_import_description">Zaimportuj archiwum JSON lub zwykłego tekstu wyeksportowane przez Singlenote. Zaimportowane notatki trafią do Twojego archiwum.</string>
     <string name="archive_import_success">Notatki zaimportowane</string>
+    <string name="archive_import_result">Dodano %1$d notatek; pominięto %2$d już zarchiwizowanych.</string>
     <string name="archive_import_failed">Nie udało się zaimportować tego archiwum</string>
     <string name="archive_export_description">JSON zawiera tytuły i daty i można go zaimpotować z powrotem do Singlenote. Zwykły tekst zawiera tylko notatki.</string>
     <string name="archive_export_json">JSON (z tytułami i datami)</string>

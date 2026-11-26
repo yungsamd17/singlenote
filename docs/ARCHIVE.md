@@ -63,8 +63,13 @@ Both formats live in `util/ArchiveFile.kt` (`buildArchiveJson` /
 JSON format carries a `format` marker and a `version` number: a file from
 another app, a malformed file or a newer archive version is rejected with the
 "import failed" message instead of importing half the notes. Plain text has no
-markers, so any non-JSON text file becomes one or more archived notes. Importing
-the same file twice adds the notes twice.
+markers, so any non-JSON text file becomes one or more archived notes.
+
+Before an import is written, notes already in the archive are skipped: JSON
+notes match on content **and** creation time, text notes on content alone
+(because a text backup has no timestamps). Duplicates within the imported file
+are skipped too. The snackbar reports how many notes were added and how many
+were skipped, so importing the same backup twice is now a no-op the second time.
 
 These exports include **archived notes only**: they do not include the active
 note, app settings, widgets, or notification preferences. Full app backup/restore

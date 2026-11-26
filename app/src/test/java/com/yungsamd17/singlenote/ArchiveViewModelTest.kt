@@ -5,6 +5,7 @@ import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.ui.ArchiveEvent
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.ImportResult
 import com.yungsamd17.singlenote.ui.archiveSearchAvailable
 import com.yungsamd17.singlenote.ui.filterArchivedNotes
 import kotlinx.coroutines.Dispatchers
@@ -129,6 +130,35 @@ class ArchiveViewModelTest {
         val received = mutableListOf<ArchiveEvent>()
         backgroundScope.launch { vm.events.collect { received += it } }
         return received
+    }
+
+    @Test
+    fun importArchivedSkipsDuplicatesAndReportsCounts() = runTest {
+        installMain()
+        val existing = archived(1, "same")
+        val store = FakeArchiveStore().apply { archivedNotes.value = listOf(existing) }
+        val vm = ArchiveViewModel(store)
+
+        val result = vm.importArchived(listOf(existing.copy(id = 0L), archived(2, "fresh")))
+
+        assertEquals(ImportResult(added = 1, skipped = 1), result)
+        assertEquals(listOf(existing, archived(2, "fresh")), store.archivedNotes.value)
+    }
+
+    @Test
+    fun textImportSkipsByContentEvenWhenTimestampsDiffer() = runTest {
+        installMain()
+        val existing = archived(1, "same").copy(createdAt = 5L)
+        val store = FakeArchiveStore().apply { archivedNotes.value = listOf(existing) }
+        val vm = ArchiveViewModel(store)
+
+        val result = vm.importArchived(
+            listOf(archived(0, "same").copy(createdAt = 99L)),
+            matchContentOnly = true,
+        )
+
+        assertEquals(ImportResult(added = 0, skipped = 1), result)
+        assertEquals(listOf(existing), store.archivedNotes.value)
     }
 
     @Test

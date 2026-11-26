@@ -271,6 +271,7 @@ Política completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md]
     <string name="archive_import">Importar notas</string>
     <string name="archive_import_description">Importe um arquivo JSON ou de texto simples exportado pelo Singlenote. As notas importadas são adicionadas ao seu arquivo.</string>
     <string name="archive_import_success">Notas importadas</string>
+    <string name="archive_import_result">%1$d notas adicionadas; %2$d já arquivadas ignoradas.</string>
     <string name="archive_import_failed">Não foi possível importar este arquivo</string>
     <string name="archive_export_description">O JSON inclui títulos e datas e pode ser importado de volta no Singlenote. O texto simples contém apenas o conteúdo das notas.</string>
     <string name="archive_export_json">JSON (com títulos e datas)</string>
