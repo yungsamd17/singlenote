@@ -6,7 +6,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes for the next release will be listed here.
+### Added
+
+- **Plain-text archive import.** The archive already exports a readable `.txt` backup; it can now be imported back. Text notes get the current time as their archive time; JSON still keeps the original timestamps.
 
 ## [1.0.2] - 2026-11-25
 

@@ -236,7 +236,7 @@
     <plurals name="archive_hours_ago"><item quantity="other">%d 小时前</item></plurals>
     <plurals name="archive_days_ago"><item quantity="other">%d 天前</item></plurals>
     <string name="archive_import">导入笔记</string>
-    <string name="archive_import_description">导入由 Singlenote 导出的 JSON 归档。导入的笔记将添加到您的归档中。</string>
+    <string name="archive_import_description">导入由 Singlenote 导出的 JSON 或纯文本归档。导入的笔记将添加到您的归档中。</string>
     <string name="archive_import_success">笔记已导入</string>
     <string name="archive_import_failed">无法导入此归档</string>
     <string name="archive_export_description">JSON 包含标题和日期，可导回 Singlenote。纯文本仅包含笔记内容。</string>

@@ -267,7 +267,7 @@ Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVA
     <plurals name="archive_hours_ago"><item quantity="one">%d saat önce</item><item quantity="other">%d saat önce</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">%d gün önce</item><item quantity="other">%d gün önce</item></plurals>
     <string name="archive_import">Notları içe aktar</string>
-    <string name="archive_import_description">Singlenote tarafından dışa aktarılmış bir JSON arşivini içe aktarın. İçe aktarılan notlar arşivinize eklenir.</string>
+    <string name="archive_import_description">Singlenote tarafından dışa aktarılmış bir JSON veya düz metin arşivini içe aktarın. İçe aktarılan notlar arşivinize eklenir.</string>
     <string name="archive_import_success">Notlar içe aktarıldı</string>
     <string name="archive_import_failed">Bu arşiv içe aktarılamadı</string>
     <string name="archive_export_description">JSON başlıkları ve tarihleri içerir ve Singlenote\'a geri aktarılabilir. Düz metin yalnızca not içeriğini içerir.</string>
