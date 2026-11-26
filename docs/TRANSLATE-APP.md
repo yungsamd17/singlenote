@@ -96,6 +96,14 @@ keys, but submitted translations should be complete.
   a literal translation that clips or changes an action's meaning needs revision.
 - Do not commit `local.properties`, keystores, generated APKs, or build outputs.
 
+## Automated completeness check
+
+`TranslationCompletenessTest` runs with `testDebugUnitTest` and compares every
+`values-*/strings.xml` with `values/strings.xml`: the key sets must match exactly,
+numbered placeholders must keep their numbers and types, and every locale in
+`locales_config.xml` must have a resource folder. A missing or stale translation
+fails the JVM suite instead of silently falling back to English.
+
 ## Register a new language
 
 A new resource folder alone does not add an entry to Singlenote's language list.

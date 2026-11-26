@@ -92,7 +92,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.Note
 import com.yungsamd17.singlenote.util.buildArchiveJson
-import com.yungsamd17.singlenote.util.parseArchiveJson
+import com.yungsamd17.singlenote.util.buildArchiveText
+import com.yungsamd17.singlenote.util.parseArchive
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
@@ -194,7 +195,7 @@ fun ArchiveScreen(
             val imported = withContext(Dispatchers.IO) {
                 try {
                     val raw = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("empty")
-                    val notes = parseArchiveJson(raw)
+                    val notes = parseArchive(raw)
                     viewModel.importArchived(notes)
                     true
                 } catch (_: Exception) { false }
@@ -496,14 +497,14 @@ fun ArchiveScreen(
             }
         }, confirmButton = { TextButton(onClick = {
             showExport = false
-            viewModel.pendingExport = if (exportJson) buildArchiveJson(sortedNotes) else sortedNotes.joinToString("\n\n---\n\n") { it.content }
+            viewModel.pendingExport = if (exportJson) buildArchiveJson(sortedNotes) else buildArchiveText(sortedNotes)
             exportLauncher.launch(if (exportJson) "singlenote-archive.json" else "singlenote-archive.txt")
         }) { Text(stringResource(R.string.export_archive)) } }, dismissButton = { TextButton(onClick = { showExport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
     }
     if (showImport) {
         AlertDialog(onDismissRequest = { showImport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_import)) },
             text = { Text(stringResource(R.string.archive_import_description)) },
-            confirmButton = { TextButton(onClick = { showImport = false; importLauncher.launch(arrayOf("application/json", "application/octet-stream")) }) { Text(stringResource(R.string.archive_import)) } },
+            confirmButton = { TextButton(onClick = { showImport = false; importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text(stringResource(R.string.archive_import)) } },
             dismissButton = { TextButton(onClick = { showImport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
     }
     if (showSort) {

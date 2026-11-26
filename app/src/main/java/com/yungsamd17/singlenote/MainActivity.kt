@@ -59,6 +59,7 @@ import com.yungsamd17.singlenote.ui.motionOffsetSpec
 import com.yungsamd17.singlenote.ui.toGray
 import com.yungsamd17.singlenote.ui.toMonochrome
 import com.yungsamd17.singlenote.util.AppLanguage
+import com.yungsamd17.singlenote.util.AppShortcuts
 import com.yungsamd17.singlenote.util.Diagnostics
 import com.yungsamd17.singlenote.util.ActionSecurity
 import com.yungsamd17.singlenote.util.GithubReleases
@@ -98,13 +99,15 @@ class MainActivity : ComponentActivity() {
     private var quickCapture by mutableStateOf(false)
     private var updateRelease by mutableStateOf<GithubReleases.Release?>(null)
     private var openFromNotification by mutableStateOf(false)
+    // Launcher shortcut route to open once the NavHost exists (cold start).
+    private var pendingRoute by mutableStateOf<String?>(null)
     private var navControllerRef: NavController? = null
     private var testUpdateJob: Job? = null
 
     /**
-     * Reads the actions our own widgets, tiles and notification can trigger.
-     * They all arrive as intents on this exported activity, so the token
-     * decides which ones are ours.
+     * Reads the actions our own widgets, tiles, notification and launcher
+     * shortcuts can trigger. They all arrive as intents on this exported
+     * activity, so the token decides which ones are ours.
      */
     private fun receiveExternalAction(intent: Intent?) {
         if (ActionSecurity.valid(this, intent?.getStringExtra(ActionSecurity.EXTRA_TOKEN))) {
@@ -112,6 +115,13 @@ class MainActivity : ComponentActivity() {
                 it in setOf("open", "edit", "archive")
             }
             quickCapture = intent?.getBooleanExtra(EXTRA_QUICK_CAPTURE, false) == true
+            when (AppShortcuts.target(intent)) {
+                // Reuse quick capture: the note on screen is archived, never
+                // deleted, and the new editor gets the cursor.
+                AppShortcuts.TARGET_NEW_NOTE -> quickCapture = true
+                AppShortcuts.TARGET_ARCHIVE -> openShortcutRoute("archive")
+                AppShortcuts.TARGET_SETTINGS -> openShortcutRoute("settings")
+            }
         }
         // Notification opens are navigation only: no token needed, and they
         // must reset the back stack to the editor even from recents.
@@ -130,13 +140,37 @@ class MainActivity : ComponentActivity() {
         intent?.removeExtra(EXTRA_WIDGET_ACTION)
         intent?.removeExtra(EXTRA_QUICK_CAPTURE)
         intent?.removeExtra(EXTRA_OPEN_FROM_NOTIFICATION)
+        intent?.removeExtra(AppShortcuts.EXTRA_TARGET)
         intent?.removeExtra(ActionSecurity.EXTRA_TOKEN)
     }
+
+    /**
+     * Opens a launcher shortcut destination. A warm start navigates directly;
+     * a cold start stores the route until the NavHost exists. Popping to the
+     * note first makes Back from a shortcut return to the editor instead of
+     * whatever page happened to be underneath.
+     */
+    private fun openShortcutRoute(route: String) {
+        val controller = navControllerRef
+        if (controller == null) {
+            pendingRoute = route
+            return
+        }
+        if (controller.currentDestination?.route == route) return
+        controller.navigate(route) {
+            popUpTo("note") { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+
 
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         AppLanguage.finishTransition(this)
+        // Shortcut labels are snapshots: republish so a language switch also
+        // updates what the launcher shows under the app icon.
+        lifecycleScope.launch(Dispatchers.IO) { AppShortcuts.publish(this@MainActivity) }
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -146,6 +180,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         receiveExternalAction(intent)
+        // Launcher shortcuts are published at runtime so their intents can
+        // carry the per-install action token; republishing also refreshes the
+        // labels after an app update. Off the main thread because the token
+        // lives in SharedPreferences.
+        lifecycleScope.launch(Dispatchers.IO) { AppShortcuts.publish(this@MainActivity) }
         // Match the launch window to the system theme before the first
         // frame. The stored theme needs a DataStore read, which must never
         // block the UI thread — so the launch background uses the system
@@ -268,6 +307,16 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val navController = rememberNavController()
                     SideEffect { navControllerRef = navController }
+                    // A launcher shortcut that started the app before the
+                    // NavHost existed: open its destination now.
+                    LaunchedEffect(pendingRoute) {
+                        val route = pendingRoute ?: return@LaunchedEffect
+                        navController.navigate(route) {
+                            popUpTo("note") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                        pendingRoute = null
+                    }
                     // Rapid taps on a settings row must not stack duplicate
                     // destinations: singleTop reuses the existing top entry.
                     fun navigateOnce(route: String) {
