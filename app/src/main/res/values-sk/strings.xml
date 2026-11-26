@@ -144,6 +144,8 @@
     <string name="settings_updates_summary">Kontrola aktualizácií a poznámky</string>
     <string name="settings_update_checks">Kontrolovať aktualizácie pri spustení</string>
     <string name="settings_update_checks_desc">Pri každom spustení hľadať novú verziu</string>
+    <string name="updates_section_checks">Kontrola aktualizácií</string>
+    <string name="updates_section_history">História verzií</string>
     <string name="no_app_to_open_link">Nenašla sa aplikácia na otvorenie tohto odkazu</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>

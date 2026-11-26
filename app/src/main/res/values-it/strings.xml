@@ -144,6 +144,8 @@
     <string name="settings_updates_summary">Controllo aggiornamenti e note</string>
     <string name="settings_update_checks">Controlla gli aggiornamenti all\'avvio</string>
     <string name="settings_update_checks_desc">Cerca una nuova versione a ogni avvio</string>
+    <string name="updates_section_checks">Controllo aggiornamenti</string>
+    <string name="updates_section_history">Cronologia delle versioni</string>
     <string name="no_app_to_open_link">Nessuna app trovata per aprire questo link</string>
     <string name="email_title">Email</string>
     <string name="email_address">yungsamd@proton.me</string>

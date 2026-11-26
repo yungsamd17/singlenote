@@ -144,6 +144,8 @@
     <string name="settings_updates_summary">Güncelleme kontrolü ve sürüm notları</string>
     <string name="settings_update_checks">Açılışta güncellemeleri kontrol et</string>
     <string name="settings_update_checks_desc">Her açılışta yeni bir sürüm ara</string>
+    <string name="updates_section_checks">Güncelleme kontrolleri</string>
+    <string name="updates_section_history">Sürüm geçmişi</string>
     <string name="no_app_to_open_link">Bu bağlantıyı açacak uygulama bulunamadı</string>
     <string name="email_title">E-posta</string>
     <string name="email_address">yungsamd@proton.me</string>

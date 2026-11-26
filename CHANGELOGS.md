@@ -15,6 +15,10 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - **Archive launcher shortcut cold start.** Opening the archive no longer flashes "Nothing archived yet" while the notes load: a brief spinner takes its place until the first Room snapshot and the saved sort order are ready.
 
+### Changed
+
+- **Updates is grouped into two sections.** The launch check and manual check sit under **Update checks**; the Changelog row gets its own **Version history** section with an accent-colored heading.
+
 ## [1.0.2] - 2026-11-25
 
 ### Fixed

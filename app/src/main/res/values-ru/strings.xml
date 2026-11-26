@@ -165,6 +165,8 @@
     <string name="settings_updates_summary">Проверка обновлений и списки изменений</string>
     <string name="settings_update_checks">Проверять обновления при запуске</string>
     <string name="settings_update_checks_desc">Искать новую версию при каждом запуске</string>
+    <string name="updates_section_checks">Проверка обновлений</string>
+    <string name="updates_section_history">История версий</string>
     <string name="no_app_to_open_link">Не найдено приложение для открытия этой ссылки</string>
     <string name="email_title">Эл. почта</string>
     <string name="email_address">yungsamd@proton.me</string>

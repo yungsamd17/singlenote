@@ -165,6 +165,8 @@
     <string name="settings_updates_summary">Vérification des mises à jour et notes</string>
     <string name="settings_update_checks">Vérifier les mises à jour au lancement</string>
     <string name="settings_update_checks_desc">Rechercher une nouvelle version à chaque lancement</string>
+    <string name="updates_section_checks">Vérification des mises à jour</string>
+    <string name="updates_section_history">Historique des versions</string>
     <string name="no_app_to_open_link">Aucune application trouvée pour ouvrir ce lien</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>

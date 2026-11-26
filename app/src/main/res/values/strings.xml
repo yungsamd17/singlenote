@@ -144,6 +144,8 @@
     <string name="settings_updates_summary">Update checks and release notes</string>
     <string name="settings_update_checks">Check for updates on launch</string>
     <string name="settings_update_checks_desc">Look for a newer version on every launch</string>
+    <string name="updates_section_checks">Update checks</string>
+    <string name="updates_section_history">Version history</string>
     <string name="no_app_to_open_link">No app found to open this link</string>
     <string name="email_title">Email</string>
     <string name="email_address">yungsamd@proton.me</string>
