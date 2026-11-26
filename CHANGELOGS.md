@@ -6,6 +6,15 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Launcher shortcuts.** Long-press the app icon for **New note**, **Archive** and **Settings**. New note archives the note on screen (never deletes it) and puts the cursor in an empty editor, so the Undo bar still offers it back.
+- **Plain-text archive import.** The archive already exports a readable `.txt` backup; it can now be imported back. Text notes get the current time as their archive time; JSON still keeps the original timestamps.
+
+### Fixed
+
+- **Archive launcher shortcut cold start.** Opening the archive no longer flashes "Nothing archived yet" while the notes load: a brief spinner takes its place until the first Room snapshot and the saved sort order are ready.
+
 ### Changed
 
 - **Updates is grouped into two sections.** The launch check and manual check sit under **Update checks**; the Changelog row gets its own **Version history** section with an accent-colored heading.

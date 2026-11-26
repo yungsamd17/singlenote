@@ -11,6 +11,14 @@ const val ARCHIVE_FORMAT = "singlenote-archive"
 /** Current archive export version. Bump it when the JSON shape changes. */
 const val ARCHIVE_VERSION = 1
 
+/**
+ * Separator used by the plain-text export. It is deliberately the same string
+ * the exporter writes, so a text backup can be imported without a second
+ * format: `buildArchiveJson` keeps its timestamps, `buildArchiveText` keeps
+ * only the note content.
+ */
+const val ARCHIVE_TEXT_SEPARATOR = "\n\n---\n\n"
+
 /** Thrown when an archive file cannot be read as a Singlenote archive. */
 class ArchiveFormatException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
@@ -40,6 +48,10 @@ fun buildArchiveJson(notes: List<Note>): String {
         .put("notes", items)
         .toString(2)
 }
+
+/** Serializes note contents only, separated by [ARCHIVE_TEXT_SEPARATOR]. */
+fun buildArchiveText(notes: List<Note>): String =
+    notes.joinToString(ARCHIVE_TEXT_SEPARATOR) { it.content }
 
 /**
  * Parses an archive export into notes.
@@ -92,3 +104,34 @@ fun parseArchiveJson(raw: String): List<Note> {
     }
     return notes
 }
+
+/**
+ * Parses a plain-text export: every block between two separators becomes an
+ * archived note. Text exports have no timestamps or title metadata, so all
+ * notes get [now] as their creation, update and archive time. A note that
+ * happens to contain the separator is inherently ambiguous, the same way it
+ * is in the exported text; use the JSON format when that matters.
+ */
+fun parseArchiveText(raw: String, now: Long = System.currentTimeMillis()): List<Note> {
+    val normalized = raw.replace("\r\n", "\n").replace('\r', '\n')
+    val contents = normalized.split(ARCHIVE_TEXT_SEPARATOR)
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+    if (contents.isEmpty()) throw ArchiveFormatException("the file has no notes")
+    return contents.map { content ->
+        Note(
+            content = content,
+            createdAt = now,
+            updatedAt = now,
+            archivedAt = now,
+            state = Note.STATE_ARCHIVED,
+        )
+    }
+}
+
+/**
+ * Parses either export format. JSON is detected by its leading brace; a
+ * malformed JSON file is rejected instead of being imported as one text note.
+ */
+fun parseArchive(raw: String, now: Long = System.currentTimeMillis()): List<Note> =
+    if (raw.trimStart().startsWith("{")) parseArchiveJson(raw) else parseArchiveText(raw, now)

@@ -269,7 +269,7 @@ Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY
     <plurals name="archive_hours_ago"><item quantity="one">%d uur geleden</item><item quantity="other">%d uur geleden</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">%d dag geleden</item><item quantity="other">%d dagen geleden</item></plurals>
     <string name="archive_import">Notities importeren</string>
-    <string name="archive_import_description">Importeer een JSON-archief dat door Singlenote is geëxporteerd. Geïmporteerde notities worden aan je archief toegevoegd.</string>
+    <string name="archive_import_description">Importeer een JSON- of tekstarchief dat door Singlenote is geëxporteerd. Geïmporteerde notities worden aan je archief toegevoegd.</string>
     <string name="archive_import_success">Notities geïmporteerd</string>
     <string name="archive_import_failed">Kon dit archief niet importeren</string>
     <string name="archive_export_description">JSON bevat titels en datums en kan weer in Singlenote worden geïmporteerd. Platte tekst bevat alleen de inhoud van de notities.</string>

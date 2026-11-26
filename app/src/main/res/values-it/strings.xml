@@ -269,7 +269,7 @@ Informativa completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.m
     <plurals name="archive_hours_ago"><item quantity="one">%d ora fa</item><item quantity="other">%d ore fa</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">%d giorno fa</item><item quantity="other">%d giorni fa</item></plurals>
     <string name="archive_import">Importa note</string>
-    <string name="archive_import_description">Importa un archivio JSON esportato da Singlenote. Le note importate vengono aggiunte al tuo archivio.</string>
+    <string name="archive_import_description">Importa un archivio JSON o di testo semplice esportato da Singlenote. Le note importate vengono aggiunte al tuo archivio.</string>
     <string name="archive_import_success">Note importate</string>
     <string name="archive_import_failed">Impossibile importare questo archivio</string>
     <string name="archive_export_description">Il JSON include titoli e date e può essere reimportato in Singlenote. Il testo semplice contiene solo il contenuto delle note.</string>

@@ -131,4 +131,45 @@ class ArchiveFileTest {
 
         assertThrows(ArchiveFormatException::class.java) { parseArchiveJson(json.toString()) }
     }
+
+    @Test
+    fun textRoundTripKeepsNoteContent() {
+        val parsed = parseArchiveText(buildArchiveText(notes), now = 9_000L)
+
+        assertEquals(
+            listOf("first note\nwith a second line", "second note"),
+            parsed.map { it.content },
+        )
+        parsed.forEach {
+            assertEquals(9_000L, it.createdAt)
+            assertEquals(9_000L, it.updatedAt)
+            assertEquals(9_000L, it.archivedAt)
+            assertEquals(Note.STATE_ARCHIVED, it.state)
+            assertNull(it.activeSlot)
+        }
+    }
+
+    @Test
+    fun textImportAcceptsWindowsLineEndings() {
+        val parsed = parseArchiveText("first line\r\n\r\n---\r\n\r\nsecond line\r\n", 1L)
+
+        assertEquals(listOf("first line", "second line"), parsed.map { it.content })
+    }
+
+    @Test
+    fun textImportRejectsAnEmptyFile() {
+        assertThrows(ArchiveFormatException::class.java) {
+            parseArchiveText("  \n\n---\n\n ")
+        }
+    }
+
+    @Test
+    fun archiveSniffsBothFormatsWithoutHidingBrokenJson() {
+        val json = parseArchive(buildArchiveJson(notes))
+        assertEquals(2, json.size)
+        assertEquals(1_000L, json[0].createdAt)
+
+        assertEquals("single note", parseArchive("single note", now = 7L).single().content)
+        assertThrows(ArchiveFormatException::class.java) { parseArchive("{not json") }
+    }
 }

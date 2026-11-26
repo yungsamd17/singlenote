@@ -238,7 +238,7 @@
     <plurals name="archive_hours_ago"><item quantity="one">%d час назад</item><item quantity="few">%d часа назад</item><item quantity="many">%d часов назад</item><item quantity="other">%d часов назад</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">%d день назад</item><item quantity="few">%d дня назад</item><item quantity="many">%d дней назад</item><item quantity="other">%d дней назад</item></plurals>
     <string name="archive_import">Импорт заметок</string>
-    <string name="archive_import_description">Импортируйте JSON-архив, экспортированный Singlenote. Импортированные заметки добавятся в ваш архив.</string>
+    <string name="archive_import_description">Импортируйте JSON-архив или архив в виде обычного текста, экспортированный Singlenote. Импортированные заметки добавятся в ваш архив.</string>
     <string name="archive_import_success">Заметки импортированы</string>
     <string name="archive_import_failed">Не удалось импортировать этот архив</string>
     <string name="archive_export_description">JSON включает заголовки и даты и может быть импортирован обратно в Singlenote. Обычный текст содержит только заметки.</string>

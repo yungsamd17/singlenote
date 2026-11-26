@@ -238,7 +238,7 @@
     <plurals name="archive_hours_ago"><item quantity="one">il y a %d heure</item><item quantity="other">il y a %d heures</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">il y a %d jour</item><item quantity="other">il y a %d jours</item></plurals>
     <string name="archive_import">Importer des notes</string>
-    <string name="archive_import_description">Importez une archive JSON exportée par Singlenote. Les notes importées sont ajoutées à vos archives.</string>
+    <string name="archive_import_description">Importez une archive JSON ou en texte brut exportée par Singlenote. Les notes importées sont ajoutées à vos archives.</string>
     <string name="archive_import_success">Notes importées</string>
     <string name="archive_import_failed">Impossible d\'importer cette archive</string>
     <string name="archive_export_description">JSON inclut titres et dates et peut être réimporté dans Singlenote. Texte brut contient seulement les notes.</string>

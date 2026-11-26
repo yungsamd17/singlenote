@@ -238,7 +238,7 @@
     <plurals name="archive_hours_ago"><item quantity="one">vor %d Stunde</item><item quantity="other">vor %d Stunden</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">vor %d Tag</item><item quantity="other">vor %d Tagen</item></plurals>
     <string name="archive_import">Notizen importieren</string>
-    <string name="archive_import_description">Importiere ein JSON-Archiv, das von Singlenote exportiert wurde. Importierte Notizen werden zu deinem Archiv hinzugefügt.</string>
+    <string name="archive_import_description">Importiere ein JSON- oder Klartext-Archiv, das von Singlenote exportiert wurde. Importierte Notizen werden zu deinem Archiv hinzugefügt.</string>
     <string name="archive_import_success">Notizen importiert</string>
     <string name="archive_import_failed">Archiv konnte nicht importiert werden</string>
     <string name="archive_export_description">JSON enthält Titel und Daten und kann zurück in Singlenote importiert werden. Klartext enthält nur Notizen.</string>
