@@ -6,7 +6,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes for the next release will be listed here.
+### Fixed
+
+- **Archive launcher shortcut cold start.** Opening the archive no longer flashes "Nothing archived yet" while the notes load: a brief spinner takes its place until the first Room snapshot and the saved sort order are ready.
 
 ## [1.0.2] - 2026-11-25
 
