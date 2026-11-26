@@ -165,6 +165,8 @@
     <string name="settings_updates_summary">更新检查与版本说明</string>
     <string name="settings_update_checks">启动时检查更新</string>
     <string name="settings_update_checks_desc">每次启动时查找新版本</string>
+    <string name="updates_section_checks">更新检查</string>
+    <string name="updates_section_history">版本历史</string>
     <string name="no_app_to_open_link">未找到可打开此链接的应用</string>
     <string name="email_title">邮箱</string>
     <string name="email_address">yungsamd@proton.me</string>

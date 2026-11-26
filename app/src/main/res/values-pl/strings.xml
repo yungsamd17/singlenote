@@ -165,6 +165,8 @@
     <string name="settings_updates_summary">Sprawdzanie aktualizacji i informacje</string>
     <string name="settings_update_checks">Sprawdzaj aktualizacje przy starcie</string>
     <string name="settings_update_checks_desc">Szukaj nowej wersji przy każdym starcie</string>
+    <string name="updates_section_checks">Sprawdzanie aktualizacji</string>
+    <string name="updates_section_history">Historia wersji</string>
     <string name="no_app_to_open_link">Nie znaleziono aplikacji do otwarcia tego linku</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>

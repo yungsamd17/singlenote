@@ -81,6 +81,7 @@ fun UpdatesScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
         onBack = onBack,
         snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
     ) {
+        SettingsSectionHeader(stringResource(R.string.updates_section_checks))
         SettingsGroup(
             listOf(
                 {
@@ -101,15 +102,20 @@ fun UpdatesScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
                         enabled = !checking,
                     )
                 },
-                {
-                    ValueRow(
-                        Icons.Outlined.History,
-                        stringResource(R.string.changelog_title),
-                        stringResource(R.string.changelog_subtitle),
-                        { showChangelog = true; loadChangelog() },
-                    )
-                },
             )
+        )
+        // The section name differs from the row inside it ("Changelog"), so
+        // TalkBack users navigating by heading get two distinct labels.
+        SettingsSectionHeader(stringResource(R.string.updates_section_history))
+        SettingsGroup(
+            listOf {
+                ValueRow(
+                    Icons.Outlined.History,
+                    stringResource(R.string.changelog_title),
+                    stringResource(R.string.changelog_subtitle),
+                    { showChangelog = true; loadChangelog() },
+                )
+            }
         )
     }
 

@@ -144,6 +144,8 @@
     <string name="settings_updates_summary">Updates controleren en release notes</string>
     <string name="settings_update_checks">Bij opstarten controleren op updates</string>
     <string name="settings_update_checks_desc">Bij elke start naar een nieuwe versie zoeken</string>
+    <string name="updates_section_checks">Updatecontrole</string>
+    <string name="updates_section_history">Versiegeschiedenis</string>
     <string name="no_app_to_open_link">Geen app gevonden om deze link te openen</string>
     <string name="email_title">E-mail</string>
     <string name="email_address">yungsamd@proton.me</string>

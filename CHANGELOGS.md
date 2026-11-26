@@ -6,7 +6,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes for the next release will be listed here.
+### Changed
+
+- **Updates is grouped into two sections.** The launch check and manual check sit under **Update checks**; the Changelog row gets its own **Version history** section with an accent-colored heading.
 
 ## [1.0.2] - 2026-11-25
 

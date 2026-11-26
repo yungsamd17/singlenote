@@ -165,6 +165,8 @@
     <string name="settings_updates_summary">Update-Prüfung und Versionshinweise</string>
     <string name="settings_update_checks">Beim Start nach Updates suchen</string>
     <string name="settings_update_checks_desc">Bei jedem Start nach einer neuen Version suchen</string>
+    <string name="updates_section_checks">Update-Prüfung</string>
+    <string name="updates_section_history">Versionsverlauf</string>
     <string name="no_app_to_open_link">Keine App zum Öffnen dieses Links gefunden</string>
     <string name="email_title">E-Mail</string>
     <string name="email_address">yungsamd@proton.me</string>
