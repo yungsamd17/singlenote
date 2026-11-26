@@ -10,6 +10,7 @@ project follows [Semantic Versioning](https://semver.org/).
 
 - **Launcher shortcuts.** Long-press the app icon for **New note**, **Archive** and **Settings**. New note archives the note on screen (never deletes it) and puts the cursor in an empty editor, so the Undo bar still offers it back.
 - **Plain-text archive import.** The archive already exports a readable `.txt` backup; it can now be imported back. Text notes get the current time as their archive time; JSON still keeps the original timestamps.
+- **Duplicate imports are skipped.** Importing the same backup again no longer appends the notes twice: existing notes are matched by content and creation time (by content alone for text backups), and the snackbar tells you how many were added and how many were skipped.
 
 ### Fixed
 

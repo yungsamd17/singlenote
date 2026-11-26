@@ -240,6 +240,7 @@
     <string name="archive_import">Importar notas</string>
     <string name="archive_import_description">Importa un archivo JSON o de texto sin formato exportado por Singlenote. Las notas importadas se añaden a tu archivo.</string>
     <string name="archive_import_success">Notas importadas</string>
+    <string name="archive_import_result">Se añadieron %1$d notas; se omitieron %2$d ya archivadas.</string>
     <string name="archive_import_failed">No se pudo importar este archivo</string>
     <string name="archive_export_description">JSON incluye títulos y fechas y puede importarse de vuelta a Singlenote. Texto plano solo contiene notas.</string>
     <string name="archive_export_json">JSON (con títulos y fechas)</string>

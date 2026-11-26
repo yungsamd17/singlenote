@@ -240,6 +240,7 @@
     <string name="archive_import">导入笔记</string>
     <string name="archive_import_description">导入由 Singlenote 导出的 JSON 或纯文本归档。导入的笔记将添加到您的归档中。</string>
     <string name="archive_import_success">笔记已导入</string>
+    <string name="archive_import_result">已添加 %1$d 条笔记；跳过 %2$d 条已在归档中的笔记。</string>
     <string name="archive_import_failed">无法导入此归档</string>
     <string name="archive_export_description">JSON 包含标题和日期，可导回 Singlenote。纯文本仅包含笔记内容。</string>
     <string name="archive_export_json">JSON (含标题和日期)</string>

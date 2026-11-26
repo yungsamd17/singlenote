@@ -171,5 +171,46 @@ class ArchiveFileTest {
 
         assertEquals("single note", parseArchive("single note", now = 7L).single().content)
         assertThrows(ArchiveFormatException::class.java) { parseArchive("{not json") }
+        assertTrue(isPlainTextArchive("  single note"))
+        assertTrue(!isPlainTextArchive(buildArchiveJson(notes)))
+    }
+
+    @Test
+    fun duplicateImportSkipsNotesAlreadyInTheArchive() {
+        val duplicates = notes.map { it.copy(id = 0L) }
+        val fresh = notes[0].copy(content = "new note", createdAt = 9_000L)
+
+        val result = filterDuplicateNotes(duplicates + fresh, notes)
+
+        assertEquals(listOf(fresh), result.accepted)
+        assertEquals(2, result.skipped)
+    }
+
+    @Test
+    fun duplicateImportAlsoSkipsDuplicatesInsideTheFile() {
+        val result = filterDuplicateNotes(listOf(notes[0], notes[0]), emptyList())
+
+        assertEquals(listOf(notes[0]), result.accepted)
+        assertEquals(1, result.skipped)
+    }
+
+    @Test
+    fun aDifferentCreationTimeIsNotADuplicate() {
+        val changed = notes[0].copy(createdAt = 9_999L)
+
+        val result = filterDuplicateNotes(listOf(changed), notes)
+
+        assertEquals(listOf(changed), result.accepted)
+        assertEquals(0, result.skipped)
+    }
+
+    @Test
+    fun textImportMatchesOnContentOnly() {
+        val existing = notes.map { it.copy(createdAt = 9_000L) }
+
+        val result = filterDuplicateNotes(notes, existing, matchContentOnly = true)
+
+        assertTrue(result.accepted.isEmpty())
+        assertEquals(2, result.skipped)
     }
 }

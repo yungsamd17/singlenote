@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.ArchiveRestoreUndo
 import com.yungsamd17.singlenote.data.ArchiveStore
 import com.yungsamd17.singlenote.data.Note
+import com.yungsamd17.singlenote.util.filterDuplicateNotes
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -27,6 +28,9 @@ sealed interface ArchiveEvent {
     data object Restored : ArchiveEvent
     data object Cleared : ArchiveEvent
 }
+
+/** Counts from the last import, including notes skipped as duplicates. */
+data class ImportResult(val added: Int, val skipped: Int)
 
 class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
 
@@ -111,7 +115,15 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
         viewModelScope.launch { archiveStore.deleteArchived(note.id) }
     }
 
-    suspend fun importArchived(notes: List<Note>) = archiveStore.importArchived(notes)
+    /**
+     * Skips notes already stored (and duplicates inside the file) before
+     * writing. Text backups have no timestamps, so they match on content only.
+     */
+    suspend fun importArchived(notes: List<Note>, matchContentOnly: Boolean = false): ImportResult {
+        val filtered = filterDuplicateNotes(notes, archiveStore.archivedNotes.first(), matchContentOnly)
+        archiveStore.importArchived(filtered.accepted)
+        return ImportResult(filtered.accepted.size, filtered.skipped)
+    }
 
     fun clearArchive() {
         viewModelScope.launch {

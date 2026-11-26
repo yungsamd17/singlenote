@@ -240,6 +240,7 @@
     <string name="archive_import">Notizen importieren</string>
     <string name="archive_import_description">Importiere ein JSON- oder Klartext-Archiv, das von Singlenote exportiert wurde. Importierte Notizen werden zu deinem Archiv hinzugefügt.</string>
     <string name="archive_import_success">Notizen importiert</string>
+    <string name="archive_import_result">%1$d Notizen hinzugefügt; %2$d bereits im Archiv übersprungen.</string>
     <string name="archive_import_failed">Archiv konnte nicht importiert werden</string>
     <string name="archive_export_description">JSON enthält Titel und Daten und kann zurück in Singlenote importiert werden. Klartext enthält nur Notizen.</string>
     <string name="archive_export_json">JSON (mit Titeln und Daten)</string>
