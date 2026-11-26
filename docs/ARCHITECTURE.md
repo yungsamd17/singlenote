@@ -87,6 +87,9 @@ Launcher caching and monochrome themed icons remain under launcher control.
 - `tile/`: quick-settings service displays a note preview and launches the editor for a new note, archiving the active note first.
 - `notify/`: pinned-note notification, content visibility, actions and boot/update
   restoration. Turning off notifications also clears the pinned preference.
+- `util/AppShortcuts.kt`: dynamic launcher shortcuts (New note, Archive,
+  Settings). They are published at runtime and after a language change, and
+  their intents carry the same action token as the widget and notification.
 
 Keep notification permission handling, intent validation and broadcast package
 scoping intact. Follow-app widget accents refresh when the app accent changes.

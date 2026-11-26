@@ -6,7 +6,9 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Changes for the next release will be listed here.
+### Added
+
+- **Launcher shortcuts.** Long-press the app icon for **New note**, **Archive** and **Settings**. New note archives the note on screen (never deletes it) and puts the cursor in an empty editor, so the Undo bar still offers it back.
 
 ## [1.0.2] - 2026-11-25
 
