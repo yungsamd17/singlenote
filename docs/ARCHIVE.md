@@ -50,18 +50,21 @@ Open the archive more menu and choose **Export notes**:
   nullable edit/archive timestamps. Use this format to import notes back into
   Singlenote.
 - **Plain text** exports note contents separated by `---`. It does not contain
-  timestamps or structured title metadata and cannot be imported by the JSON importer.
+  timestamps or structured title metadata; on import those notes get the
+  current time as their creation, update and archive time.
 
 Use Android's document picker to choose where to save the file. **Import notes**
-accepts a compatible Singlenote JSON archive and adds its notes to the archive
-with new database IDs. It does not replace the current archive. Save a copy of
-any important notes before testing import or delete behavior.
+accepts both Singlenote formats — JSON and plain text — and adds the notes to
+the archive with new database IDs. It does not replace the current archive. Save
+a copy of any important notes before testing import or delete behavior.
 
-The JSON format lives in `util/ArchiveFile.kt` (`buildArchiveJson` /
-`parseArchiveJson`) and is covered by `ArchiveFileTest`. It carries a `format`
-marker and a `version` number: a file from another app, a malformed file or a
-newer archive version is rejected with the "import failed" message instead of
-importing half the notes. Importing the same file twice adds the notes twice.
+Both formats live in `util/ArchiveFile.kt` (`buildArchiveJson` /
+`buildArchiveText` / `parseArchive`) and are covered by `ArchiveFileTest`. The
+JSON format carries a `format` marker and a `version` number: a file from
+another app, a malformed file or a newer archive version is rejected with the
+"import failed" message instead of importing half the notes. Plain text has no
+markers, so any non-JSON text file becomes one or more archived notes. Importing
+the same file twice adds the notes twice.
 
 These exports include **archived notes only**: they do not include the active
 note, app settings, widgets, or notification preferences. Full app backup/restore

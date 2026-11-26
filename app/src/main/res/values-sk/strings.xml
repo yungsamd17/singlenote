@@ -236,7 +236,7 @@
     <plurals name="archive_hours_ago"><item quantity="one">pred %d hodinou</item><item quantity="few">pred %d hodinami</item><item quantity="many">pred %d hodinami</item><item quantity="other">pred %d hodinami</item></plurals>
     <plurals name="archive_days_ago"><item quantity="one">pred %d dňom</item><item quantity="few">pred %d dňami</item><item quantity="many">pred %d dňami</item><item quantity="other">pred %d dňami</item></plurals>
     <string name="archive_import">Importovať poznámky</string>
-    <string name="archive_import_description">Importujte archív JSON exportovaný aplikáciou Singlenote. Poznámky sa pridajú do archívu.</string>
+    <string name="archive_import_description">Importujte archív JSON alebo čistého textu exportovaný aplikáciou Singlenote. Poznámky sa pridajú do archívu.</string>
     <string name="archive_import_success">Poznámky importované</string>
     <string name="archive_import_failed">Archív sa nepodarilo importovať</string>
     <string name="archive_export_description">JSON obsahuje názvy a dátumy a možno ho znova importovať do Singlenote. Obyčajný text obsahuje iba poznámky.</string>
