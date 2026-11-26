@@ -27,6 +27,7 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 - **Home screen widget** — the current note at a glance; adjustable appearance, text size, and tap action
 - **Pinned notification** — keeps your note visible in the notification shade
 - **Quick settings tile** — open the editor for a new note, archiving the current note first
+- **Launcher shortcuts** — long-press the app icon for a new note, the archive or settings
 - **Archive** — restore, delete, sort, and export notes, or import a Singlenote JSON or plain-text archive
 - **Share & copy** — straight from the top bar, with confirmation
 - **Theming** — light / dark / system, accent palettes, dynamic colors and AMOLED
