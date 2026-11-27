@@ -37,6 +37,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yungsamd17.singlenote.BuildConfig
+import com.yungsamd17.singlenote.data.BackupRepository
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.notify.PinNotification
 import com.yungsamd17.singlenote.notify.PinnedNoteService
@@ -44,6 +45,8 @@ import com.yungsamd17.singlenote.ui.AboutScreen
 import com.yungsamd17.singlenote.ui.AppMotion
 import com.yungsamd17.singlenote.ui.ArchiveScreen
 import com.yungsamd17.singlenote.ui.ArchiveViewModel
+import com.yungsamd17.singlenote.ui.BackupScreen
+import com.yungsamd17.singlenote.ui.BackupViewModel
 import com.yungsamd17.singlenote.ui.LicenseScreen
 import com.yungsamd17.singlenote.ui.NoteScreen
 import com.yungsamd17.singlenote.ui.NoteViewModel
@@ -52,6 +55,7 @@ import com.yungsamd17.singlenote.ui.SettingsScreen
 import com.yungsamd17.singlenote.ui.SettingsViewModel
 import com.yungsamd17.singlenote.ui.TermsScreen
 import com.yungsamd17.singlenote.ui.UpdateDialog
+import com.yungsamd17.singlenote.ui.WidgetCustomizationScreen
 import com.yungsamd17.singlenote.ui.UpdatesScreen
 import com.yungsamd17.singlenote.ui.accentScheme
 import com.yungsamd17.singlenote.ui.motionSpec
@@ -86,6 +90,9 @@ class MainActivity : ComponentActivity() {
         /** The pinned notification's Open action: always land on the note. */
         const val EXTRA_OPEN_FROM_NOTIFICATION = "open_from_notification"
 
+        /** Text handed over by the system share sheet's "Save as note" target. */
+        const val EXTRA_SHARE_TEXT = "share_text"
+
         internal fun testRelease(context: Context) =
             GithubReleases.Release(
                 tag = "v99.0.0",
@@ -97,6 +104,7 @@ class MainActivity : ComponentActivity() {
     }
     private var widgetAction by mutableStateOf<String?>(null)
     private var quickCapture by mutableStateOf(false)
+    private var sharedText by mutableStateOf<String?>(null)
     private var updateRelease by mutableStateOf<GithubReleases.Release?>(null)
     private var openFromNotification by mutableStateOf(false)
     // Launcher shortcut route to open once the NavHost exists (cold start).
@@ -115,6 +123,10 @@ class MainActivity : ComponentActivity() {
                 it in setOf("open", "edit", "archive")
             }
             quickCapture = intent?.getBooleanExtra(EXTRA_QUICK_CAPTURE, false) == true
+            // ShareNoteActivity adds our own token before forwarding, so this
+            // never trusts text from an arbitrary intent directly.
+            val incoming = intent?.getStringExtra(EXTRA_SHARE_TEXT)
+            if (!incoming.isNullOrBlank()) sharedText = incoming
             when (AppShortcuts.target(intent)) {
                 // Reuse quick capture: the note on screen is archived, never
                 // deleted, and the new editor gets the cursor.
@@ -139,6 +151,7 @@ class MainActivity : ComponentActivity() {
         }
         intent?.removeExtra(EXTRA_WIDGET_ACTION)
         intent?.removeExtra(EXTRA_QUICK_CAPTURE)
+        intent?.removeExtra(EXTRA_SHARE_TEXT)
         intent?.removeExtra(EXTRA_OPEN_FROM_NOTIFICATION)
         intent?.removeExtra(AppShortcuts.EXTRA_TARGET)
         intent?.removeExtra(ActionSecurity.EXTRA_TOKEN)
@@ -279,7 +292,7 @@ class MainActivity : ComponentActivity() {
             // it wins over both the accent and the wallpaper colors.
             val colorScheme = if (monochrome == true) baseScheme.toMonochrome() else baseScheme
             MaterialTheme(
-                typography = com.yungsamd17.singlenote.ui.appTypography(appFont == "flex"),
+                typography = com.yungsamd17.singlenote.ui.appTypography(appFont ?: "system"),
                 colorScheme = if (amoled == true && darkTheme) colorScheme.copy(
                     background = androidx.compose.ui.graphics.Color.Black,
                     surface = androidx.compose.ui.graphics.Color.Black
@@ -322,8 +335,8 @@ class MainActivity : ComponentActivity() {
                     fun navigateOnce(route: String) {
                         navController.navigate(route) { launchSingleTop = true }
                     }
-                    LaunchedEffect(widgetAction, quickCapture) {
-                        if ((widgetAction != null || quickCapture) && navController.currentDestination?.route != "note") {
+                    LaunchedEffect(widgetAction, quickCapture, sharedText) {
+                        if ((widgetAction != null || quickCapture || sharedText != null) && navController.currentDestination?.route != "note") {
                             navController.navigate("note") { popUpTo("note") { inclusive = false }; launchSingleTop = true }
                         }
                     }
@@ -338,6 +351,20 @@ class MainActivity : ComponentActivity() {
                         viewModel(factory = ArchiveViewModel.factory(repository))
                     val settingsViewModel: SettingsViewModel =
                         viewModel(factory = SettingsViewModel.factory(repository))
+                    // Flushes the editor's debounced save before notes are
+                    // replaced, so a restore can't be overwritten by a stale
+                    // write that was still in flight.
+                    val backupViewModel: BackupViewModel =
+                        viewModel(
+                            factory = BackupViewModel.factory(
+                                BackupRepository(
+                                    applicationContext,
+                                    repository,
+                                    NotePreferences.get(applicationContext),
+                                    flushNotes = { noteViewModel.flushSaveAndAwait() },
+                                )
+                            )
+                        )
                     LaunchedEffect(openFromNotification) {
                         if (openFromNotification) {
                             // Pop rather than navigate: this plays the same
@@ -420,6 +447,8 @@ class MainActivity : ComponentActivity() {
                                 onWidgetActionHandled = { widgetAction = null },
                                 quickCapture = quickCapture,
                                 onQuickCaptureHandled = { quickCapture = false },
+                                sharedText = sharedText,
+                                onSharedTextHandled = { sharedText = null },
                                 onOpenArchive = { navigateOnce("archive") },
                                 onOpenSettings = { navigateOnce("settings") }
                             )
@@ -447,7 +476,8 @@ class MainActivity : ComponentActivity() {
                                 onRestored = {
                                     noteViewModel.onArchiveRestored(archiveViewModel.takeRestoreUndo())
                                     navController.popBackStack()
-                                }
+                                },
+                                onOpenBackup = { navigateOnce("settings/backup") },
                             )
                         }
                         composable("settings") {
@@ -466,6 +496,15 @@ class MainActivity : ComponentActivity() {
                         composable("settings/updates") {
                             UpdatesScreen(
                                 viewModel = settingsViewModel,
+                                onBack = { navController.popBackStack() },
+                            )
+                        }
+                        composable("settings/widget") {
+                            WidgetCustomizationScreen(onBack = { navController.popBackStack() })
+                        }
+                        composable("settings/backup") {
+                            BackupScreen(
+                                viewModel = backupViewModel,
                                 onBack = { navController.popBackStack() },
                             )
                         }

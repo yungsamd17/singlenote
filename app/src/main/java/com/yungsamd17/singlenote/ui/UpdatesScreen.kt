@@ -79,7 +79,9 @@ fun UpdatesScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
     SettingsPage(
         title = stringResource(R.string.settings_section_updates),
         onBack = onBack,
-        snackbarHost = { SwipeableSnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SwipeableSnackbarHost(snackbarHostState, modifier = AppSnackbarHostModifier)
+        },
     ) {
         SettingsSectionHeader(stringResource(R.string.updates_section_checks))
         SettingsGroup(

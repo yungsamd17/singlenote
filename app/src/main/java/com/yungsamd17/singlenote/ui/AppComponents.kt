@@ -2,6 +2,8 @@ package com.yungsamd17.singlenote.ui
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +26,15 @@ internal val NoteCardHorizontalPadding = 16.dp
 internal val NoteCardTopPadding = 8.dp
 
 internal val AppCardShape = RoundedCornerShape(28.dp)
+
+/**
+ * Shared snackbar placement for screens with no bottom action bar. Screens
+ * that do have one (the editor) lift the bar higher with their own modifier.
+ */
+internal val AppSnackbarHostModifier: Modifier = Modifier
+    .navigationBarsPadding()
+    .imePadding()
+    .padding(bottom = 16.dp)
 
 @Composable
 internal fun AppSnackbar(data: SnackbarData) {
