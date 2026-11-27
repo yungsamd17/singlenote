@@ -115,3 +115,15 @@ Source: https://github.com/google/fonts/tree/main/ofl/googlesansflex
 License: SIL Open Font License 1.1
 Bundled font: app/src/main/res/font/google_sans_flex.ttf
 Full license: app/src/main/assets/licenses/GoogleSansFlex-OFL.txt
+
+Inter
+Source: https://github.com/google/fonts/tree/main/ofl/inter
+License: SIL Open Font License 1.1
+Bundled font: app/src/main/res/font/inter.ttf
+Full license: app/src/main/assets/licenses/Inter-OFL.txt
+
+Roboto Slab
+Source: https://github.com/google/fonts/tree/main/apache/robotoslab
+License: Apache License 2.0
+Bundled font: app/src/main/res/font/roboto_slab.ttf
+Full license: app/src/main/assets/licenses/RobotoSlab-Apache-2.0.txt

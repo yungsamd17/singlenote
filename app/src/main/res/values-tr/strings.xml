@@ -74,7 +74,7 @@
     <string name="accent_green">Yeşil</string>
     <string name="accent_orange">Turuncu</string>
     <string name="accent_pink">Pembe</string>
-    <string name="settings_font">Yazı tipi türü</string>
+    <string name="settings_font">Yazı tipi</string>
     <string name="settings_text_size">Metin boyutu</string>
     <string name="theme_system">Sistem</string>
     <string name="theme_light">Açık</string>
@@ -110,7 +110,7 @@
     <string name="about_title">Uygulama hakkında</string>
     <string name="about_subtitle">Sürüm, koşullar, gizlilik ve daha fazlası</string>
     <string name="about_version_line">v%1$s • %2$d</string>
-    <string name="about_privacy_blurb">Singlenote çevrimdışı önceliklidir. Notunuz cihazınızdan asla ayrılmaz — hesap yok, analiz yok, izleme yok. Notlar ve ayarlar uygulamanın özel alanında şifrelenmeden saklanır.</string>
+    <string name="about_privacy_blurb">Singlenote çevrimdışı önceliklidir. Notunuz cihazınızdan asla ayrılmaz; hesap yok, analiz yok, izleme yok. Notlar ve ayarlar uygulamanın özel alanında şifrelenmeden saklanır. Ayarlar, Yedekleme ve geri yükleme yerel bir kopya kaydedebilir.</string>
     <string name="about_license">Lisans</string>
     <string name="license_short">MIT Lisansı</string>
     <string name="license_components_title">Açık kaynak bileşenler</string>
@@ -168,21 +168,16 @@ TOPLANAN VERİLER
 Hiçbiri. Hesap, analiz, reklam veya izleme tanımlayıcısı yoktur.
 
 CİHAZINIZDA
-Notunuz ve ayarlarınız cihazınızdaki uygulamanın özel alanında kalır. Şifrelenmeden saklanırlar (düz metin veritabanı ve tercihler): kilidi açık cihazınıza erişimi olan herkes bunları okuyabilir. Otomatik yedekleme kapalıdır, bu yüzden Google hesabınıza hiçbir şey kopyalanmaz — uygulamayı kaldırmak her şeyi siler.
+Notunuz ve ayarlarınız cihazınızdaki uygulamanın özel alanında kalır. Şifrelenmeden saklanırlar (düz metin veritabanı ve tercihler): kilidi açık cihazınıza erişimi olan herkes bunları okuyabilir. Otomatik yedekleme kapalıdır, bu yüzden Google hesabınıza hiçbir şey kopyalanmaz; uygulamayı kaldırmak her şeyi siler.
 
 KOPYALAMA VE PAYLAŞMA
-Kopyala, düz metni sistem panosuna koyar — sistem bir önizleme gösterebilir ve metin klavye geçmişinde kalabilir. Paylaş, düz metni seçtiğiniz uygulamaya gönderir.
+Kopyala, düz metni sistem panosuna koyar; sistem bir önizleme gösterebilir ve metin klavye geçmişinde kalabilir. Paylaş, düz metni seçtiğiniz uygulamaya gönderir.
 
 İZİNLER
 Bildirimler (isteğe bağlı): yalnızca notunuzu sabitleyip görünür tutmak için. Ön plan servisi (yalnızca bir not sabitlenmişken): arka plan işlerini durduran cihazlarda bile bildirimi ve kilit ekranı güncellemelerini etkin tutar. Açılış alıcısı: yeniden başlatmadan sonra sabitlenmiş notu geri getirir. Konum, kamera veya mikrofon erişimi yoktur.
 
 AĞ
-Güncelleme denetimi, "Başlatma sırasında güncellemeleri denetle" açıksa (varsayılan) başlatmada bir kez, ayrıca sürüm notlarını açtığınızda veya Ayarlar → Güncellemeler bölümünde "Güncellemeleri denetle"ye dokunduğunuzda GitHub ile iletişim kurar. Başlatmadaki denetimi oradan kapatabilirsiniz. Hesap yok, analiz yok, başka hiçbir şey hiçbir yere gönderilmez.
-
-İLETİŞİM
-Sorular: yungsamd@proton.me.
-
-Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+Güncelleme denetimi, "Başlatma sırasında güncellemeleri denetle" açıksa (varsayılan) başlatmada bir kez, ayrıca sürüm notlarını açtığınızda veya Ayarlar → Güncellemeler bölümünde "Güncellemeleri denetle"ye dokunduğunuzda GitHub ile iletişim kurar. Başlatmadaki denetimi oradan kapatabilirsiniz. Hesap yok, analiz yok, başka hiçbir şey hiçbir yere gönderilmez.\n\nDOSYA ERİŞİMİ VE PAYLAŞMA\nYedekler ve Singlenote ile paylaşılan metin isteğe bağlı işlemlerdir, uygulama izinleri değildir. Dosya seçici yalnızca seçtiğiniz dosyayı açar; uygulamaya paylaşım dosya erişimi gerektirmez.\nYedekler, siz silene kadar kaydettiğiniz yerde kalır.</string>
     <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
     <string name="license_kotlin">Kotlin — Apache License 2.0</string>
     <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
@@ -213,7 +208,7 @@ Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVA
     <string name="settings_app_font">Uygulama yazı tipi</string>
     <string name="font_system">Sistem yazı tipi</string>
     <string name="font_google_flex">Google Sans Flex</string>
-    <string name="settings_font_category">Yazı tipi</string>
+    <string name="settings_font_category">Not</string>
     <string name="settings_size_category">Boyut</string>
     <string name="settings_note_notification">Not bildirimi</string>
     <string name="settings_contribute">Katkıda bulun</string>
@@ -287,9 +282,82 @@ Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVA
     <string name="diagnostics_save">Dosyaya kaydet</string>
     <string name="diagnostics_saved">Tanılama kaydedildi</string>
     <string name="diagnostics_save_failed">Kaydedilemedi: %1$s</string>
-    <string name="diagnostics_test_update">Güncelleme istemini test et</string>
+    <string name="diagnostics_test_update">Güncellemeyi test et</string>
     <string name="diagnostics_copied">Tanılama kopyalandı</string>
-    <string name="diagnostics_widget_update">Araç takımı güncellemesini zorla</string>
+    <string name="diagnostics_widget_update">Widget\'ları güncelle</string>
     <string name="diagnostics_widget_update_requested">Araç takımı güncellemesi istendi</string>
     <string name="diagnostics_widget_update_failed">Araç takımı güncellemesi başarısız: %1$s</string>
+    <string name="settings_backup">Yedekleme ve geri yükleme</string>
+    <string name="settings_backup_summary">Notlar, ayarlar ve widget\'lar</string>
+    <string name="backup_title">Yedekleme ve geri yükleme</string>
+    <string name="backup_intro">Yedekler düz, şifrelenmemiş dosyalardır. Nereye kaydedileceğini siz seçersiniz; hiçbir şey yüklenmez.</string>
+    <string name="backup_section_create">Yedek oluştur</string>
+    <string name="backup_include_active">Etkin not</string>
+    <string name="backup_include_active_desc">Ana ekrandaki not</string>
+    <string name="backup_include_archived">Arşivlenen notlar</string>
+    <string name="backup_include_archived_desc">Arşivdeki tüm notlar</string>
+    <string name="backup_include_settings">Uygulama ayarları</string>
+    <string name="backup_include_settings_desc">Tema, dil, bildirimler ve daha fazlası</string>
+    <string name="backup_include_widgets">Widget ayarları</string>
+    <string name="backup_include_widgets_desc">Widget görünümü ve dokunma işlemleri</string>
+    <string name="backup_create">Yedek oluştur</string>
+    <string name="backup_create_message">Nelerin dahil edileceğini seçin, ardından dosyanın kaydedileceği yeri belirleyin.</string>
+    <string name="backup_section_restore">Geri yükle</string>
+    <string name="backup_restore_notes">Notları geri yükle</string>
+    <string name="backup_restore_notes_desc">Yedekteki etkin ve arşivlenen notlar</string>
+    <string name="backup_restore_settings">Uygulama ayarlarını geri yükle</string>
+    <string name="backup_restore_settings_desc">Bu cihazdaki ayarları değiştirir</string>
+    <string name="backup_restore_widgets">Widget ayarlarını geri yükle</string>
+    <string name="backup_restore_widgets_desc">Widget\'larınızın stilini değiştirir</string>
+    <string name="backup_restore_file">Dosyadan geri yükle</string>
+    <string name="backup_restore_message">Geri yüklenecekleri seçin. Notlar birleştirilebilir veya değiştirilebilir.</string>
+    <string name="backup_merge">Notları birleştir</string>
+    <string name="backup_merge_desc">Notlarınızı koruyun ve sadece yenilerini ekleyin</string>
+    <string name="backup_replace">Notları değiştir</string>
+    <string name="backup_replace_desc">Önce mevcut notu ve arşivi sil</string>
+    <string name="backup_restore_warning">Başlatıcı simgesi değişirse uygulama kapanır ve yeniden açılır.</string>
+    <string name="backup_restore_action">Geri yükle</string>
+    <string name="backup_section_notes">Yalnızca notlar</string>
+    <string name="backup_notes_export">Yalnızca notları dışa aktar</string>
+    <string name="backup_notes_import">Yalnızca notları içe aktar</string>
+    <string name="backup_saved">Yedek kaydedildi</string>
+    <string name="backup_save_failed">Yedek kaydedilemedi</string>
+    <string name="backup_restored">%1$d not geri yüklendi; %2$d atlandı.</string>
+    <string name="backup_restored_settings">Ayarlar geri yüklendi</string>
+    <string name="backup_restore_failed">Bu yedek geri yüklenemedi</string>
+    <string name="backup_too_large">Dosya çok büyük (en fazla %1$d MB).</string>
+    <string name="settings_section_personalization">Kişiselleştirme</string>
+    <string name="settings_section_data_updates">Veriler ve güncellemeler</string>
+    <string name="share_note_label">Not olarak kaydet</string>
+    <string name="typography_preview">Notunuz bir bakışta\nİkinci satır aralığı gösterir.</string>
+    <string name="settings_line_spacing">Satır aralığı</string>
+    <string name="settings_line_spacing_default">Varsayılan</string>
+    <string name="settings_line_spacing_compact">Sıkı</string>
+    <string name="settings_line_spacing_comfortable">Rahat</string>
+    <string name="font_inter">Inter</string>
+    <string name="font_slab">Roboto Slab</string>
+    <string name="license_inter">Inter — SIL Open Font License 1.1</string>
+    <string name="license_roboto_slab">Roboto Slab — Apache License 2.0</string>
+    <string name="privacy_contact">İLETİŞİM
+Sorular: yungsamd@proton.me.
+
+Tam gizlilik politikası: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="settings_note_preview">Not önizlemesi</string>
+    <string name="font_use_app">Uygulama yazı tipini kullan</string>
+    <string name="settings_widget_customization">Widget özelleştirme</string>
+    <string name="widget_customize">Widget\'i özelleştir</string>
+    <string name="widget_customize_desc">Görünüm ve dokunma işlemleri</string>
+    <string name="widget_customize_title">Widget özelleştirme</string>
+    <string name="widget_add_home">Widget\'i ana ekrana ekle</string>
+    <string name="widget_add_home_desc">Sistem widget seçicisini aç</string>
+    <string name="widget_save">Widget görünümünü kaydet</string>
+    <string name="widget_added">Widget eklendi</string>
+    <string name="widget_saved">Widget görünümü kaydedildi</string>
+    <string name="settings_section_app">Uygulama</string>
+    <string name="diagnostics_clear">Günlüğü temizle</string>
+    <string name="diagnostics_cleared">Günlük temizlendi</string>
+    <string name="backup_notes_export_short">Tarihli JSON veya düz metin</string>
+    <string name="backup_notes_import_short">Singlenote dosyasından not ekle</string>
+    <string name="backup_nothing_restored">Hiçbir şey geri yüklenmedi</string>
+    <string name="brand_bold_prefix">Single</string>
 </resources>

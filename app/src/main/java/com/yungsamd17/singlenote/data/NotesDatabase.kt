@@ -79,6 +79,7 @@ interface NoteStore {
     val updateChecksEnabled: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
+    val lineSpacing: Flow<String>
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
@@ -98,6 +99,7 @@ interface NoteStore {
     suspend fun setUpdateChecksEnabled(value: Boolean)
     suspend fun setThemeMode(value: String)
     suspend fun setFontFamily(value: String)
+    suspend fun setLineSpacing(value: String)
     suspend fun setTextSize(value: String)
     suspend fun setDynamicColors(value: Boolean)
     suspend fun setAmoled(value: Boolean)
@@ -175,6 +177,7 @@ class NoteRepository(
     override val updateChecksEnabled: Flow<Boolean> = preferences.updateChecksEnabled
     override val themeMode: Flow<String> = preferences.themeMode
     override val fontFamily: Flow<String> = preferences.fontFamily
+    override val lineSpacing: Flow<String> = preferences.lineSpacing
     override val textSize: Flow<String> = preferences.textSize
     override val dynamicColors: Flow<Boolean> = preferences.dynamicColors
     override val amoled: Flow<Boolean> = preferences.amoled
@@ -246,6 +249,24 @@ class NoteRepository(
         if (notes.isNotEmpty()) notifyNow()
     }
 
+    /** Replaces both note sets in one transaction for a full-backup restore. */
+    suspend fun replaceAllNotes(active: Note?, archived: List<Note>) {
+        writeMutex.withLock { dao.replaceAllNotes(active, archived) }
+        notifyNow()
+    }
+
+    /** Puts a note from a backup into the main view, keeping a single ACTIVE row. */
+    suspend fun restoreActiveFromBackup(note: Note) {
+        writeMutex.withLock {
+            dao.deleteActiveNote()
+            dao.insert(note.copy(id = 0, state = Note.STATE_ACTIVE, activeSlot = Note.ACTIVE_SLOT))
+        }
+        notifyNow()
+    }
+
+    /** Repaints widgets, the tile and the notification after settings restore. */
+    fun notifyChanged() = notifyNow()
+
     override suspend fun restoreWithUndo(noteId: Long, replace: Boolean): ArchiveRestoreUndo? {
         val undo = writeMutex.withLock { dao.restoreWithUndo(noteId, replace) }
         if (undo != null) notifyNow()
@@ -290,7 +311,14 @@ class NoteRepository(
 
     override suspend fun setThemeMode(value: String) = preferences.setThemeMode(value)
 
-    override suspend fun setFontFamily(value: String) = preferences.setFontFamily(value)
+    override suspend fun setFontFamily(value: String) {
+        preferences.setFontFamily(value)
+        // Glance renders from the widget's own session: wake it so a font
+        // change shows up without visiting the widget customization screen.
+        notifyNow()
+    }
+
+    override suspend fun setLineSpacing(value: String) = preferences.setLineSpacing(value)
 
     override suspend fun setTextSize(value: String) = preferences.setTextSize(value)
 
@@ -307,7 +335,11 @@ class NoteRepository(
         notifyNow()
     }
 
-    override suspend fun setAppFont(value: String) = preferences.setAppFont(value)
+    override suspend fun setAppFont(value: String) {
+        preferences.setAppFont(value)
+        // "Use app font" widgets follow this too.
+        notifyNow()
+    }
 
     override suspend fun setAppIcon(value: String) = preferences.setAppIcon(value)
 

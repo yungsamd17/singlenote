@@ -8,7 +8,7 @@ Start with the [project README](../README.md) for features and downloads, or
 | [Translate the app](TRANSLATE-APP.md) | Language codes, XML examples, registration, formatting, testing and PR submission |
 | [Building and previews](BUILDING.md) | SDK/JDK setup, debug checks, side-by-side previews, installation and troubleshooting |
 | [Changelog](../CHANGELOGS.md) | Unreleased changes and published release history |
-| [Archive and backups](ARCHIVE.md) | Sort, restore, delete, and import or export archived notes |
+| [Archive and backups](ARCHIVE.md) | Sort, restore, delete, archive import/export and full backups |
 | [Architecture](ARCHITECTURE.md) | Navigation, persistence, repository boundaries, locale handling and external surfaces |
 | [Showcase assets](showcase/README.md) | README imagery, social preview, Play Store screenshots, sizes and upload steps |
 | [Showcase image rules](showcase/AGENTS.md) | Visual and copy rules for producing and reviewing marketing images |

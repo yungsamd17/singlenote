@@ -110,7 +110,7 @@
     <string name="about_title">Sobre o app</string>
     <string name="about_subtitle">Versão, termos, privacidade e mais</string>
     <string name="about_version_line">v%1$s • %2$d</string>
-    <string name="about_privacy_blurb">O Singlenote é offline-first. Sua nota nunca sai do seu dispositivo — sem contas, sem análises, sem rastreamento. Notas e configurações ficam sem criptografia no armazenamento privado do app.</string>
+    <string name="about_privacy_blurb">O Singlenote é offline-first. Sua nota nunca sai do seu dispositivo; sem contas, sem análises, sem rastreamento. Notas e configurações ficam sem criptografia no armazenamento privado do app. Configurações, Backup e restauração pode salvar uma cópia local.</string>
     <string name="about_license">Licença</string>
     <string name="license_short">Licença MIT</string>
     <string name="license_components_title">Componentes de código aberto</string>
@@ -168,21 +168,16 @@ DADOS COLETADOS
 Nenhum. Sem contas, sem análises, sem anúncios, sem identificadores de rastreamento.
 
 NO SEU DISPOSITIVO
-Sua nota e suas configurações ficam no armazenamento privado do app no seu dispositivo. Elas são armazenadas sem criptografia (banco de dados e preferências em texto simples): qualquer pessoa com acesso ao dispositivo desbloqueado pode lê-las. O backup automático está desativado, então nada é copiado para sua conta Google — desinstalar o app apaga tudo.
+Sua nota e suas configurações ficam no armazenamento privado do app no seu dispositivo. Elas são armazenadas sem criptografia (banco de dados e preferências em texto simples): qualquer pessoa com acesso ao dispositivo desbloqueado pode lê-las. O backup automático está desativado, então nada é copiado para sua conta Google; desinstalar o app apaga tudo.
 
 COPIAR E COMPARTILHAR
-Copiar coloca texto simples na área de transferência do sistema — o sistema pode mostrar uma prévia e ele pode permanecer no histórico do teclado. Compartilhar envia texto simples para o app que você escolher.
+Copiar coloca texto simples na área de transferência do sistema; o sistema pode mostrar uma prévia e ele pode permanecer no histórico do teclado. Compartilhar envia texto simples para o app que você escolher.
 
 PERMISSÕES
 Notificações (opcional): apenas para fixar sua nota e mantê-la visível. Serviço em primeiro plano (apenas com uma nota fixada): mantém a notificação e suas atualizações na tela de bloqueio ativas mesmo em dispositivos que encerram tarefas em segundo plano. Receptor de inicialização: restaura a nota fixada após reiniciar. Sem acesso à localização, câmera ou microfone.
 
 REDE
-A verificação de atualizações contata o GitHub uma vez na inicialização quando "Verificar atualizações ao iniciar" está ativado (padrão), e ao abrir as notas de versão ou tocar em "Verificar atualizações" em Configurações → Atualizações. Você pode desativar a verificação na inicialização lá. Sem contas, sem análises, nada mais é enviado a lugar nenhum.
-
-CONTATO
-Dúvidas: yungsamd@proton.me.
-
-Política completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+A verificação de atualizações contata o GitHub uma vez na inicialização quando "Verificar atualizações ao iniciar" está ativado (padrão), e ao abrir as notas de versão ou tocar em "Verificar atualizações" em Configurações → Atualizações. Você pode desativar a verificação na inicialização lá. Sem contas, sem análises, nada mais é enviado a lugar nenhum.\n\nACESSO A ARQUIVOS E COMPARTILHAMENTO\nBackups e texto compartilhado com o Singlenote são ações opcionais, não permissões do app. O seletor abre apenas o arquivo escolhido; compartilhar com o app não exige acesso aos seus arquivos.\nOs backups permanecem onde você os salva até que você os exclua.</string>
     <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
     <string name="license_kotlin">Kotlin — Apache License 2.0</string>
     <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
@@ -213,7 +208,7 @@ Política completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md]
     <string name="settings_app_font">Fonte do app</string>
     <string name="font_system">Fonte do sistema</string>
     <string name="font_google_flex">Google Sans Flex</string>
-    <string name="settings_font_category">Fonte</string>
+    <string name="settings_font_category">Nota</string>
     <string name="settings_size_category">Tamanho</string>
     <string name="settings_note_notification">Notificação da nota</string>
     <string name="settings_contribute">Contribuir</string>
@@ -287,9 +282,82 @@ Política completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md]
     <string name="diagnostics_save">Salvar em arquivo</string>
     <string name="diagnostics_saved">Diagnóstico salvo</string>
     <string name="diagnostics_save_failed">Não foi possível salvar: %1$s</string>
-    <string name="diagnostics_test_update">Testar aviso de atualização</string>
+    <string name="diagnostics_test_update">Testar atualização</string>
     <string name="diagnostics_copied">Diagnósticos copiados</string>
-    <string name="diagnostics_widget_update">Forçar atualização do widget</string>
+    <string name="diagnostics_widget_update">Atualizar widgets</string>
     <string name="diagnostics_widget_update_requested">Atualização do widget solicitada</string>
     <string name="diagnostics_widget_update_failed">Falha na atualização do widget: %1$s</string>
+    <string name="settings_backup">Backup e restauração</string>
+    <string name="settings_backup_summary">Notas, configurações e widgets</string>
+    <string name="backup_title">Backup e restauração</string>
+    <string name="backup_intro">Os backups são arquivos simples e sem criptografia. Escolha onde salvá-los; nada é enviado.</string>
+    <string name="backup_section_create">Criar um backup</string>
+    <string name="backup_include_active">Nota ativa</string>
+    <string name="backup_include_active_desc">A nota na tela principal</string>
+    <string name="backup_include_archived">Notas arquivadas</string>
+    <string name="backup_include_archived_desc">Todas as notas no arquivo</string>
+    <string name="backup_include_settings">Configurações do app</string>
+    <string name="backup_include_settings_desc">Tema, idioma, notificações e mais</string>
+    <string name="backup_include_widgets">Configurações dos widgets</string>
+    <string name="backup_include_widgets_desc">Aparência e ações dos widgets</string>
+    <string name="backup_create">Criar backup</string>
+    <string name="backup_create_message">Escolha o que incluir e depois onde salvar o arquivo.</string>
+    <string name="backup_section_restore">Restaurar</string>
+    <string name="backup_restore_notes">Restaurar notas</string>
+    <string name="backup_restore_notes_desc">Notas ativas e arquivadas do backup</string>
+    <string name="backup_restore_settings">Restaurar configurações do app</string>
+    <string name="backup_restore_settings_desc">Substitui as configurações neste dispositivo</string>
+    <string name="backup_restore_widgets">Restaurar configurações dos widgets</string>
+    <string name="backup_restore_widgets_desc">Substitui o estilo dos seus widgets</string>
+    <string name="backup_restore_file">Restaurar do arquivo</string>
+    <string name="backup_restore_message">Escolha o que restaurar. As notas podem ser mescladas ou substituídas.</string>
+    <string name="backup_merge">Mesclar notas</string>
+    <string name="backup_merge_desc">Mantenha suas notas e adicione apenas as novas</string>
+    <string name="backup_replace">Substituir notas</string>
+    <string name="backup_replace_desc">Excluir primeiro a nota atual e o arquivo</string>
+    <string name="backup_restore_warning">Se o ícone do app mudar, ele é fechado e reaberto.</string>
+    <string name="backup_restore_action">Restaurar</string>
+    <string name="backup_section_notes">Apenas notas</string>
+    <string name="backup_notes_export">Exportar apenas notas</string>
+    <string name="backup_notes_import">Importar apenas notas</string>
+    <string name="backup_saved">Backup salvo</string>
+    <string name="backup_save_failed">Não foi possível salvar o backup</string>
+    <string name="backup_restored">%1$d notas restauradas; %2$d ignoradas.</string>
+    <string name="backup_restored_settings">Configurações restauradas</string>
+    <string name="backup_restore_failed">Não foi possível restaurar este backup</string>
+    <string name="backup_too_large">O arquivo é grande demais (máximo de %1$d MB).</string>
+    <string name="settings_section_personalization">Personalização</string>
+    <string name="settings_section_data_updates">Dados e atualizações</string>
+    <string name="share_note_label">Salvar como nota</string>
+    <string name="typography_preview">Sua nota de relance\nUma segunda linha mostra o espaçamento.</string>
+    <string name="settings_line_spacing">Espaçamento entre linhas</string>
+    <string name="settings_line_spacing_default">Padrão</string>
+    <string name="settings_line_spacing_compact">Compacto</string>
+    <string name="settings_line_spacing_comfortable">Confortável</string>
+    <string name="font_inter">Inter</string>
+    <string name="font_slab">Roboto Slab</string>
+    <string name="license_inter">Inter — SIL Open Font License 1.1</string>
+    <string name="license_roboto_slab">Roboto Slab — Apache License 2.0</string>
+    <string name="privacy_contact">CONTATO
+Dúvidas: yungsamd@proton.me.
+
+Política completa: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="settings_note_preview">Prévia da nota</string>
+    <string name="font_use_app">Usar a fonte do app</string>
+    <string name="settings_widget_customization">Personalização do widget</string>
+    <string name="widget_customize">Personalizar widget</string>
+    <string name="widget_customize_desc">Aparência e ações de toque</string>
+    <string name="widget_customize_title">Personalização do widget</string>
+    <string name="widget_add_home">Adicionar widget à tela inicial</string>
+    <string name="widget_add_home_desc">Abrir o seletor de widgets do sistema</string>
+    <string name="widget_save">Salvar aparência do widget</string>
+    <string name="widget_added">Widget adicionado</string>
+    <string name="widget_saved">Aparência do widget salva</string>
+    <string name="settings_section_app">App</string>
+    <string name="diagnostics_clear">Limpar registro</string>
+    <string name="diagnostics_cleared">Registro limpo</string>
+    <string name="backup_notes_export_short">JSON com datas ou texto simples</string>
+    <string name="backup_notes_import_short">Adicionar notas de um arquivo do Singlenote</string>
+    <string name="backup_nothing_restored">Nada foi restaurado</string>
+    <string name="brand_bold_prefix">Single</string>
 </resources>

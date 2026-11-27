@@ -3,6 +3,7 @@ package com.yungsamd17.singlenote.util
 import com.yungsamd17.singlenote.data.Note
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -212,5 +213,119 @@ class ArchiveFileTest {
 
         assertTrue(result.accepted.isEmpty())
         assertEquals(2, result.skipped)
+    }
+
+    // Full backups: same versioned-JSON discipline as archives, with sections
+    // for the other stores the app keeps.
+
+    private val snapshot =
+        BackupSnapshot(
+            active = Note(content = "current", createdAt = 10L, updatedAt = 20L),
+            archived = notes,
+            settings =
+                mapOf(
+                    "theme_mode" to "dark",
+                    "pin_current_note" to true,
+                    "text_size" to "huge",
+                    "unknown_key" to "value",
+                ),
+            widgetStyles =
+                mapOf(
+                    "remembered" to "dark",
+                    "remembered.accent" to "blue",
+                    "remembered.titleSize" to 99,
+                    "remembered.opacity" to 150,
+                    "7" to "light",
+                    "7.showTitle" to false,
+                    "junk.key" to "dark",
+                ),
+            languageTag = "de-DE",
+        )
+
+    @Test
+    fun fullBackupRoundTripsNotesSettingsWidgetsAndLanguage() {
+        val parsed = parseBackup(buildBackupJson(snapshot, savedAt = 99L))
+
+        assertEquals("current", parsed.active?.content)
+        assertEquals(Note.STATE_ACTIVE, parsed.active?.state)
+        assertEquals(Note.ACTIVE_SLOT, parsed.active?.activeSlot)
+        assertEquals(notes.map { it.content }, parsed.archived.map { it.content })
+        assertEquals(2, parsed.archived.size)
+        assertEquals("dark", parsed.settings["theme_mode"])
+        assertEquals(true, parsed.settings["pin_current_note"])
+        assertFalse(parsed.settings.containsKey("text_size"))
+        assertFalse(parsed.settings.containsKey("unknown_key"))
+        assertEquals("blue", parsed.widgetStyles["remembered.accent"])
+        assertEquals(24, parsed.widgetStyles["remembered.titleSize"])
+        assertEquals(100, parsed.widgetStyles["remembered.opacity"])
+        assertEquals("light", parsed.widgetStyles["7"])
+        assertEquals(false, parsed.widgetStyles["7.showTitle"])
+        assertFalse(parsed.widgetStyles.containsKey("junk.key"))
+        assertEquals("de-DE", parsed.languageTag)
+    }
+
+    @Test
+    fun aPartialBackupOmitsTheSectionsThatWereNotSelected() {
+        val selection = BackupSelection(activeNote = true, archivedNotes = false, appSettings = false, widgetSettings = false)
+        val root = JSONObject(buildBackupJson(snapshot, selection, savedAt = 99L))
+
+        assertEquals(BACKUP_FORMAT, root.getString("format"))
+        assertEquals(BACKUP_VERSION, root.getInt("version"))
+        assertEquals(99L, root.getLong("savedAt"))
+        assertTrue(root.has("notes"))
+        assertFalse(root.has("settings"))
+        assertFalse(root.has("widget"))
+        assertFalse(root.has("language"))
+        assertFalse(root.getJSONObject("notes").isNull("active"))
+    }
+
+    @Test
+    fun fullBackupRejectsForeignFormatsVersionsAndBrokenJson() {
+        val root = JSONObject(buildBackupJson(snapshot, savedAt = 99L))
+        root.put("format", "singlenote-archive")
+        assertThrows(BackupFormatException::class.java) { parseBackup(root.toString()) }
+
+        root.put("format", BACKUP_FORMAT)
+        root.put("version", BACKUP_VERSION + 1)
+        assertThrows(BackupFormatException::class.java) { parseBackup(root.toString()) }
+
+        assertThrows(BackupFormatException::class.java) { parseBackup("not json") }
+    }
+
+    @Test
+    fun backupFileAcceptsLegacyArchivesAndText() {
+        val legacy = parseBackupFile(buildArchiveJson(notes), now = 42L)
+        assertTrue(legacy is BackupPayload.Notes)
+        assertEquals(2, (legacy as BackupPayload.Notes).notes.size)
+        assertFalse(legacy.plainText)
+
+        val text = parseBackupFile(buildArchiveText(notes), now = 42L) as BackupPayload.Notes
+        assertTrue(text.plainText)
+        assertEquals(42L, text.notes.first().createdAt)
+    }
+
+    @Test
+    fun backupsKeepBundledFontsAndNoteStylePreferences() {
+        val values =
+            mapOf(
+                "font_family" to "app",
+                "app_font" to "inter",
+                "line_spacing" to "comfortable",
+                "font_family_bogus" to "app",
+                "line_spacing_bogus" to "huge",
+            )
+
+        val clean = sanitizeSettings(values)
+
+        assertEquals("app", clean["font_family"])
+        assertEquals("inter", clean["app_font"])
+        assertEquals("comfortable", clean["line_spacing"])
+        assertFalse(clean.containsKey("font_family_bogus"))
+        assertFalse(clean.containsKey("line_spacing_bogus"))
+    }
+
+    @Test
+    fun brokenJsonIsRejectedInsteadOfBeingImportedAsOneTextNote() {
+        assertThrows(Exception::class.java) { parseBackupFile("{broken json", now = 42L) }
     }
 }

@@ -4,9 +4,12 @@ import android.os.Build
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
@@ -23,6 +26,7 @@ interface PreferencesStore {
     val updateChecksEnabled: Flow<Boolean>
     val themeMode: Flow<String>
     val fontFamily: Flow<String>
+    val lineSpacing: Flow<String>
     val textSize: Flow<String>
     val dynamicColors: Flow<Boolean>
     val amoled: Flow<Boolean>
@@ -44,6 +48,8 @@ interface PreferencesStore {
     suspend fun setThemeMode(value: String)
 
     suspend fun setFontFamily(value: String)
+
+    suspend fun setLineSpacing(value: String)
 
     suspend fun setTextSize(value: String)
 
@@ -71,6 +77,34 @@ class NotePreferences private constructor(private val context: Context) : Prefer
     val archiveOrder: Flow<String> = context.settingsDataStore.data.map { it[stringPreferencesKey("archive_order")] ?: "descending" }
     suspend fun setArchiveSort(value: String) { context.settingsDataStore.edit { it[stringPreferencesKey("archive_sort")] = value } }
     suspend fun setArchiveOrder(value: String) { context.settingsDataStore.edit { it[stringPreferencesKey("archive_order")] = value } }
+
+    /**
+     * Raw preferences for a full backup. The values are keyed by their
+     * DataStore key names so the backup format does not depend on the flow
+     * surface, and unknown keys are kept out by the backup sanitizer.
+     */
+    suspend fun snapshot(): Map<String, Any> =
+        context.settingsDataStore.data.first().asMap().mapNotNull { (key, value) ->
+            when (value) {
+                is String, is Boolean, is Int, is Long -> key.name to value
+                else -> null
+            }
+        }.toMap()
+
+    /** Replaces all stored preferences with the values from a backup. */
+    suspend fun restore(values: Map<String, Any>) {
+        context.settingsDataStore.edit { prefs ->
+            prefs.clear()
+            values.forEach { (key, value) ->
+                when (value) {
+                    is Boolean -> prefs[booleanPreferencesKey(key)] = value
+                    is String -> prefs[stringPreferencesKey(key)] = value
+                    is Int -> prefs[intPreferencesKey(key)] = value
+                    is Long -> prefs[longPreferencesKey(key)] = value
+                }
+            }
+        }
+    }
 
     override val dynamicColors: Flow<Boolean> =
         context.settingsDataStore.data.map {
@@ -143,6 +177,8 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         context.settingsDataStore.data.map { it[KEY_THEME] ?: THEME_SYSTEM }
     override val fontFamily: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_FONT_FAMILY] ?: FONT_DEFAULT }
+    override val lineSpacing: Flow<String> =
+        context.settingsDataStore.data.map { it[KEY_LINE_SPACING] ?: LINE_SPACING_DEFAULT }
     override val textSize: Flow<String> =
         context.settingsDataStore.data.map { it[KEY_TEXT_SIZE] ?: SIZE_MEDIUM }
     override val accentColor: Flow<String> =
@@ -174,6 +210,10 @@ class NotePreferences private constructor(private val context: Context) : Prefer
 
     override suspend fun setFontFamily(value: String) {
         context.settingsDataStore.edit { it[KEY_FONT_FAMILY] = value }
+    }
+
+    override suspend fun setLineSpacing(value: String) {
+        context.settingsDataStore.edit { it[KEY_LINE_SPACING] = value }
     }
 
     override suspend fun setTextSize(value: String) {
@@ -220,6 +260,7 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         val KEY_UPDATE_CHECKS = booleanPreferencesKey("update_checks_enabled")
         val KEY_THEME = stringPreferencesKey("theme_mode")
         val KEY_FONT_FAMILY = stringPreferencesKey("font_family")
+        val KEY_LINE_SPACING = stringPreferencesKey("line_spacing")
         val KEY_TEXT_SIZE = stringPreferencesKey("text_size")
         val KEY_ACCENT = stringPreferencesKey("accent_color")
 
@@ -230,6 +271,11 @@ class NotePreferences private constructor(private val context: Context) : Prefer
         const val FONT_DEFAULT = "default"
         const val FONT_MONO = "mono"
         const val FONT_SERIF = "serif"
+        const val FONT_APP = "app"
+
+        const val LINE_SPACING_DEFAULT = "default"
+        const val LINE_SPACING_COMPACT = "compact"
+        const val LINE_SPACING_COMFORTABLE = "comfortable"
 
         const val SIZE_SMALL = "small"
         const val SIZE_MEDIUM = "medium"
@@ -252,7 +298,16 @@ class NotePreferences private constructor(private val context: Context) : Prefer
             supported && (stored ?: (legacyAccent == ACCENT_SYSTEM))
 
         val THEMES = listOf(THEME_SYSTEM, THEME_LIGHT, THEME_DARK)
-        val FONTS = listOf(FONT_DEFAULT, FONT_MONO, FONT_SERIF)
+        // Inter and Roboto Slab are app fonts now; the note font keeps its own
+        // simple choices plus "use app font".
+        val FONTS = listOf(FONT_DEFAULT, FONT_MONO, FONT_SERIF, FONT_APP)
+
+        const val APP_FONT_SYSTEM = "system"
+        const val APP_FONT_FLEX = "flex"
+        const val APP_FONT_INTER = "inter"
+        const val APP_FONT_SLAB = "slab"
+        val APP_FONTS = listOf(APP_FONT_SYSTEM, APP_FONT_FLEX, APP_FONT_INTER, APP_FONT_SLAB)
+        val LINE_SPACINGS = listOf(LINE_SPACING_DEFAULT, LINE_SPACING_COMPACT, LINE_SPACING_COMFORTABLE)
         val SIZES = listOf(SIZE_SMALL, SIZE_MEDIUM, SIZE_LARGE)
         val ACCENTS =
             listOf(

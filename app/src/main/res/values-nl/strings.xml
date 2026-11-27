@@ -110,7 +110,7 @@
     <string name="about_title">Over de app</string>
     <string name="about_subtitle">Versie, voorwaarden, privacy en meer</string>
     <string name="about_version_line">v%1$s • %2$d</string>
-    <string name="about_privacy_blurb">Singlenote werkt offline-first. Je notitie verlaat je apparaat nooit — geen accounts, geen analyses, geen tracking. Notities en instellingen worden onversleuteld opgeslagen in de privéopslag van de app.</string>
+    <string name="about_privacy_blurb">Singlenote werkt offline-first. Je notitie verlaat je apparaat nooit; geen accounts, geen analyses, geen tracking. Notities en instellingen worden onversleuteld opgeslagen in de privéopslag van de app. Instellingen, Back-up en herstel kan een lokale kopie opslaan.</string>
     <string name="about_license">Licentie</string>
     <string name="license_short">MIT-licentie</string>
     <string name="license_components_title">Open-sourcecomponenten</string>
@@ -168,21 +168,16 @@ VERZAMELDE GEGEVENS
 Geen. Geen accounts, geen analyses, geen advertenties, geen tracking-identificatoren.
 
 OP JE APPARAAT
-Je notitie en instellingen blijven in de privéopslag van de app op je apparaat. Ze worden onversleuteld opgeslagen (database en voorkeuren als platte tekst): iedereen met toegang tot je ontgrendelde apparaat kan ze lezen. Automatische back-up staat uit, dus er wordt niets naar je Google-account gekopieerd — als je de app verwijdert, is alles weg.
+Je notitie en instellingen blijven in de privéopslag van de app op je apparaat. Ze worden onversleuteld opgeslagen (database en voorkeuren als platte tekst): iedereen met toegang tot je ontgrendelde apparaat kan ze lezen. Automatische back-up staat uit, dus er wordt niets naar je Google-account gekopieerd; als je de app verwijdert, is alles weg.
 
 KOPIËREN EN DELEN
-Kopiëren zet platte tekst op het klembord van het systeem — het systeem kan een voorbeeld tonen en de tekst kan in de toetsenbordgeschiedenis blijven staan. Delen stuurt platte tekst naar de app die je kiest.
+Kopiëren zet platte tekst op het klembord van het systeem; het systeem kan een voorbeeld tonen en de tekst kan in de toetsenbordgeschiedenis blijven staan. Delen stuurt platte tekst naar de app die je kiest.
 
 MACHTIGINGEN
 Meldingen (optioneel): alleen om je notitie vast te maken zodat die zichtbaar blijft. Voorgrondservice (alleen met een vastgemaakte notitie): houdt de melding en de updates voor het vergrendelscherm actief, ook op apparaten die achtergrondtaken stoppen. Ontvanger bij opstarten: herstelt de vastgemaakte notitie na een herstart. Geen toegang tot locatie, camera of microfoon.
 
 NETWERK
-Bij het controleren op updates wordt eenmaal bij het opstarten contact met GitHub opgenomen als «Bij opstarten controleren op updates» aan staat (standaard), en wanneer je releaseopmerkingen opent of «Controleren op updates» tikt in Instellingen → Updates. Je kunt de controle bij opstarten daar uitzetten. Geen accounts, geen analyses, niets anders wordt ooit ergens heen gestuurd.
-
-CONTACT
-Vragen: yungsamd@proton.me.
-
-Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+Bij het controleren op updates wordt eenmaal bij het opstarten contact met GitHub opgenomen als «Bij opstarten controleren op updates» aan staat (standaard), en wanneer je releaseopmerkingen opent of «Controleren op updates» tikt in Instellingen → Updates. Je kunt de controle bij opstarten daar uitzetten. Geen accounts, geen analyses, niets anders wordt ooit ergens heen gestuurd.\n\nBESTANDS- EN DEELTOEGANG\nBack-ups en tekst die je met Singlenote deelt zijn optionele acties, geen app-machtigingen. De bestandskiezer opent alleen het bestand dat jij kiest; delen met de app vereist geen toegang tot je bestanden.\nBack-ups blijven op de gekozen locatie tot je ze verwijdert.</string>
     <string name="license_mit_body">MIT License\n\nCopyright (c) 2026 Sam (yungsamd17)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</string>
     <string name="license_kotlin">Kotlin — Apache License 2.0</string>
     <string name="license_compose">Jetpack Compose (Material 3) — Apache License 2.0</string>
@@ -213,7 +208,7 @@ Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY
     <string name="settings_app_font">App-lettertype</string>
     <string name="font_system">Systeemlettertype</string>
     <string name="font_google_flex">Google Sans Flex</string>
-    <string name="settings_font_category">Lettertype</string>
+    <string name="settings_font_category">Notitie</string>
     <string name="settings_size_category">Grootte</string>
     <string name="settings_note_notification">Notitiemelding</string>
     <string name="settings_contribute">Bijdragen</string>
@@ -287,9 +282,82 @@ Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY
     <string name="diagnostics_save">Opslaan in bestand</string>
     <string name="diagnostics_saved">Diagnose opgeslagen</string>
     <string name="diagnostics_save_failed">Kan niet opslaan: %1$s</string>
-    <string name="diagnostics_test_update">Updatemelding testen</string>
+    <string name="diagnostics_test_update">Update testen</string>
     <string name="diagnostics_copied">Diagnostiek gekopieerd</string>
-    <string name="diagnostics_widget_update">Widget-update forceren</string>
+    <string name="diagnostics_widget_update">Widgets verversen</string>
     <string name="diagnostics_widget_update_requested">Widget-update aangevraagd</string>
     <string name="diagnostics_widget_update_failed">Widget-update mislukt: %1$s</string>
+    <string name="settings_backup">Back-up en herstel</string>
+    <string name="settings_backup_summary">Notities, instellingen en widgets</string>
+    <string name="backup_title">Back-up en herstel</string>
+    <string name="backup_intro">Back-ups zijn gewone, onversleutelde bestanden. Jij kiest waar je ze opslaat; er wordt niets geüpload.</string>
+    <string name="backup_section_create">Back-up maken</string>
+    <string name="backup_include_active">Actieve notitie</string>
+    <string name="backup_include_active_desc">De notitie op het hoofdscherm</string>
+    <string name="backup_include_archived">Gearchiveerde notities</string>
+    <string name="backup_include_archived_desc">Alle notities in het archief</string>
+    <string name="backup_include_settings">App-instellingen</string>
+    <string name="backup_include_settings_desc">Thema, taal, meldingen en meer</string>
+    <string name="backup_include_widgets">Widget-instellingen</string>
+    <string name="backup_include_widgets_desc">Uiterlijk en tikacties van widgets</string>
+    <string name="backup_create">Back-up maken</string>
+    <string name="backup_create_message">Kies wat je wilt opnemen en vervolgens waar je het bestand wilt opslaan.</string>
+    <string name="backup_section_restore">Herstellen</string>
+    <string name="backup_restore_notes">Notities herstellen</string>
+    <string name="backup_restore_notes_desc">Actieve en gearchiveerde notities uit de back-up</string>
+    <string name="backup_restore_settings">App-instellingen herstellen</string>
+    <string name="backup_restore_settings_desc">Vervangt de instellingen op dit apparaat</string>
+    <string name="backup_restore_widgets">Widget-instellingen herstellen</string>
+    <string name="backup_restore_widgets_desc">Vervangt de stijl van je widgets</string>
+    <string name="backup_restore_file">Herstellen uit bestand</string>
+    <string name="backup_restore_message">Kies wat je terugzet. Notities kunnen worden samengevoegd of vervangen.</string>
+    <string name="backup_merge">Notities samenvoegen</string>
+    <string name="backup_merge_desc">Je notities houden en alleen nieuwe toevoegen</string>
+    <string name="backup_replace">Notities vervangen</string>
+    <string name="backup_replace_desc">Huidige notitie en archief eerst verwijderen</string>
+    <string name="backup_restore_warning">Als het icoon verandert, sluit de app en wordt hij opnieuw geopend.</string>
+    <string name="backup_restore_action">Herstellen</string>
+    <string name="backup_section_notes">Alleen notities</string>
+    <string name="backup_notes_export">Alleen notities exporteren</string>
+    <string name="backup_notes_import">Alleen notities importeren</string>
+    <string name="backup_saved">Back-up opgeslagen</string>
+    <string name="backup_save_failed">Back-up kon niet worden opgeslagen</string>
+    <string name="backup_restored">%1$d notities hersteld; %2$d overgeslagen.</string>
+    <string name="backup_restored_settings">Instellingen hersteld</string>
+    <string name="backup_restore_failed">Deze back-up kon niet worden hersteld</string>
+    <string name="backup_too_large">Het bestand is te groot (maximaal %1$d MB).</string>
+    <string name="settings_section_personalization">Personalisatie</string>
+    <string name="settings_section_data_updates">Gegevens en updates</string>
+    <string name="share_note_label">Opslaan als notitie</string>
+    <string name="typography_preview">Je notitie in één oogopslag\nEen tweede regel toont de regelafstand.</string>
+    <string name="settings_line_spacing">Regelafstand</string>
+    <string name="settings_line_spacing_default">Standaard</string>
+    <string name="settings_line_spacing_compact">Compact</string>
+    <string name="settings_line_spacing_comfortable">Comfortabel</string>
+    <string name="font_inter">Inter</string>
+    <string name="font_slab">Roboto Slab</string>
+    <string name="license_inter">Inter — SIL Open Font License 1.1</string>
+    <string name="license_roboto_slab">Roboto Slab — Apache License 2.0</string>
+    <string name="privacy_contact">CONTACT
+Vragen: yungsamd@proton.me.
+
+Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
+    <string name="settings_note_preview">Notitievoorbeeld</string>
+    <string name="font_use_app">App-lettertype gebruiken</string>
+    <string name="settings_widget_customization">Widget-aanpassing</string>
+    <string name="widget_customize">Widget aanpassen</string>
+    <string name="widget_customize_desc">Uiterlijk en tikacties</string>
+    <string name="widget_customize_title">Widget aanpassen</string>
+    <string name="widget_add_home">Widget aan het startscherm toevoegen</string>
+    <string name="widget_add_home_desc">De systeemwidgetkiezer openen</string>
+    <string name="widget_save">Widget-uiterlijk opslaan</string>
+    <string name="widget_added">Widget toegevoegd</string>
+    <string name="widget_saved">Widget-uiterlijk opgeslagen</string>
+    <string name="settings_section_app">App</string>
+    <string name="diagnostics_clear">Logboek wissen</string>
+    <string name="diagnostics_cleared">Logboek gewist</string>
+    <string name="backup_notes_export_short">JSON met datums of platte tekst</string>
+    <string name="backup_notes_import_short">Notities uit een Singlenote-bestand toevoegen</string>
+    <string name="backup_nothing_restored">Niets hersteld</string>
+    <string name="brand_bold_prefix">Single</string>
 </resources>

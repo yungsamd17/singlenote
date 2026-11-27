@@ -231,6 +231,22 @@ class NoteDaoTest {
         assertTrue(dao.observeArchived().first().isEmpty())
     }
 
+    @Test
+    fun replaceAllNotesKeepsOneActiveRowAndDiscardsOldIds() = runBlocking {
+        dao.insert(note("old active"))
+        dao.insert(note("old archived", state = Note.STATE_ARCHIVED))
+
+        dao.replaceAllNotes(
+            Note(content = "new active", createdAt = 3, updatedAt = 4),
+            listOf(Note(content = "new archived", createdAt = 3, updatedAt = 4, state = Note.STATE_ARCHIVED)),
+        )
+
+        assertEquals("new active", dao.getActive()?.content)
+        assertEquals(listOf("new archived"), dao.observeArchived().first().map { it.content })
+        assertEquals(1, dao.observeArchived().first().size)
+        assertTrue(dao.getById(1) == null)
+    }
+
     private fun note(content: String, state: Int = Note.STATE_ACTIVE) = Note(
         content = content,
         createdAt = 1,

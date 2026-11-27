@@ -59,6 +59,22 @@ object Diagnostics {
         append(EVENT_FILE, "E/$tag ${error.javaClass.name}: ${error.message}\n${stackTrace(error)}")
     }
 
+    /** Manually clears both recorded logs and the logcat tail; never automatic. */
+    fun clear(context: Context) {
+        File(context.applicationContext.filesDir, EVENT_FILE).delete()
+        File(context.applicationContext.filesDir, CRASH_FILE).delete()
+        // The report also embeds a logcat tail, which would otherwise keep
+        // showing the very crash the user just cleared.
+        try {
+            ProcessBuilder("logcat", "-c")
+                .redirectErrorStream(true)
+                .start()
+                .waitFor(2, TimeUnit.SECONDS)
+        } catch (_: Throwable) {
+            // Some ROMs forbid clearing logcat; our own logs are still cleared.
+        }
+    }
+
     /**
      * Builds the text the diagnostics dialog shows: build identity, widget state,
      * the recorded event log, the last crash, and this app's own logcat tail.

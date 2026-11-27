@@ -11,6 +11,11 @@ project follows [Semantic Versioning](https://semver.org/).
 - **Launcher shortcuts.** Long-press the app icon for **New note**, **Archive** and **Settings**. New note archives the note on screen (never deletes it) and puts the cursor in an empty editor, so the Undo bar still offers it back.
 - **Plain-text archive import.** The archive already exports a readable `.txt` backup; it can now be imported back. Text notes get the current time as their archive time; JSON still keeps the original timestamps.
 - **Duplicate imports are skipped.** Importing the same backup again no longer appends the notes twice: existing notes are matched by content and creation time (by content alone for text backups), and the snackbar tells you how many were added and how many were skipped.
+- **Full app backup and restore.** Settings → Backup & restore can save the active note, archive, app settings, widget styles and language to a versioned JSON file, and restore them with a Merge or Replace choice. Notes-only JSON/text export and import moved here from the archive menu, and the Privacy screen explains where backup files live.
+- **Save as note from the share sheet.** Select text or a link anywhere and share it to Singlenote; it becomes a new note, with the current note archived first just like New note from the tile or notification.
+- **Richer typography.** The app font now includes bundled Inter and Roboto Slab. Font type offers Default, Mono, Serif and **Use app font**, alongside three line spacings and a live **Note preview** card. Font changes refresh the widget right away, and the note font is used by the editor and archive too.
+- **Widget customization in Settings.** Appearance now links to an in-app customization screen with a live widget preview, the same style options, an add-to-home-screen card and a save FAB that appears only after a change.
+- **Diagnostics log clearing.** The hidden diagnostics dialog has a manual **Clear log** action and a tidier layout.
 
 ### Fixed
 
@@ -19,6 +24,9 @@ project follows [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - **Updates is grouped into two sections.** The launch check and manual check sit under **Update checks**; the Changelog row gets its own **Version history** section with an accent-colored heading.
+- **Import and export moved out of the archive.** The archive more menu now links to Backup & restore, where all note and settings files are managed.
+- **Settings and typography sections.** The settings hub is grouped into Personalization, Data & updates and About; Typography has App and Note sections around a live preview. The wordmark uses the system font so "Single" stays bold with every app font.
+- **Privacy copy updated.** File backups and share-sheet imports are described as optional actions, separate from app permissions.
 
 ## [1.0.2] - 2026-11-25
 

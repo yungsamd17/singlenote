@@ -25,8 +25,8 @@ at the bottom records what shipped and where. The 1.0 gate lives in
 
 Target SDK 36 landed (`compileSdk`/`targetSdk` 36). Portrait remains on phones for
 1.0.0; Android 16 ignores the lock at 600 dp and wider, so tablet/foldable rotation
-is a documented limitation. Full backup/restore is deferred by decision. Docs were
-reconciled with v1.0.0 on 2026-11-13.
+is a documented limitation. Full backup/restore has since shipped as a user-created
+file in Settings → Backup & restore. Docs were reconciled with v1.0.0 on 2026-11-13.
 
 ## Engineering follow-ups
 
@@ -81,10 +81,11 @@ reconciled with v1.0.0 on 2026-11-13.
 
 ## Post-1.0.0 (decided 2026-11-11)
 
-- [ ] **Full backup/restore** — the active note, preferences, widget styles and
-  accent are not exportable; `allowBackup="false"` makes uninstall irreversible.
-  The archive JSON export stays the only backup in 1.0.0. Revisit with dedupe and
-  file-size limits.
+- [x] **Full backup/restore** — shipped in Settings → Backup & restore: a versioned
+  `singlenote-backup` JSON file with selectable categories (active note, archive,
+  app settings, widget styles, language), Merge/Replace restore, notes-only
+  JSON/text import and export, deduplication and a 10 MB file cap.
+  `allowBackup="false"` still keeps plaintext data out of cloud backup.
 - [ ] **Landscape / tablets / foldables** — full layouts for 600 dp and wider;
   Android 16 already ignores the portrait lock there. Revisit the lock after the
   layouts pass the QA matrix.
@@ -106,8 +107,8 @@ trade-off:
   (`notify/PinNotification.kt:27-51,107-110`).
 - **`allowBackup="false"` stays** — plaintext DB/prefs must not go to Drive;
   backup is an explicit user export instead.
-- **Full backup/restore stays out of 1.0.0** — archive export is the only backup
-  for this release; the README and plan say so plainly.
+- **Explicit backup instead of cloud backup** — `allowBackup="false"` still holds;
+  the full backup ships as a user-created file in Settings → Backup & restore.
 - **Portrait lock stays for 1.0.0** — a deliberate scope decision, not a design
   choice; phones stay portrait, while Android 16 ignores the lock at 600 dp and
   wider (documented). Full layouts are post-1.0.0.

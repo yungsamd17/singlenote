@@ -8,7 +8,7 @@ You may use, copy, modify, merge, publish and distribute the app under the terms
 
 ## Your notes
 
-Your note never leaves your device. There are no accounts, no analytics and no tracking.
+Your note never leaves your device on its own. There are no accounts, no analytics and no tracking. Text you share into Singlenote through the system share sheet becomes a new note on your device. You can explicitly export a backup to a file you choose; what happens to that file, including any synchronization by your document provider, is your responsibility.
 
 ## Liability
 
