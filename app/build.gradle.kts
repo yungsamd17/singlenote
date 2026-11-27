@@ -155,6 +155,7 @@ kover {
                     "com.yungsamd17.singlenote.ui.NoteViewModel*",
                     "com.yungsamd17.singlenote.ui.ArchiveViewModel*",
                     "com.yungsamd17.singlenote.ui.SettingsViewModel*",
+                    "com.yungsamd17.singlenote.ui.BackupViewModel*",
                 )
             }
             excludes {
@@ -162,6 +163,7 @@ kover {
                     // Room generates this from the DAO: it is exercised
                     // through the DAO, not line by line. The trailing "*"
                     // also catches the inner classes ("NoteDao_Impl$1").
+                    "com.yungsamd17.singlenote.data.BackupRepository*",
                     "com.yungsamd17.singlenote.data.*_Impl*",
                     // Android components: they need a device, not a JVM test.
                     "com.yungsamd17.singlenote.notify.PinNotification*",

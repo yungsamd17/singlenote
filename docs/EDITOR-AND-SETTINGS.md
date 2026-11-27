@@ -19,7 +19,7 @@ changing layout; early focus clearing can change the keyboard layout mid-dismiss
 
 ## Settings layout and scrolling
 
-The hub links to Appearance, Typography, Language, Notifications and About. Each
+The hub is grouped into Personalization (Appearance, Typography, Language, Notifications), Data & updates (Backup & restore, then Updates) and About (About app, last). Each
 page uses a large top bar. A page whose complete content fits below the bar does
 not scroll. Overflowing pages scroll under the pinned bar, which never collapses
 or hides; increasing the viewport enough to fit the page leaves the bar unchanged.
@@ -33,10 +33,11 @@ Switch cards toggle across their full row; disabled controls are dimmed and iner
 
 | Page | Controls and behavior |
 |---|---|
-| Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, and default, preset-accent, or wallpaper-accent launcher icon on Android 12+ |
-| Typography | Bundled Google Sans Flex or system app font; existing default/mono/serif note style and text sizes |
+| Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, launcher icon on Android 12+, and a Widget customization section linking to `settings/widget`: live preview, the same widget style rows, an add-to-home-screen card and a save FAB shown only when the style is dirty. Changing the note or app font refreshes widgets immediately |
+| Typography | Note preview card; app font (system, Google Sans Flex, Inter, Roboto Slab); font type (default/mono/serif/use app font), text size and line spacing in one section. The chosen note font is used by the editor, archive and widget |
 | Language | Translation contribution link; System plus English, then the rest alphabetically by their English name (Deutsch, Español, Français, Italiano, Nederlands, Polski, Português (Brasil), Русский, Slovenčina, Türkçe) with Chinese (Simplified) last, each row with a round region badge, the English name on top of the native one and a check mark in a light accent tint in the badge of the selected row. The hub row names the language in use: "System (English)" while the app follows the device, the language name when one is picked explicitly. Picking "Your device language" always takes effect, even when the device already runs that language |
 | Notifications | Pinned notification and lock-screen content; lock-screen switch is disabled when notifications are off. The pinned notification carries an **Open** and a **New note** action; the quick capture archives the note on screen (never deletes it) and opens an empty editor with the cursor in it. A pinned note stays pinned: the new note takes over the notification |
+| Backup & restore | Toggles for what to include (active note, archive, app settings, widget settings) and what to restore; create a versioned `singlenote-backup` JSON file through the document picker; restore with a Merge/Replace choice; notes-only JSON/text export and import retained for compatibility. Import files are size-capped and notes are deduplicated before writing. The Privacy screen carries the matching file-storage notice |
 | About | Accent brand/version/update card, app description, legal links, project/support links, and Changelog last |
 
 Dynamic colors disable manual accent selection while active. Turning them off
@@ -61,9 +62,9 @@ ID and timestamps; a stale Undo cannot overwrite a newer active note.
 
 Archive cards show relative archive or edit times and support persisted sort
 choices. The search filters the cards as you type; clearing or closing it fades
-the filtered-out cards back in instead of popping them onto the screen. JSON
-import/export and plain-text export are described in
-[ARCHIVE.md](ARCHIVE.md).
+the filtered-out cards back in instead of popping them onto the screen. The more
+menu links to Backup & restore, where notes-only JSON/text import and export live;
+the format is described in [ARCHIVE.md](ARCHIVE.md).
 
 App snackbars use rounded pill styling and a slightly lighter tonal action
 button. Undo is offered for reversible note operations. The About update snackbar
@@ -74,7 +75,9 @@ uses the same styling and keeps its Download action.
 Widget appearance controls share the segmented card style. Each widget has its
 own saved theme/accent, note/title sizes, title visibility, opacity and tap action.
 The settings of the last widget are remembered as well, so removing a widget and
-adding it again starts with the same settings instead of the defaults.
+adding it again starts with the same settings instead of the defaults. A full
+backup includes widget styles; restoring them writes the remembered settings to
+the widgets currently on the home screen.
 
 Long widget notes scroll inside the card with no visible scroll indicator. Tap
 anywhere on the card, including blank space, to run its selected action. The

@@ -136,6 +136,16 @@ object AppLanguage {
         }
     }
 
+    /**
+     * Applies a language restored from a backup. Unlike [setLanguage], this
+     * skips the snapshot crossfade: a restore is a bulk write, not a tap on a
+     * language row. The stored tag stays the source of truth for the picker.
+     */
+    fun restore(context: Context, languageTag: String) {
+        preferences(context).edit().putString(LANGUAGE_KEY, languageTag).apply()
+        applyLanguage(context, languageTag)
+    }
+
     /** Applies the saved choice on Android 12 and earlier, where app locales are not platform-managed. */
     fun wrap(context: Context): Context {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return context

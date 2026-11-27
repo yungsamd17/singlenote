@@ -73,11 +73,30 @@ class WidgetStyleStoreTest {
         assertEquals(8, options.titleSize)
         assertEquals(0, options.opacity)
     }
+
+    @Test
+    fun snapshotAndRestoreReplaceAllWidgetSettings() {
+        WidgetStyleStore.set(storage, 1, WidgetOptions(theme = "dark", accent = "blue"))
+        val snapshot = WidgetStyleStore.snapshot(storage)
+        assertEquals("dark", snapshot["1"])
+        assertEquals("blue", snapshot["1.accent"])
+        assertEquals("dark", snapshot["remembered"])
+
+        WidgetStyleStore.restore(storage, mapOf("9" to "light", "9.opacity" to 55))
+
+        assertFalse(WidgetStyleStore.exists(storage, 1))
+        assertEquals(
+            WidgetOptions(theme = "light", opacity = 55),
+            WidgetStyleStore.get(storage, 9),
+        )
+    }
 }
 
 /** The widget settings in memory, the way the shared preferences hold them. */
 private class FakeWidgetStyleStorage : WidgetStyleStorage {
     val values = mutableMapOf<String, Any>()
+
+    override fun all(): Map<String, Any> = values.toMap()
 
     override fun contains(key: String): Boolean = values.containsKey(key)
 

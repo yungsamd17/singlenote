@@ -110,6 +110,21 @@ abstract class NoteDao {
         notes.forEach { insert(it.copy(id = 0, state = Note.STATE_ARCHIVED, activeSlot = null)) }
     }
 
+    /**
+     * Restores a full backup in one transaction: the old active row is removed
+     * before the new one is inserted so the unique activeSlot index never sees
+     * two ACTIVE rows. Imported ids are discarded, like in [importArchived].
+     */
+    @Transaction
+    open suspend fun replaceAllNotes(active: Note?, archived: List<Note>) {
+        deleteArchived()
+        getActive()?.let { deleteById(it.id) }
+        if (active != null) {
+            insert(active.copy(id = 0, state = Note.STATE_ACTIVE, activeSlot = Note.ACTIVE_SLOT))
+        }
+        archived.forEach { insert(it.copy(id = 0, state = Note.STATE_ARCHIVED, activeSlot = null)) }
+    }
+
     @Transaction
     open suspend fun deleteArchivedNote(noteId: Long) {
         // A captured archive deletion may commit after an Undo has restored this row.

@@ -60,6 +60,12 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
     val fontFamily: StateFlow<String> = store.fontFamily
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
 
+    val appFont: StateFlow<String> = store.appFont
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "system")
+
+    val lineSpacing: StateFlow<String> = store.lineSpacing
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "default")
+
     val textSize: StateFlow<String> = store.textSize
         .stateIn(viewModelScope, SharingStarted.Eagerly, SIZE_MEDIUM)
 
@@ -98,6 +104,7 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
             // DataStore/Room first emissions are the stored truth (the
             // StateFlow defaults above are only a pre-load stand-in).
             combine(store.textSize, store.fontFamily) { _, _ -> Unit }.first()
+            store.lineSpacing.first()
             _ready.value = true
         }
     }
@@ -161,10 +168,17 @@ class NoteViewModel(private val store: NoteStore) : ViewModel() {
      *
      * A pinned note stays pinned: the new note takes its place.
      */
-    fun quickCapture(): Job {
+    fun quickCapture(sharedText: String? = null): Job {
         saveJob?.cancel()
         return viewModelScope.launch {
             if (_text.value.isNotBlank()) archiveNow(keepPinned = true) else clearEmptyNote()
+            // The system share sheet hands us the selected text once. Put it
+            // straight into the new note and persist it before the editor can
+            // debounce or be navigated away from.
+            if (!sharedText.isNullOrBlank()) {
+                onTextChange(sharedText)
+                flushSaveAndAwait()
+            }
         }
     }
 

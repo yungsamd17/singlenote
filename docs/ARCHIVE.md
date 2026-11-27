@@ -2,7 +2,8 @@
 
 The archive holds notes moved out of the main editor. Open it from the editor's
 archive button. Each card shows the complete note, its time, and Restore and
-Delete actions. The more menu contains sorting, import, export, and Clear archive.
+Delete actions. The more menu contains sorting, a link to Backup & restore, and
+Clear archive. Notes-only import and export moved to Settings → Backup & restore.
 
 ## Timestamps and sorting
 
@@ -43,7 +44,7 @@ it is not a backup or durable history.
 
 ## Export and import
 
-Open the archive more menu and choose **Export notes**:
+Open Settings → Backup & restore and choose **Export notes only**:
 
 - **JSON** exports archived notes in Singlenote's versioned format. Each entry
   includes the full content, first line as `title`, creation/update times, and
@@ -53,9 +54,9 @@ Open the archive more menu and choose **Export notes**:
   timestamps or structured title metadata; on import those notes get the
   current time as their creation, update and archive time.
 
-Use Android's document picker to choose where to save the file. **Import notes**
-accepts both Singlenote formats — JSON and plain text — and adds the notes to
-the archive with new database IDs. It does not replace the current archive. Save
+Use Android's document picker to choose where to save the file. **Import notes
+only** accepts both Singlenote formats — JSON and plain text — and adds the notes
+to the archive with new database IDs. It does not replace the current archive. Save
 a copy of any important notes before testing import or delete behavior.
 
 Both formats live in `util/ArchiveFile.kt` (`buildArchiveJson` /
@@ -71,10 +72,14 @@ notes match on content **and** creation time, text notes on content alone
 are skipped too. The snackbar reports how many notes were added and how many
 were skipped, so importing the same backup twice is now a no-op the second time.
 
-These exports include **archived notes only**: they do not include the active
-note, app settings, widgets, or notification preferences. Full app backup/restore
-is planned for after 1.0.0. Export files are readable, unencrypted files; keep them in a
-location you trust. The app does not upload them for you.
+These notes-only exports include **archived notes only**: they do not include the
+active note, app settings, widgets, or notification preferences. For all of
+those, use **Backup & restore** in Settings: it writes a versioned
+`singlenote-backup` JSON file with the categories you select (active note,
+archive, app settings, widget styles, language) and can restore them with a
+merge or replace choice. The file picker also accepts the older notes-only
+archives described here. Export files are readable, unencrypted files; keep them
+in a location you trust. The app does not upload them for you.
 
 See [BUILDING.md](BUILDING.md) for preview builds and device verification, and
 [V1.0.0-PLAN.md](V1.0.0-PLAN.md) for the broader backup/restore goal.

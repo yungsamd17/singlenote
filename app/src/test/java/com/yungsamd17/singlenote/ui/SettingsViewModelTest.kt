@@ -39,6 +39,7 @@ class SettingsViewModelTest {
         override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
+        override val lineSpacing = MutableStateFlow("default")
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
         override val dynamicColors = MutableStateFlow(false)
         override val amoled = MutableStateFlow(false)
@@ -58,6 +59,7 @@ class SettingsViewModelTest {
         override suspend fun setUpdateChecksEnabled(value: Boolean) { updateChecksEnabled.value = value }
         override suspend fun setThemeMode(value: String) { themeMode.value = value }
         override suspend fun setFontFamily(value: String) { fontFamily.value = value }
+        override suspend fun setLineSpacing(value: String) { lineSpacing.value = value }
         override suspend fun setTextSize(value: String) { textSize.value = value }
         override suspend fun setDynamicColors(value: Boolean) { dynamicColors.value = value }
         override suspend fun setAmoled(value: Boolean) { amoled.value = value }
@@ -150,6 +152,17 @@ class SettingsViewModelTest {
         assertTrue(store.monochrome.value)
         assertEquals("mono", store.appFont.value)
         assertEquals("dynamic", store.appIcon.value)
+    }
+
+    @Test
+    fun noteStyleSettersReachTheStore() = runTest {
+        installMain()
+        val vm = SettingsViewModel(store)
+
+        vm.setLineSpacing("comfortable")
+        advanceUntilIdle()
+
+        assertEquals("comfortable", store.lineSpacing.value)
     }
 
     @Test

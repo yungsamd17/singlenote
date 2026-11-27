@@ -112,6 +112,7 @@ class NoteRepositoryTest {
         override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
+        override val lineSpacing = MutableStateFlow("default")
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
         override val accentColor = MutableStateFlow(ACCENT_DEFAULT)
 
@@ -141,6 +142,10 @@ class NoteRepositoryTest {
 
         override suspend fun setFontFamily(value: String) {
             fontFamily.value = value
+        }
+
+        override suspend fun setLineSpacing(value: String) {
+            lineSpacing.value = value
         }
 
         override suspend fun setTextSize(value: String) {
@@ -717,5 +722,52 @@ class NoteRepositoryTest {
         advanceUntilIdle()
 
         assertFalse(prefs.updateChecksEnabled.value)
+    }
+
+    @Test
+    fun fontChangesBroadcastSoWidgetsRefresh() = runTest(UnconfinedTestDispatcher()) {
+        var broadcasts = 0
+        val repo = NoteRepository(FakeDao(), FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
+
+        repo.setFontFamily("mono")
+        repo.setAppFont("inter")
+        advanceUntilIdle()
+
+        assertEquals(2, broadcasts)
+    }
+
+    @Test
+    fun replaceAllNotes_swapsBothSetsAndBroadcastsOnce() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        var broadcasts = 0
+        val repo = NoteRepository(dao, FakePrefs(), { broadcasts++ }, { 10_000L }, backgroundScope, 0L)
+        repo.saveActive("old")
+        repo.importArchived(listOf(Note(content = "old archived", createdAt = 1, updatedAt = 1, state = Note.STATE_ARCHIVED)))
+        advanceUntilIdle()
+        broadcasts = 0
+
+        repo.replaceAllNotes(
+            Note(content = "new", createdAt = 2, updatedAt = 2),
+            listOf(Note(content = "new archived", createdAt = 2, updatedAt = 2, state = Note.STATE_ARCHIVED)),
+        )
+        advanceUntilIdle()
+
+        assertEquals("new", dao.getActive()?.content)
+        assertEquals(listOf("new archived"), dao.observeArchived().first().map { it.content })
+        assertEquals(1, dao.activeCount())
+        assertEquals(1, broadcasts)
+    }
+
+    @Test
+    fun restoreActiveFromBackup_keepsASingleActiveRow() = runTest(UnconfinedTestDispatcher()) {
+        val dao = FakeDao()
+        val repo = NoteRepository(dao, FakePrefs(), {}, { 10_000L }, backgroundScope, 0L)
+        repo.saveActive("in progress")
+        advanceUntilIdle()
+
+        repo.restoreActiveFromBackup(Note(content = "restored", createdAt = 2, updatedAt = 2))
+
+        assertEquals("restored", dao.getActive()?.content)
+        assertEquals(1, dao.activeCount())
     }
 }

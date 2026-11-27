@@ -46,6 +46,7 @@ class NoteViewModelTest {
         override val updateChecksEnabled = MutableStateFlow(true)
         override val themeMode = MutableStateFlow(THEME_SYSTEM)
         override val fontFamily = MutableStateFlow(FONT_DEFAULT)
+        override val lineSpacing = MutableStateFlow("default")
         override val textSize = MutableStateFlow(SIZE_MEDIUM)
         override val accentColor = MutableStateFlow(ACCENT_DEFAULT)
 
@@ -98,6 +99,7 @@ class NoteViewModelTest {
 
         override suspend fun setThemeMode(value: String) {}
         override suspend fun setFontFamily(value: String) {}
+        override suspend fun setLineSpacing(value: String) {}
         override suspend fun setTextSize(value: String) {}
         override suspend fun setAccentColor(value: String) {}
     }
@@ -197,6 +199,26 @@ class NoteViewModelTest {
         assertFalse(store.archiveRequested)
         assertTrue(store.deleteRequested)
         assertEquals("", vm.text.value)
+    }
+
+    @Test
+    fun quickCaptureWithSharedText_archivesTheOldNoteAndSavesTheSharedOne() = runTest {
+        installMain()
+        val store = FakeNoteStore()
+        val vm = NoteViewModel(store)
+        advanceUntilIdle()
+
+        vm.onTextChange("old note")
+        advanceUntilIdle()
+        vm.quickCapture("https://example.com/article")
+        advanceUntilIdle()
+
+        // Same quick-capture semantics, but the new note already holds the
+        // text handed over by the system share sheet.
+        assertTrue(store.archiveRequested)
+        assertFalse(store.deleteRequested)
+        assertEquals("https://example.com/article", store.savedContent)
+        assertEquals("https://example.com/article", vm.text.value)
     }
 
     @Test

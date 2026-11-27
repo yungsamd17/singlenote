@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.yungsamd17.singlenote.data.NoteStore
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENT_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONT_DEFAULT
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.LINE_SPACING_DEFAULT
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZE_MEDIUM
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEME_SYSTEM
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,9 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     val fontFamily: StateFlow<String> = store.fontFamily
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FONT_DEFAULT)
+
+    val lineSpacing: StateFlow<String> = store.lineSpacing
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LINE_SPACING_DEFAULT)
 
     val textSize: StateFlow<String> = store.textSize
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SIZE_MEDIUM)
@@ -116,6 +120,7 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
             ) { _, _, _, _, _ -> Unit }.first()
             // Separate first: the typed combine overloads stop at five
             // flows, so the new pref is awaited on its own.
+            store.lineSpacing.first()
             store.lockscreenVisible.first()
             store.notificationTitleFirstLine.first()
             store.updateChecksEnabled.first()
@@ -134,6 +139,10 @@ class SettingsViewModel(private val store: NoteStore) : ViewModel() {
 
     fun setFontFamily(value: String) {
         viewModelScope.launch { store.setFontFamily(value) }
+    }
+
+    fun setLineSpacing(value: String) {
+        viewModelScope.launch { store.setLineSpacing(value) }
     }
 
     fun setTextSize(value: String) {

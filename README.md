@@ -28,10 +28,13 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 - **Pinned notification** — keeps your note visible in the notification shade
 - **Quick settings tile** — open the editor for a new note, archiving the current note first
 - **Launcher shortcuts** — long-press the app icon for a new note, the archive or settings
-- **Archive** — restore, delete, sort, and export notes, or import a Singlenote JSON or plain-text archive
+- **Archive** — restore, delete and sort notes
+- **Backup & restore** — full backups of the active note, archive, app settings, widget styles and language, plus notes-only JSON/text export and import, in Settings → Backup & restore
 - **Share & copy** — straight from the top bar, with confirmation
+- **Save as note** — a share-sheet target: selected text or a link from any app becomes a new note, archiving the current one first
 - **Theming** — light / dark / system, accent palettes, dynamic colors and AMOLED
-- **Typography** — system or bundled Google Sans Flex app font, default / monospace / serif note styles, three text sizes
+- **Typography** — app font (system, Google Sans Flex, Inter or Roboto Slab); note font type including "Use app font", three line spacings and three text sizes, with a live note preview
+- **Widget customization** — adjust the widget preview, appearance and tap actions from Settings → Appearance, without adding or long-pressing a widget
 - **Changelog & updates** — per-version release notes and update checks in About
 - **Languages** — English, Slovenčina, Deutsch, Español, Français, Italiano,
   Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文. Follows
@@ -42,6 +45,8 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
   Permissions: notifications and, while a note is pinned, a foreground service
   (plus boot receiver) to keep the pin accurate; internet for release notes and
   update checks, with the launch-time check switchable off in Settings → Updates
+  Backups are unencrypted files you save through the system picker; no storage
+  permission is requested, and nothing is uploaded.
 
 ## Screenshots
 
@@ -68,7 +73,7 @@ Grab the latest APK from [Releases](https://github.com/yungsamd17/singlenote/rel
 
 ## Roadmap
 
-`v1.0.2` is the current stable release. The remaining checklist for the next steps (full backup/restore, tablet and foldable layouts, archive swipe actions) lives in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md). Portrait is locked on phones in the 1.0 series; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0. The archive JSON/text export is the only backup, and uninstalling the app deletes the active note.
+`v1.0.2` is the current stable release. The remaining checklist for the next steps (tablet and foldable layouts, archive swipe actions) lives in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md). Portrait is locked on phones in the 1.0 series; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0. Full backup/restore is now available in Settings → Backup & restore: create a file with the categories you choose and restore it later, so uninstalling the app no longer has to mean losing everything.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 
@@ -102,8 +107,8 @@ installable APKs to [Releases](https://github.com/yungsamd17/singlenote/releases
 
 ## Settings and behavior
 
-Settings has separate Appearance, Typography, Language, Notifications, and About
-screens. Google Sans Flex is bundled for offline use under the SIL OFL 1.1.
+Settings is grouped into Personalization (Appearance, Typography, Language,
+Notifications), Data & updates (Backup & restore, Updates) and About. Google Sans Flex is bundled for offline use under the SIL OFL 1.1.
 Dynamic colors require Android 12 or later. Launcher icons can use the default,
 the selected preset accent, or a wallpaper-derived color on Android 12+. Changing
 the selected icon closes the app; reopen it from the launcher. Icon refresh timing

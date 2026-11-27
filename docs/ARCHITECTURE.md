@@ -13,7 +13,8 @@ Navigation Compose. Note/archive/settings ViewModels are activity-scoped so
 pending saves and undo work survive in-app navigation.
 
 The settings routes are `settings`, `settings/appearance`, `settings/typography`,
-`settings/language`, `settings/notifications`, and `settings/about`. The editor,
+`settings/language`, `settings/notifications`, `settings/updates`,
+`settings/backup`, `settings/widget`, and `settings/about`. The editor,
 archive, and legal screens retain their own routes. Widget actions arrive through
 validated intents and return to the note screen.
 
@@ -44,7 +45,11 @@ the unique active-slot guard.
 and flushes on lifecycle stop. Stored notes remain intact when changing font or
 size. Repository content-change broadcasts are throttled with a trailing update;
 archive, restore, delete and other explicit mutations notify immediately. Avoid
-adding a second writer or bypassing repository invalidation.
+adding a second writer or bypassing repository invalidation. Full-backup restores
+are the one bulk writer: `BackupRepository` implements `BackupStore` on top of the
+same repository/preferences/widget store, flushes the pending editor save first,
+and writes notes through `NoteDao.replaceAllNotes` inside one transaction. A
+broadcast after the restore repaints the widget, tile and notification.
 
 Swap and Replace capture an `ArchiveRestoreUndo` snapshot inside the same Room
 transaction as the state change. The main ViewModel owns the undo snackbar and
@@ -58,11 +63,20 @@ editor undo state; they are not a durable history or a database schema change.
 ## Preferences and locale
 
 `PreferencesStore` abstracts DataStore and `NoteStore` exposes settings to
-ViewModels. Theme, accent, font type, text size, archive sort/order, notification/lock-screen switches,
+ViewModels. Theme, accent, app font, note font type, line spacing, text size, archive sort/order, notification/lock-screen switches,
 dynamic colors, AMOLED, app font and launcher icon choice use `NotePreferences`.
 Settings ViewModels generally expose flows with `SharingStarted.WhileSubscribed(5000)`;
 the editor observes text size eagerly so changes are ready when returning from Settings.
 Preserve existing keys and stored values when changing their presentation.
+`NotePreferences.snapshot()` / `restore()` read and replace the raw DataStore keys
+for backups; `WidgetStyleStore.snapshot()` / `restore()` do the same for the
+`widget_styles` SharedPreferences (per-widget entries plus `remembered`). App
+language is backed up separately from `AppLanguage`. The per-install action token
+and diagnostics logs are never exported.
+
+Restored language tags are applied immediately on Android 13+; on Android 10–12
+the tag is stored and applied on the next launch, because a restore runs on the
+application context with no activity to reconfigure.
 
 Language is separate: `AppLanguage` uses Android per-app locales on Android 13+
 and SharedPreferences plus a context/resource override on Android 10–12. An empty
@@ -90,6 +104,10 @@ Launcher caching and monochrome themed icons remain under launcher control.
 - `util/AppShortcuts.kt`: dynamic launcher shortcuts (New note, Archive,
   Settings). They are published at runtime and after a language change, and
   their intents carry the same action token as the widget and notification.
+- `ShareNoteActivity`: exported `ACTION_SEND` / `text/plain` share-sheet target.
+  It forwards only the shared text to MainActivity with the app's own token;
+  MainActivity runs the same quick-capture path as the tile and notification
+  (archive the current note, keep the pin, start a new note with the text).
 
 Keep notification permission handling, intent validation and broadcast package
 scoping intact. Follow-app widget accents refresh when the app accent changes.
@@ -112,6 +130,8 @@ update every implementation and fake. UI timing, keyboard behavior, launcher
 scrolling and locale transitions additionally need device verification.
 
 Notes/settings are unencrypted in private app storage; cloud backup is disabled.
-There are no accounts, analytics or tracking. `GithubReleases` fetches public
-release notes/update metadata only on demand. The legal statements in
+Explicit backups use SAF and are unencrypted files in a location the user picks;
+imports read one chosen file, cap it at `BACKUP_MAX_BYTES` and deduplicate notes
+before writing. There are no accounts, analytics or tracking. `GithubReleases`
+fetches public release notes/update metadata only on demand. The legal statements in
 [PRIVACY.md](PRIVACY.md) and [TERMS.md](TERMS.md) describe the user-facing policy.

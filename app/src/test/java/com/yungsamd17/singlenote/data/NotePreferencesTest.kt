@@ -57,6 +57,16 @@ class NotePreferencesTest {
     }
 
     @Test
+    fun noteStylePreferencesRoundTrip() = runBlocking {
+        val prefs = preferences
+        prefs.setFontFamily(NotePreferences.FONT_APP)
+        prefs.setLineSpacing(NotePreferences.LINE_SPACING_COMFORTABLE)
+
+        assertEquals(NotePreferences.FONT_APP, prefs.fontFamily.first())
+        assertEquals(NotePreferences.LINE_SPACING_COMFORTABLE, prefs.lineSpacing.first())
+    }
+
+    @Test
     fun appFontAndIconRoundTrip() = runBlocking {
         val prefs = preferences
 
@@ -93,6 +103,27 @@ class NotePreferencesTest {
 
         assertEquals("title", prefs.archiveSort.first())
         assertEquals("ascending", prefs.archiveOrder.first())
+    }
+
+    @Test
+    fun snapshotAndRestoreRoundTripEveryStoredPreference() = runBlocking {
+        val prefs = preferences
+        prefs.setThemeMode(NotePreferences.THEME_DARK)
+        prefs.setPinned(true)
+        prefs.setArchiveSort("title")
+
+        val snapshot = prefs.snapshot()
+        assertEquals(NotePreferences.THEME_DARK, snapshot["theme_mode"])
+        assertEquals(true, snapshot["pin_current_note"])
+        assertEquals("title", snapshot["archive_sort"])
+
+        prefs.restore(mapOf("theme_mode" to NotePreferences.THEME_LIGHT, "amoled" to true))
+
+        assertEquals(NotePreferences.THEME_LIGHT, prefs.themeMode.first())
+        assertEquals(true, prefs.amoled.first())
+        // Restore replaces the store: a preference absent from the backup
+        // goes back to its default instead of lingering on the device.
+        assertEquals(false, prefs.pinned.first())
     }
 
     @Test

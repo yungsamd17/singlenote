@@ -102,6 +102,28 @@ internal object WidgetStyleStore {
         editor.apply()
     }
 
+    /** All stored widget keys, for a full backup. */
+    fun snapshot(context: Context): Map<String, Any> = snapshot(storage(context))
+
+    fun snapshot(storage: WidgetStyleStorage): Map<String, Any> = storage.all()
+
+    /** Replaces every stored widget setting with the values from a backup. */
+    fun restore(context: Context, values: Map<String, Any>) = restore(storage(context), values)
+
+    fun restore(storage: WidgetStyleStorage, values: Map<String, Any>) {
+        val editor = storage.edit()
+        storage.all().keys.forEach(editor::remove)
+        values.forEach { (key, value) ->
+            when (value) {
+                is String -> editor.putString(key, value)
+                is Int -> editor.putInt(key, value)
+                is Long -> editor.putInt(key, value.toInt())
+                is Boolean -> editor.putBoolean(key, value)
+            }
+        }
+        editor.apply()
+    }
+
     /** Emits the settings of a widget whenever they change. */
     fun observe(context: Context, id: Int) = callbackFlow {
         val prefs = prefs(context)
@@ -152,6 +174,8 @@ internal object WidgetStyleStore {
 
 /** The key-value storage the widget settings live in. */
 internal interface WidgetStyleStorage {
+    fun all(): Map<String, Any>
+
     fun contains(key: String): Boolean
 
     fun getString(key: String, fallback: String): String
@@ -180,6 +204,9 @@ internal interface WidgetStyleStorageEditor {
 private class SharedPreferencesStyleStorage(
     private val prefs: SharedPreferences,
 ) : WidgetStyleStorage {
+    override fun all(): Map<String, Any> =
+        prefs.all.filterValues { it != null }.mapValues { it.value as Any }
+
     override fun contains(key: String): Boolean = prefs.contains(key)
 
     override fun getString(key: String, fallback: String): String =

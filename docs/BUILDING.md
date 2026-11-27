@@ -168,7 +168,7 @@ key consistent; uninstalling a preview deletes its own notes and settings.
 ## Verify on a device
 
 Check the editor with short and long notes, cursor movement, multiline paste,
-keyboard resizing and quick keyboard reopen. Check archive restore/delete/undo, rapid consecutive deletions, JSON import/export and sorting,
+keyboard resizing and quick keyboard reopen. Check archive restore/delete/undo, rapid consecutive deletions, full backup and notes-only JSON/text import/export, sorting,
 the settings hub and every sub-screen, the locales you touched, large system text,
 light/dark/AMOLED themes, dynamic colors on Android 12+, notification permission,
 lock-screen privacy, tile behavior, and widget resizing/scrolling. Add a widget
