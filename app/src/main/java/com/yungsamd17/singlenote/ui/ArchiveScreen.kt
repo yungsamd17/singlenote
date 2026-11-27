@@ -97,7 +97,7 @@ fun ArchiveScreen(
     viewModel: ArchiveViewModel,
     onBack: () -> Unit,
     onRestored: () -> Unit,
-    onOpenBackup: () -> Unit,
+    onOpenBackup: () -> Unit = {},
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val loaded by viewModel.loaded.collectAsStateWithLifecycle()
