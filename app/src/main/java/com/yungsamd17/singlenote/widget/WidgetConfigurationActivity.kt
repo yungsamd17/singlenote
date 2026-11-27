@@ -47,124 +47,6 @@ import com.yungsamd17.singlenote.ui.toMonochrome
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-@Composable
-private fun WidgetSettingRow(icon: ImageVector, title: String, value: String, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth()
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.padding(start = 20.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun WidgetChoice(
-    icon: ImageVector,
-    title: String,
-    selected: String,
-    options: List<Pair<String, Int>>,
-    onSelect: (String) -> Unit,
-) {
-    var open by remember { mutableStateOf(false) }
-    WidgetSettingRow(
-        icon,
-        title,
-        stringResource(
-            options.firstOrNull { it.first == selected }?.second ?: options.first().second
-        ),
-    ) {
-        open = true
-    }
-    if (open)
-        AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text(title) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState()).selectableGroup()) {
-                    options.forEach { (key, label) ->
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                                .selectable(
-                                    selected = selected == key,
-                                    role = Role.RadioButton,
-                                    onClick = {
-                                        onSelect(key)
-                                        open = false
-                                    },
-                                )
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            RadioButton(selected = selected == key, onClick = null)
-                            Text(stringResource(label), Modifier.padding(start = 12.dp))
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { open = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            },
-        )
-}
-
-@Composable
-private fun WidgetSizeChoice(
-    icon: ImageVector,
-    title: String,
-    value: Int,
-    range: IntRange,
-    format: Int = R.string.widget_size_sp,
-    onSave: (Int) -> Unit,
-) {
-    var open by remember { mutableStateOf(false) }
-    var draft by remember { mutableIntStateOf(value) }
-    WidgetSettingRow(icon, title, stringResource(format, value)) {
-        draft = value
-        open = true
-    }
-    if (open)
-        AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text(title) },
-            text = {
-                Column {
-                    Text(stringResource(format, draft), style = MaterialTheme.typography.bodyLarge)
-                    Slider(
-                        value = draft.toFloat(),
-                        onValueChange = { draft = it.roundToInt() },
-                        valueRange = range.first.toFloat()..range.last.toFloat(),
-                        steps =
-                            if (range.last - range.first > 40) 0 else range.last - range.first - 1,
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onSave(draft)
-                        open = false
-                    }
-                ) {
-                    Text(stringResource(R.string.widget_size_save))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { open = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            },
-        )
-}
-
 @OptIn(ExperimentalGlanceRemoteViewsApi::class)
 class WidgetConfigurationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -199,6 +81,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val amoled by prefs.amoled.collectAsStateWithLifecycle(initialValue = false)
             val monochrome by prefs.monochrome.collectAsStateWithLifecycle(initialValue = false)
             val appFont by prefs.appFont.collectAsStateWithLifecycle(initialValue = "system")
+            val noteFont by prefs.fontFamily.collectAsStateWithLifecycle(initialValue = NotePreferences.FONT_DEFAULT)
             val appDark =
                 when (appTheme) {
                     NotePreferences.THEME_LIGHT -> false
@@ -240,7 +123,7 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val brand = stringResource(R.string.app_name)
             val renderer = remember { GlanceRemoteViews() }
             var previewViews by remember { mutableStateOf<android.widget.RemoteViews?>(null) }
-            LaunchedEffect(options, appAccent, dynamic, monochrome, previewText, brand, scheme.background) {
+            LaunchedEffect(options, appAccent, dynamic, monochrome, noteFont, appFont, previewText, brand, scheme.background) {
                 previewViews =
                     renderer
                         .compose(
@@ -253,6 +136,8 @@ class WidgetConfigurationActivity : ComponentActivity() {
                                 fallbackHint = previewText,
                                 style = options,
                                 appAccent = appAccent,
+                                noteFont = noteFont,
+                                appFont = appFont,
                                 context = this@WidgetConfigurationActivity,
                                 brand = brand,
                                 appDynamicColors = dynamic,
@@ -267,151 +152,30 @@ class WidgetConfigurationActivity : ComponentActivity() {
             }
             MaterialTheme(
                 colorScheme = scheme,
-                typography = com.yungsamd17.singlenote.ui.appTypography(appFont == "flex"),
+                typography = com.yungsamd17.singlenote.ui.appTypography(appFont),
             ) {
                 Surface(Modifier.fillMaxSize()) {
-                    Column(
-                        Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 16.dp)
-                    ) {
-                        Column(
-                            Modifier.weight(1f)
-                                .verticalScroll(rememberScrollState())
-                                .padding(bottom = 32.dp),
-                            verticalArrangement = Arrangement.spacedBy(0.dp),
-                        ) {
-                            Spacer(Modifier.height(12.dp))
-                            AndroidView(
-                                factory = { android.widget.FrameLayout(it) },
-                                modifier = Modifier.fillMaxWidth().height(120.dp),
-                                update = { parent ->
-                                    parent.removeAllViews()
-                                    previewViews?.apply(parent.context, parent)?.let {
-                                        parent.addView(it)
-                                    }
-                                },
-                            )
-                            SettingsSectionHeader(
-                                stringResource(R.string.settings_section_appearance)
-                            )
-                            SettingsGroup(
-                                buildList<@Composable () -> Unit> {
-                                    add {
-                                        WidgetChoice(
-                                            Icons.Outlined.Palette,
-                                            stringResource(R.string.settings_theme),
-                                            options.theme,
-                                            listOf(
-                                                "system" to R.string.widget_config_system,
-                                                "light" to R.string.widget_config_light,
-                                                "dark" to R.string.widget_config_dark,
-                                            ),
-                                        ) {
-                                            options = options.copy(theme = it)
-                                        }
-                                    }
-                                    add {
-                                        WidgetChoice(
-                                            Icons.Outlined.FormatPaint,
-                                            stringResource(R.string.settings_accent),
-                                            options.accent,
-                                            listOf(
-                                                "app" to R.string.widget_follow_app,
-                                                "default" to R.string.accent_default,
-                                                "blue" to R.string.accent_blue,
-                                                "teal" to R.string.accent_teal,
-                                                "green" to R.string.accent_green,
-                                                "orange" to R.string.accent_orange,
-                                                "pink" to R.string.accent_pink,
-                                            ),
-                                        ) {
-                                            options = options.copy(accent = it)
-                                        }
-                                    }
-                                    add {
-                                        WidgetSizeChoice(
-                                            Icons.Outlined.Opacity,
-                                            stringResource(R.string.widget_background_opacity),
-                                            options.opacity,
-                                            0..100,
-                                            R.string.widget_opacity_percent,
-                                        ) {
-                                            options = options.copy(opacity = it)
-                                        }
-                                    }
-                                    add {
-                                        WidgetSizeChoice(
-                                            Icons.Outlined.FormatSize,
-                                            stringResource(R.string.widget_note_size),
-                                            widgetFontSize(options.size),
-                                            10..36,
-                                        ) {
-                                            options = options.copy(size = it.toString())
-                                        }
-                                    }
-                                    add {
-                                        ToggleRow(
-                                            Icons.Outlined.Visibility,
-                                            stringResource(R.string.widget_show_title),
-                                            "",
-                                            options.showTitle,
-                                            { options = options.copy(showTitle = it) },
-                                        )
-                                    }
-                                    if (options.showTitle)
-                                        add {
-                                            WidgetSizeChoice(
-                                                Icons.Outlined.Title,
-                                                stringResource(R.string.widget_title_size),
-                                                options.titleSize,
-                                                8..24,
-                                            ) {
-                                                options = options.copy(titleSize = it)
-                                            }
-                                        }
-                                }
-                            )
-                            SettingsSectionHeader(stringResource(R.string.widget_section_behavior))
-                            SettingsGroup(
-                                listOf({
-                                    WidgetChoice(
-                                        Icons.Outlined.TouchApp,
-                                        stringResource(R.string.widget_tap_action),
-                                        options.action,
-                                        listOf(
-                                            "open" to R.string.widget_action_open,
-                                            "edit" to R.string.widget_action_edit,
-                                            "archive" to R.string.widget_action_archive,
-                                        ),
-                                    ) {
-                                        options = options.copy(action = it)
-                                    }
-                                })
-                            )
+                    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+                        WidgetEditorContent(
+                            options = options,
+                            onOptionsChange = { options = it },
+                            previewViews = previewViews,
+                        )
                         }
                         Button(
                             onClick = {
-                                WidgetStyleStore.set(
-                                    this@WidgetConfigurationActivity,
-                                    widgetId,
-                                    options,
-                                )
+                                WidgetStyleStore.set(this@WidgetConfigurationActivity, widgetId, options)
                                 lifecycleScope.launch {
-                                    // The new style has to reach the widget now.
-                                    // Glance's own update needs a worker that
-                                    // some devices never run, so the widget is
-                                    // rendered here, where the style is known.
-                                    refreshSinglenoteWidgets(
-                                        this@WidgetConfigurationActivity
-                                    )
+                                    refreshSinglenoteWidgets(this@WidgetConfigurationActivity)
                                     setResult(
                                         Activity.RESULT_OK,
-                                        Intent()
-                                            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId),
+                                        Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId),
                                     )
                                     finish()
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                         ) {
                             Text(
                                 stringResource(

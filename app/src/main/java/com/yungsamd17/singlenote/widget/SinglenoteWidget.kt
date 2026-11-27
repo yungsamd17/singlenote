@@ -39,9 +39,11 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.Row
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
+import androidx.glance.text.FontFamily
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.work.WorkInfo
@@ -97,6 +99,10 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
     val initialDynamic = appDynamic.first()
     val appMonochrome = NotePreferences.get(context).monochrome
     val initialMonochrome = appMonochrome.first()
+    val noteFont = NotePreferences.get(context).fontFamily
+    val initialNoteFont = noteFont.first()
+    val appFont = NotePreferences.get(context).appFont
+    val initialAppFont = appFont.first()
     val widgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
     val initialStyle = WidgetStyleStore.get(context, widgetId)
     val widgetStyle = WidgetStyleStore.observe(context, widgetId)
@@ -113,6 +119,8 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
         val selectedAppAccent by appAccent.collectAsState(initial = initialAccent)
         val selectedDynamic by appDynamic.collectAsState(initial = initialDynamic)
         val selectedMonochrome by appMonochrome.collectAsState(initial = initialMonochrome)
+        val selectedNoteFont by noteFont.collectAsState(initial = initialNoteFont)
+        val selectedAppFont by appFont.collectAsState(initial = initialAppFont)
         val openIntent =
             Intent(context, MainActivity::class.java)
                 .setData(android.net.Uri.parse("singlenote://widget/$widgetId"))
@@ -124,6 +132,8 @@ private suspend fun GlanceAppWidget.provideSinglenoteContent(
             fallbackHint = fallbackHint,
             style = style,
             appAccent = selectedAppAccent,
+            noteFont = selectedNoteFont,
+            appFont = selectedAppFont,
             context = context,
             brand = context.getString(R.string.app_name),
             appDynamicColors = selectedDynamic,
@@ -261,6 +271,8 @@ private suspend fun renderWidgetInProcess(
         val appAccent = NotePreferences.get(context).accentColor.first()
         val appDynamic = NotePreferences.get(context).dynamicColors.first()
         val appMonochrome = NotePreferences.get(context).monochrome.first()
+        val noteFont = NotePreferences.get(context).fontFamily.first()
+        val appFont = NotePreferences.get(context).appFont.first()
         val fallbackHint = context.getString(R.string.hint_write_one_thing)
         val brand = context.getString(R.string.app_name)
         val openIntent =
@@ -283,6 +295,8 @@ private suspend fun renderWidgetInProcess(
                             fallbackHint = fallbackHint,
                             style = style,
                             appAccent = appAccent,
+                            noteFont = noteFont,
+                            appFont = appFont,
                             context = context,
                             brand = brand,
                             appDynamicColors = appDynamic,
@@ -345,6 +359,8 @@ internal fun WidgetContent(
     fallbackHint: String,
     style: WidgetOptions,
     appAccent: String,
+    noteFont: String = "default",
+    appFont: String = "system",
     context: Context,
     brand: String,
     appDynamicColors: Boolean = false,
@@ -359,6 +375,7 @@ internal fun WidgetContent(
     // own background; the real widget falls back to the wallpaper color.
     backdropColor: Color? = null,
 ) {
+    val noteTypeface = widgetFontFamily(noteFont, appFont)
     val followApp = widgetAccentSetting(style.accent) == "app"
     val accentKey = if (followApp) appAccent else style.accent
     val monochrome = followApp && appMonochrome
@@ -431,24 +448,32 @@ internal fun WidgetContent(
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
             if (style.showTitle) {
-                Text(
-                    brand,
-                    modifier = if (openIntent == null) GlanceModifier else GlanceModifier.clickable(actionStartActivity(openIntent)),
-                    style =
-                        TextStyle(
-                            color = accent,
-                            fontSize = style.titleSize.sp,
-                            fontWeight = FontWeight.Medium,
-                        ),
-                    maxLines = 1,
-                )
+                val brandClick =
+                    if (openIntent == null) GlanceModifier else GlanceModifier.clickable(actionStartActivity(openIntent))
+                val brandStyle =
+                    TextStyle(color = accent, fontSize = style.titleSize.sp, fontWeight = FontWeight.Medium)
+                val boldPrefix = context.getString(R.string.brand_bold_prefix)
+                if (brand.startsWith(boldPrefix)) {
+                    // Glance Text takes plain strings only: split the brand so
+                    // the "Single" part keeps the same bold mark as the app.
+                    Row(modifier = brandClick) {
+                        Text(
+                            boldPrefix,
+                            style = TextStyle(color = accent, fontSize = style.titleSize.sp, fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                        )
+                        Text(brand.removePrefix(boldPrefix), style = brandStyle, maxLines = 1)
+                    }
+                } else {
+                    Text(brand, modifier = brandClick, style = brandStyle, maxLines = 1)
+                }
             }
             if (!scrollable) {
                 // No collection host to bind a list adapter to.
                 Text(
                     noteText,
                     modifier = GlanceModifier.fillMaxWidth(),
-                    style = TextStyle(color = foreground, fontSize = textSize.sp),
+                    style = TextStyle(color = foreground, fontSize = textSize.sp, fontFamily = noteTypeface),
                 )
             } else {
                 val titleHeight =
@@ -471,7 +496,7 @@ internal fun WidgetContent(
                             Text(
                                 noteText,
                                 modifier = if (openIntent == null) GlanceModifier.fillMaxWidth() else GlanceModifier.fillMaxWidth().clickable(actionStartActivity(openIntent)),
-                                style = TextStyle(color = foreground, fontSize = textSize.sp),
+                                style = TextStyle(color = foreground, fontSize = textSize.sp, fontFamily = noteTypeface),
                             )
                         }
                     }
@@ -556,6 +581,19 @@ private fun renderFromReceiver(context: Context, pendingResult: BroadcastReceive
 
 /** The receiver's renders outlive the broadcast, but not the process. */
 private val receiverScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+/**
+ * Glance can only name system font families (it renders a TypefaceSpan), so a
+ * bundled TTF cannot be sent to a widget. Map the note font to the closest
+ * system family instead of silently ignoring the choice.
+ */
+internal fun widgetFontFamily(noteFont: String, appFont: String): FontFamily? =
+    when (noteFont) {
+        "mono" -> FontFamily.Monospace
+        "serif" -> FontFamily.Serif
+        "app" -> if (appFont == "slab") FontFamily.Serif else FontFamily.SansSerif
+        else -> null
+    }
 
 internal fun widgetFontSize(size: String): Int =
     when (size) {
