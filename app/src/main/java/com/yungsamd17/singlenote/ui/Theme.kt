@@ -190,13 +190,9 @@ fun ColorScheme.toMonochrome(): ColorScheme = copy(
 )
 
 /** Uses only bundled resources; never requests a downloadable font. */
-fun appTypography(useFlex: Boolean): androidx.compose.material3.Typography {
+fun appTypography(appFontKey: String): androidx.compose.material3.Typography {
     val base = androidx.compose.material3.Typography()
-    if (!useFlex) return base
-    val family =
-        androidx.compose.ui.text.font.FontFamily(
-            androidx.compose.ui.text.font.Font(com.yungsamd17.singlenote.R.font.google_sans_flex)
-        )
+    val family = appFontFamilyFor(appFontKey) ?: return base
     return base.copy(
         displayLarge = base.displayLarge.copy(fontFamily = family),
         displayMedium = base.displayMedium.copy(fontFamily = family),

@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import com.yungsamd17.singlenote.R
@@ -38,7 +39,9 @@ fun BrandText(
             }
         },
         modifier = modifier,
-        style = style,
+        // Bundled variable fonts have no distinct bold file on Android 10/11,
+        // so the brand always uses the system family, which has a real bold.
+        style = style.copy(fontFamily = FontFamily.Default),
         color = color,
         maxLines = 1
     )

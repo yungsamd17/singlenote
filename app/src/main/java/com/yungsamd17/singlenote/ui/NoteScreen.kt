@@ -163,6 +163,8 @@ fun NoteScreen(
     onWidgetActionHandled: () -> Unit = {},
     quickCapture: Boolean = false,
     onQuickCaptureHandled: () -> Unit = {},
+    sharedText: String? = null,
+    onSharedTextHandled: () -> Unit = {},
     onOpenArchive: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -171,6 +173,8 @@ fun NoteScreen(
     val pinned by viewModel.pinned.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val fontFamilyKey by viewModel.fontFamily.collectAsStateWithLifecycle()
+    val appFontKey by viewModel.appFont.collectAsStateWithLifecycle()
+    val lineSpacingKey by viewModel.lineSpacing.collectAsStateWithLifecycle()
     val textSizeKey by viewModel.textSize.collectAsStateWithLifecycle()
     val ready by viewModel.ready.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -179,9 +183,9 @@ fun NoteScreen(
     val view = LocalView.current
     val widgetFocusRequester = remember { FocusRequester() }
     var widgetCursorRequest by remember { mutableIntStateOf(0) }
-    LaunchedEffect(widgetAction, quickCapture, ready) {
+    LaunchedEffect(widgetAction, quickCapture, sharedText, ready) {
         val action = widgetAction
-        val capture = quickCapture
+        val capture = quickCapture || sharedText != null
         if (!ready) return@LaunchedEffect
         if (action == null && !capture) return@LaunchedEffect
         if (action == "archive") {
@@ -193,7 +197,7 @@ fun NoteScreen(
         // Quick capture from the notification shade: the note on screen is
         // archived, never deleted, and the editor starts empty with the
         // cursor in it.
-        if (capture) viewModel.quickCapture().join()
+        if (capture) viewModel.quickCapture(sharedText).join()
         if (action == "edit" || action == "archive" || capture) {
             widgetCursorRequest++
             androidx.compose.runtime.withFrameNanos { }
@@ -202,6 +206,7 @@ fun NoteScreen(
         }
         onWidgetActionHandled()
         onQuickCaptureHandled()
+        onSharedTextHandled()
     }
 
     // Tapjacking defense: drop touches that land while another visible
@@ -324,16 +329,9 @@ fun NoteScreen(
     val fieldInteraction = remember { MutableInteractionSource() }
     val isEditing by fieldInteraction.collectIsFocusedAsState()
 
-    val noteFontFamily = when (fontFamilyKey) {
-        "mono" -> FontFamily.Monospace
-        "serif" -> FontFamily.Serif
-        else -> MaterialTheme.typography.bodyLarge.fontFamily ?: FontFamily.Default
-    }
-    val noteFontSize = when (textSizeKey) {
-        "small" -> 18.sp
-        "large" -> 28.sp
-        else -> 22.sp
-    }
+    val noteFontFamily =
+        noteFontFamilyFor(fontFamilyKey, appFontFamilyFor(appFontKey))
+    val noteFontSize = noteFontSizeFor(textSizeKey)
     // Button labels stay at the default size for "small" and grow with the setting.
     val buttonFontSize = when (textSizeKey) {
         "small" -> 14.sp
@@ -344,7 +342,7 @@ fun NoteScreen(
     // Once available screen space is exhausted, the field itself scrolls.
     val noteMaxLength = NoteViewModel.MAX_LENGTH_SMALL
     val noteMaxLines = NoteViewModel.maxLinesForTextSize(textSizeKey)
-    val noteLineHeight = noteFontSize * 1.45f
+    val noteLineHeight = noteLineHeightFor(textSizeKey, lineSpacingKey)
     val density = LocalDensity.current
     val noteCardHeight = with(density) {
         (noteLineHeight * noteMaxLines.toFloat()).toDp() + 42.dp

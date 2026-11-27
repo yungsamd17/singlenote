@@ -268,7 +268,9 @@ fun TermsScreen(onBack: () -> Unit) {
 fun PrivacyScreen(onBack: () -> Unit) {
     LegalScreen(
         title = stringResource(R.string.privacy_title),
-        body = stringResource(R.string.privacy_body),
+        body = stringResource(R.string.privacy_body) +
+            // Contact and the full-policy link stay the final two paragraphs.
+            "\n\n" + stringResource(R.string.privacy_contact),
         onBack = onBack
     )
 }
@@ -328,6 +330,8 @@ fun LicenseScreen(onBack: () -> Unit) {
             LicenseRow(R.string.license_symbols)
             LicenseRow(R.string.license_bootstrap)
             LicenseRow(R.string.license_google_flex)
+            LicenseRow(R.string.license_inter)
+            LicenseRow(R.string.license_roboto_slab)
             LinkedText(
                 text = stringResource(R.string.license_third_party),
                 style = MaterialTheme.typography.bodyMedium,

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onSizeChanged
@@ -72,6 +74,7 @@ import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.NotePreferences
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.ACCENTS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.FONTS
+import com.yungsamd17.singlenote.data.NotePreferences.Companion.LINE_SPACINGS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
 import com.yungsamd17.singlenote.util.AppLanguage
@@ -122,12 +125,14 @@ fun SettingsPage(
     title: String,
     onBack: () -> Unit,
     snackbarHost: @Composable () -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val scroll = rememberSettingsScrollState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         snackbarHost = snackbarHost,
+        floatingActionButton = floatingActionButton,
         topBar = {
             // Centered like the note and archive toolbars: the title sits in
             // the middle, and the bar stays put. It never collapses on
@@ -181,6 +186,7 @@ fun SettingsScreen(
     val theme by viewModel.themeMode.collectAsStateWithLifecycle()
     val accent by viewModel.accentColor.collectAsStateWithLifecycle()
     val font by viewModel.fontFamily.collectAsStateWithLifecycle()
+    val lineSpacing by viewModel.lineSpacing.collectAsStateWithLifecycle()
     val size by viewModel.textSize.collectAsStateWithLifecycle()
     val notifications by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val lockscreen by viewModel.lockscreenVisible.collectAsStateWithLifecycle()
@@ -204,6 +210,7 @@ fun SettingsScreen(
     SettingsPage(stringResource(title), onBack) {
         when (screen) {
             "settings" -> {
+                SettingsSectionHeader(stringResource(R.string.settings_section_personalization))
                 SettingsGroup(
                     listOf(
                         {
@@ -238,6 +245,19 @@ fun SettingsScreen(
                                 { onOpenScreen("notifications") },
                             )
                         },
+                    )
+                )
+                SettingsSectionHeader(stringResource(R.string.settings_section_data_updates))
+                SettingsGroup(
+                    listOf(
+                        {
+                            ValueRow(
+                                painterResource(R.drawable.ic_symbol_upload),
+                                stringResource(R.string.settings_backup),
+                                stringResource(R.string.settings_backup_summary),
+                                { onOpenScreen("backup") },
+                            )
+                        },
                         {
                             ValueRow(
                                 Icons.Outlined.Refresh,
@@ -248,7 +268,7 @@ fun SettingsScreen(
                         },
                     )
                 )
-                androidx.compose.foundation.layout.Spacer(Modifier.size(16.dp))
+                SettingsSectionHeader(stringResource(R.string.settings_section_about))
                 SettingsGroup(
                     listOf({
                         ValueRow(
@@ -329,22 +349,56 @@ fun SettingsScreen(
                         )
                     })
                 )
+                SettingsSectionHeader(stringResource(R.string.settings_widget_customization))
+                SettingsGroup(
+                    listOf({
+                        ValueRow(
+                            Icons.Outlined.Widgets,
+                            stringResource(R.string.widget_customize),
+                            stringResource(R.string.widget_customize_desc),
+                            { onOpenScreen("widget") },
+                        )
+                    })
+                )
             }
             "typography" -> {
+                SettingsSectionHeader(stringResource(R.string.settings_note_preview))
+                SettingsGroup(
+                    listOf({
+                        Text(
+                            text = stringResource(R.string.typography_preview),
+                            style =
+                                TextStyle(
+                                    fontFamily = noteFontFamilyFor(font, appFontFamilyFor(appFont)),
+                                    fontSize = noteFontSizeFor(size),
+                                    lineHeight = noteLineHeightFor(size, lineSpacing),
+                                ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    })
+                )
+                SettingsSectionHeader(stringResource(R.string.settings_section_app))
+                SettingsGroup(
+                    listOf({
+                        ValueRow(
+                            Icons.Outlined.FontDownload,
+                            stringResource(R.string.settings_app_font),
+                            stringResource(
+                                when (appFont) {
+                                    NotePreferences.APP_FONT_FLEX -> R.string.font_google_flex
+                                    NotePreferences.APP_FONT_INTER -> R.string.font_inter
+                                    NotePreferences.APP_FONT_SLAB -> R.string.font_slab
+                                    else -> R.string.font_system
+                                }
+                            ),
+                            { dialog = "appFont" },
+                        )
+                    })
+                )
                 SettingsSectionHeader(stringResource(R.string.settings_font_category))
                 SettingsGroup(
                     listOf(
-                        {
-                            ValueRow(
-                                Icons.Outlined.FontDownload,
-                                stringResource(R.string.settings_app_font),
-                                stringResource(
-                                    if (appFont == "flex") R.string.font_google_flex
-                                    else R.string.font_system
-                                ),
-                                { dialog = "appFont" },
-                            )
-                        },
                         {
                             ValueRow(
                                 painterResource(R.drawable.ic_symbol_serif),
@@ -353,18 +407,23 @@ fun SettingsScreen(
                                 { dialog = "font" },
                             )
                         },
+                        {
+                            ValueRow(
+                                Icons.Outlined.FormatSize,
+                                stringResource(R.string.settings_text_size),
+                                sizeLabel(size),
+                                { dialog = "size" },
+                            )
+                        },
+                        {
+                            ValueRow(
+                                Icons.Outlined.FormatSize,
+                                stringResource(R.string.settings_line_spacing),
+                                lineSpacingLabel(lineSpacing),
+                                { dialog = "lineSpacing" },
+                            )
+                        },
                     )
-                )
-                SettingsSectionHeader(stringResource(R.string.settings_size_category))
-                SettingsGroup(
-                    listOf({
-                        ValueRow(
-                            Icons.Outlined.FormatSize,
-                            stringResource(R.string.settings_text_size),
-                            sizeLabel(size),
-                            { dialog = "size" },
-                        )
-                    })
                 )
             }
             "notifications" -> {
@@ -478,15 +537,23 @@ fun SettingsScreen(
             "font" -> FONTS.map { it to fontLabel(it) }
             "size" -> SIZES.map { it to sizeLabel(it) }
             "appFont" ->
-                listOf(
-                    "system" to stringResource(R.string.font_system),
-                    "flex" to stringResource(R.string.font_google_flex),
-                )
+                NotePreferences.APP_FONTS.map { key ->
+                    key to
+                        stringResource(
+                            when (key) {
+                                NotePreferences.APP_FONT_FLEX -> R.string.font_google_flex
+                                NotePreferences.APP_FONT_INTER -> R.string.font_inter
+                                NotePreferences.APP_FONT_SLAB -> R.string.font_slab
+                                else -> R.string.font_system
+                            }
+                        )
+                }
             "icon" ->
                 listOf(
                     "default" to stringResource(R.string.accent_default),
                     "accent" to stringResource(R.string.settings_icon_accent),
                 ) + if (android.os.Build.VERSION.SDK_INT >= 31) listOf("dynamic" to stringResource(R.string.settings_icon_dynamic)) else emptyList()
+            "lineSpacing" -> LINE_SPACINGS.map { it to lineSpacingLabel(it) }
             else -> emptyList()
         }
     if (options.isNotEmpty())
@@ -499,6 +566,7 @@ fun SettingsScreen(
                         "font" -> R.string.settings_font
                         "size" -> R.string.settings_text_size
                         "appFont" -> R.string.settings_app_font
+                        "lineSpacing" -> R.string.settings_line_spacing
                         else -> R.string.settings_app_icon
                     }
                 ),
@@ -533,6 +601,7 @@ fun SettingsScreen(
                     "font" -> font
                     "size" -> size
                     "appFont" -> appFont
+                    "lineSpacing" -> lineSpacing
                     else -> appIcon
                 },
             onSelect = { value ->
@@ -542,6 +611,7 @@ fun SettingsScreen(
                     "font" -> viewModel.setFontFamily(value)
                     "size" -> viewModel.setTextSize(value)
                     "appFont" -> viewModel.setAppFont(value)
+                    "lineSpacing" -> viewModel.setLineSpacing(value)
                     "icon" -> viewModel.setAppIcon(value)
                 }
                 dialog = ""
@@ -832,7 +902,16 @@ private fun fontLabel(key: String): String =
     when (key) {
         NotePreferences.FONT_MONO -> stringResource(R.string.font_mono)
         NotePreferences.FONT_SERIF -> stringResource(R.string.font_serif)
+        NotePreferences.FONT_APP -> stringResource(R.string.font_use_app)
         else -> stringResource(R.string.font_default)
+    }
+
+@Composable
+private fun lineSpacingLabel(key: String): String =
+    when (key) {
+        NotePreferences.LINE_SPACING_COMPACT -> stringResource(R.string.settings_line_spacing_compact)
+        NotePreferences.LINE_SPACING_COMFORTABLE -> stringResource(R.string.settings_line_spacing_comfortable)
+        else -> stringResource(R.string.settings_line_spacing_default)
     }
 
 @Composable
