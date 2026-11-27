@@ -1,8 +1,6 @@
 package com.yungsamd17.singlenote.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -47,10 +44,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sort
-import androidx.compose.material.icons.outlined.Upload
 import androidx.compose.material.icons.outlined.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -86,20 +81,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yungsamd17.singlenote.R
 import com.yungsamd17.singlenote.data.Note
-import com.yungsamd17.singlenote.util.buildArchiveJson
-import com.yungsamd17.singlenote.util.buildArchiveText
-import com.yungsamd17.singlenote.util.isPlainTextArchive
-import com.yungsamd17.singlenote.util.parseArchive
-import java.text.DateFormat
-import java.util.Date
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -107,6 +97,7 @@ fun ArchiveScreen(
     viewModel: ArchiveViewModel,
     onBack: () -> Unit,
     onRestored: () -> Unit,
+    onOpenBackup: () -> Unit = {},
 ) {
     val notes by viewModel.notes.collectAsStateWithLifecycle()
     val loaded by viewModel.loaded.collectAsStateWithLifecycle()
@@ -123,11 +114,15 @@ fun ArchiveScreen(
     // until the real values are known instead.
     val sort by preferences.archiveSort.collectAsStateWithLifecycle(initialValue = null)
     val order by preferences.archiveOrder.collectAsStateWithLifecycle(initialValue = null)
+    val fontFamilyKey by preferences.fontFamily.collectAsStateWithLifecycle(initialValue = NotePreferences.FONT_DEFAULT)
+    val appFontKey by preferences.appFont.collectAsStateWithLifecycle(initialValue = "system")
+    val textSizeKey by preferences.textSize.collectAsStateWithLifecycle(initialValue = NotePreferences.SIZE_MEDIUM)
+    val lineSpacingKey by preferences.lineSpacing.collectAsStateWithLifecycle(initialValue = NotePreferences.LINE_SPACING_DEFAULT)
+    val archivedFont = noteFontFamilyFor(fontFamilyKey, appFontFamilyFor(appFontKey))
+    val archivedFontSize = noteFontSizeFor(textSizeKey)
+    val archivedLineHeight = noteLineHeightFor(textSizeKey, lineSpacingKey)
     val listState = rememberLazyListState()
     var showSort by remember { mutableStateOf(false) }
-    var showExport by remember { mutableStateOf(false) }
-    var showImport by remember { mutableStateOf(false) }
-    var exportJson by remember { mutableStateOf(true) }
     var menuOpen by remember { mutableStateOf(false) }
     var now by remember { androidx.compose.runtime.mutableLongStateOf(System.currentTimeMillis()) }
     val owner = LocalLifecycleOwner.current
@@ -161,54 +156,12 @@ fun ArchiveScreen(
     val pendingDeleteIds by viewModel.pendingDeleteIds.collectAsStateWithLifecycle()
     val pendingClear by viewModel.pendingClear.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    // Hoisted: creating formatters during scroll composition is needlessly heavy.
-    val dateFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM) }
     var noteToDelete by remember { mutableStateOf<Note?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
     val undoLabel = stringResource(R.string.action_undo)
     val deletedLabel = stringResource(R.string.archived_note_deleted)
     val clearedLabel = stringResource(R.string.archive_cleared)
-    val exportSuccess = stringResource(R.string.archive_export_success)
-    val exportFailure = stringResource(R.string.archive_export_failed)
     val scope = rememberCoroutineScope()
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
-        val snapshot = viewModel.pendingExport
-        viewModel.pendingExport = null
-        if (uri != null) {
-            scope.launch {
-                val saved = snapshot != null && withContext(Dispatchers.IO) {
-                    try {
-                        val stream = context.contentResolver.openOutputStream(uri)
-                        if (stream == null) false else {
-                            stream.bufferedWriter(Charsets.UTF_8).use { it.write(snapshot) }
-                            true
-                        }
-                    } catch (_: java.io.IOException) { false }
-                      catch (_: SecurityException) { false }
-                }
-                snackbarHostState.showSnackbar(if (saved) exportSuccess else exportFailure)
-            }
-        }
-    }
-
-    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.launch {
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    val raw = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } ?: error("empty")
-                    val notes = parseArchive(raw)
-                    viewModel.importArchived(notes, matchContentOnly = isPlainTextArchive(raw))
-                } catch (_: Exception) { null }
-            }
-            snackbarHostState.showSnackbar(
-                if (result != null) {
-                    context.getString(R.string.archive_import_result, result.added, result.skipped)
-                } else {
-                    context.getString(R.string.archive_import_failed)
-                }
-            )
-        }
-    }
 
     // Optimistic hiding: pending rows vanish at once while the DB write
     // waits out the Undo window. Survives rotation via the ViewModel.
@@ -331,11 +284,7 @@ fun ArchiveScreen(
                             shape = RoundedCornerShape(28.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer,
                             shadowElevation = 8.dp, tonalElevation = 0.dp, modifier = Modifier.widthIn(min = 220.dp)) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.archive_sort)) }, trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_sort), null) }, onClick = { menuOpen = false; showSort = true })
-                            DropdownMenuItem(text = { Text(stringResource(R.string.export_archive)) }, enabled = sortedNotes.isNotEmpty(), trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_upload), null) }, onClick = {
-                                menuOpen = false
-                                showExport = true
-                            })
-                            DropdownMenuItem(text = { Text(stringResource(R.string.archive_import)) }, trailingIcon = { Icon(Icons.Outlined.SaveAlt, null) }, onClick = { menuOpen = false; showImport = true })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.settings_backup)) }, trailingIcon = { Icon(painterResource(R.drawable.ic_symbol_upload), null) }, onClick = { menuOpen = false; onOpenBackup() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.clear_archive)) }, enabled = sortedNotes.isNotEmpty(), trailingIcon = { Icon(Icons.Outlined.Delete, null) }, onClick = { menuOpen = false; showClearDialog = true })
                         }
                     }
@@ -346,16 +295,9 @@ fun ArchiveScreen(
                 )
             )
         },
-        // Lifted above the gesture bar like the note screen's host so the
-        // Undo bar never sits under it.
+        // Same shared placement as the other screens without a bottom bar.
         snackbarHost = {
-            SwipeableSnackbarHost(
-                snackbarHostState,
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .imePadding()
-                    .padding(bottom = 16.dp)
-            )
+            SwipeableSnackbarHost(snackbarHostState, modifier = AppSnackbarHostModifier)
         }
     ) { innerPadding ->
         // Wait for the stored sort/order and Room's first snapshot. Painting
@@ -464,6 +406,9 @@ fun ArchiveScreen(
                             ArchivedNoteItem(
                                 note = note,
                                 date = header,
+                                fontFamily = archivedFont,
+                                fontSize = archivedFontSize,
+                                lineHeight = archivedLineHeight,
                                 onRestore = { viewModel.restore(note) },
                                 onDelete = { noteToDelete = note }
                             )
@@ -475,44 +420,6 @@ fun ArchiveScreen(
         }
     }
 
-    if (showExport) {
-        AlertDialog(onDismissRequest = { showExport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.export_archive)) }, text = {
-            Column {
-                Text(stringResource(R.string.archive_export_description))
-                // Same radio pattern as Settings: the row owns the selection
-                // so TalkBack sees one focus stop with a checked state, not
-                // a clickable row plus a second radio button.
-                Column(Modifier.selectableGroup()) {
-                    listOf(true to R.string.archive_export_json, false to R.string.archive_export_text).forEach { (json, label) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                                .selectable(
-                                    selected = exportJson == json,
-                                    role = Role.RadioButton,
-                                    onClick = { exportJson = json },
-                                ),
-                        ) {
-                            RadioButton(selected = exportJson == json, onClick = null)
-                            Text(stringResource(label), modifier = Modifier.padding(start = 8.dp))
-                        }
-                    }
-                }
-            }
-        }, confirmButton = { TextButton(onClick = {
-            showExport = false
-            viewModel.pendingExport = if (exportJson) buildArchiveJson(sortedNotes) else buildArchiveText(sortedNotes)
-            exportLauncher.launch(if (exportJson) "singlenote-archive.json" else "singlenote-archive.txt")
-        }) { Text(stringResource(R.string.export_archive)) } }, dismissButton = { TextButton(onClick = { showExport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
-    }
-    if (showImport) {
-        AlertDialog(onDismissRequest = { showImport = false }, icon = { Icon(Icons.Outlined.SaveAlt, null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_import)) },
-            text = { Text(stringResource(R.string.archive_import_description)) },
-            confirmButton = { TextButton(onClick = { showImport = false; importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text(stringResource(R.string.archive_import)) } },
-            dismissButton = { TextButton(onClick = { showImport = false }) { Text(stringResource(R.string.cancel), color = MaterialTheme.colorScheme.onSurfaceVariant) } })
-    }
     if (showSort) {
         AlertDialog(onDismissRequest = { showSort = false }, icon = { Icon(painterResource(R.drawable.ic_symbol_sort), null, tint = MaterialTheme.colorScheme.primary) }, title = { Text(stringResource(R.string.archive_sort_title)) }, text = {
             Column {
@@ -647,6 +554,9 @@ fun ArchiveScreen(
 private fun ArchivedNoteItem(
     note: Note,
     date: String,
+    fontFamily: FontFamily,
+    fontSize: TextUnit,
+    lineHeight: TextUnit,
     onRestore: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -665,7 +575,11 @@ private fun ArchivedNoteItem(
                     .padding(bottom = 8.dp)
                     .semantics { heading() },
             )
-            Text(text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) }, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = note.content.ifBlank { stringResource(R.string.empty_note_placeholder) },
+                style = TextStyle(fontFamily = fontFamily, fontSize = fontSize, lineHeight = lineHeight),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

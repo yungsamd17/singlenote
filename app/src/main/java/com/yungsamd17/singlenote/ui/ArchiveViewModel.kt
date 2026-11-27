@@ -70,9 +70,6 @@ class ArchiveViewModel(private val archiveStore: ArchiveStore) : ViewModel() {
         _query.value = value
     }
 
-    // Retain the selected snapshot while the system save picker is open.
-    var pendingExport: String? = null
-
     var restoreConflict by mutableStateOf<Note?>(null)
         private set
 
