@@ -44,6 +44,21 @@
 
         </activity>
 
+        <!-- Share sheet target: saves the selected text as a new note. Other
+            apps can only hand us text; every privileged in-app action stays
+            behind the token checked in MainActivity. -->
+        <activity
+            android:name=".ShareNoteActivity"
+            android:exported="true"
+            android:label="@string/share_note_label"
+            android:theme="@style/Theme.Singlenote">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <activity-alias android:name=".launcher.Default" android:targetActivity=".MainActivity"
             android:enabled="true" android:exported="true"
             android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:label="${appLabel}">
