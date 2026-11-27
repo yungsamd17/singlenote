@@ -73,7 +73,7 @@ Grab the latest APK from [Releases](https://github.com/yungsamd17/singlenote/rel
 
 ## Roadmap
 
-`v1.0.2` is the current stable release. The remaining checklist for the next steps (tablet and foldable layouts, archive swipe actions) lives in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md). Portrait is locked on phones in the 1.0 series; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0. Full backup/restore is now available in Settings → Backup & restore: create a file with the categories you choose and restore it later, so uninstalling the app no longer has to mean losing everything.
+`v1.1.0` is the current stable release. The remaining checklist for the next steps (tablet and foldable layouts, archive swipe actions) lives in [`docs/V1.0.0-PLAN.md`](docs/V1.0.0-PLAN.md). Portrait is locked on phones in the 1.0 series; Android 16 ignores the lock on screens 600 dp and wider, so tablet and foldable layouts are post-1.0. Full backup/restore is now available in Settings → Backup & restore: create a file with the categories you choose and restore it later, so uninstalling the app no longer has to mean losing everything.
 
 The outside-scrutiny review backlog (privacy, correctness, accessibility, repo hygiene) lives in [`docs/TODO.md`](docs/TODO.md) — work through it anytime.
 

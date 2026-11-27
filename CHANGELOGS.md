@@ -6,6 +6,8 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-27
+
 ### Added
 
 - **Launcher shortcuts.** Long-press the app icon for **New note**, **Archive** and **Settings**. New note archives the note on screen (never deletes it) and puts the cursor in an empty editor, so the Undo bar still offers it back.
@@ -27,6 +29,8 @@ project follows [Semantic Versioning](https://semver.org/).
 - **Import and export moved out of the archive.** The archive more menu now links to Backup & restore, where all note and settings files are managed.
 - **Settings and typography sections.** The settings hub is grouped into Personalization, Data & updates and About; Typography has App and Note sections around a live preview. The wordmark uses the system font so "Single" stays bold with every app font.
 - **Privacy copy updated.** File backups and share-sheet imports are described as optional actions, separate from app permissions.
+
+[Release notes](https://github.com/yungsamd17/singlenote/releases/tag/v1.1.0) · [Changes since v1.0.2](https://github.com/yungsamd17/singlenote/compare/v1.0.2...v1.1.0)
 
 ## [1.0.2] - 2026-11-25
 
