@@ -47,7 +47,7 @@ import com.yungsamd17.singlenote.ui.toMonochrome
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalGlanceRemoteViewsApi::class)
+@OptIn(ExperimentalGlanceRemoteViewsApi::class, ExperimentalMaterial3Api::class)
 class WidgetConfigurationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,7 +122,11 @@ class WidgetConfigurationActivity : ComponentActivity() {
             val previewText = stringResource(R.string.widget_preview_note)
             val brand = stringResource(R.string.app_name)
             val renderer = remember { GlanceRemoteViews() }
-            var previewViews by remember { mutableStateOf<android.widget.RemoteViews?>(null) }
+            var previewViews by remember {
+                mutableStateOf<android.widget.RemoteViews?>(
+                    widgetPreviewPlaceholder(this@WidgetConfigurationActivity),
+                )
+            }
             LaunchedEffect(options, appAccent, dynamic, monochrome, noteFont, appFont, previewText, brand, scheme.background) {
                 previewViews =
                     renderer
@@ -154,14 +158,37 @@ class WidgetConfigurationActivity : ComponentActivity() {
                 colorScheme = scheme,
                 typography = com.yungsamd17.singlenote.ui.appTypography(appFont),
             ) {
-                Surface(Modifier.fillMaxSize()) {
-                    Column(Modifier.fillMaxSize().safeDrawingPadding()) {
-                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-                        WidgetEditorContent(
-                            options = options,
-                            onOptionsChange = { options = it },
-                            previewViews = previewViews,
+                Scaffold(
+                    containerColor = scheme.surface,
+                    topBar = {
+                        // Same title as the in-app screen, with no extra actions:
+                        // the system owns the finish/cancel flow here.
+                        CenterAlignedTopAppBar(
+                            title = { Text(stringResource(R.string.widget_customize)) },
+                            colors =
+                                TopAppBarDefaults.centerAlignedTopAppBarColors(
+                                    containerColor = scheme.surface,
+                                    navigationIconContentColor = scheme.onSurface,
+                                    titleContentColor = scheme.onSurface,
+                                    actionIconContentColor = scheme.onSurface,
+                                ),
                         )
+                    },
+                ) { padding ->
+                    // Scaffold's padding already accounts for the top bar;
+                    // adding safeDrawingPadding here would inset the content
+                    // twice and push the preview far below the toolbar.
+                    Column(Modifier.fillMaxSize().padding(padding)) {
+                        Column(
+                            Modifier.weight(1f)
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 16.dp),
+                        ) {
+                            WidgetEditorContent(
+                                options = options,
+                                onOptionsChange = { options = it },
+                                previewViews = previewViews,
+                            )
                         }
                         Button(
                             onClick = {

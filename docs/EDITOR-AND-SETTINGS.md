@@ -33,7 +33,7 @@ Switch cards toggle across their full row; disabled controls are dimmed and iner
 
 | Page | Controls and behavior |
 |---|---|
-| Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, launcher icon on Android 12+, and a Widget customization section linking to `settings/widget`: live preview, the same widget style rows, an add-to-home-screen card and a save FAB shown only when the style is dirty. Changing the note or app font refreshes widgets immediately |
+| Appearance | Existing theme/accent choices, wallpaper colors on Android 12+, pure-black dark background, launcher icon on Android 12+, and a Widget section with a **Customize widget** row plus an **Add widget to home screen** row (dashboard-customize icon). The customize screen, titled **Customize widget**, shows the widget preview, the same style rows and a save FAB only when the style is dirty. Changing the note or app font refreshes widgets immediately |
 | Typography | Note preview card; app font (system, Google Sans Flex, Inter, Roboto Slab); font type (default/mono/serif/use app font), text size and line spacing in one section. The chosen note font is used by the editor, archive and widget |
 | Language | Translation contribution link; System plus English, then the rest alphabetically by their English name (Deutsch, Español, Français, Italiano, Nederlands, Polski, Português (Brasil), Русский, Slovenčina, Türkçe) with Chinese (Simplified) last, each row with a round region badge, the English name on top of the native one and a check mark in a light accent tint in the badge of the selected row. The hub row names the language in use: "System (English)" while the app follows the device, the language name when one is picked explicitly. Picking "Your device language" always takes effect, even when the device already runs that language |
 | Notifications | Pinned notification and lock-screen content; lock-screen switch is disabled when notifications are off. The pinned notification carries an **Open** and a **New note** action; the quick capture archives the note on screen (never deletes it) and opens an empty editor with the cursor in it. A pinned note stays pinned: the new note takes over the notification |
@@ -81,10 +81,23 @@ the widgets currently on the home screen.
 
 Long widget notes scroll inside the card with no visible scroll indicator. Tap
 anywhere on the card, including blank space, to run its selected action. The
-customization screen starts with a static preview so placeholder text is visible
-without a widget host. Legacy per-widget Material You choices now follow the app.
-Android launchers control widget dimensions;
-resize the widget in the launcher to display more content at once.
+customization screen opens with a **Widget preview** section that renders the
+live Glance preview, so placeholder text is visible without a widget host. The
+system widget configuration screen — shown when adding a widget or editing one
+from the home screen — uses the same title, top bar and preview section, but no
+back or add actions; its bottom button finishes the system flow. Both screens
+start with a synchronously built preview so the area is never blank while
+Glance composes the live one. Legacy per-widget Material You choices now follow
+the app. Android launchers control widget dimensions; resize the widget in the
+launcher to display more content at once.
+
+The system widget picker is opened from two places: the Add widget row in
+Settings → Appearance and the dashboard-customize button in the customize
+screen's top bar. Both ask for confirmation first. When a widget is already on
+the home screen, the dialog explains that the launcher must remove it first and
+clears its saved style on confirm; cancelling leaves everything untouched.
+Either way the shared public pin request runs, so a new widget inherits the
+remembered style.
 
 ## UI verification checklist
 
