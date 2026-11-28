@@ -59,6 +59,7 @@
     <string name="widget_config_system">System</string>
     <string name="widget_config_light">Hell</string>
     <string name="widget_config_dark">Dunkel</string>
+    <string name="widget_preview">Widget-Vorschau</string>
     <string name="widget_preview_note">Deine Notiz auf einen Blick</string>
     <string name="widget_description">Zeigt deine aktuelle Notiz</string>
     <string name="settings_title">Einstellungen</string>
@@ -315,11 +316,12 @@
     <string name="privacy_contact">KONTAKT\nFragen: yungsamd@proton.me.\n\nVollständige Datenschutzerklärung: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
     <string name="settings_note_preview">Notizvorschau</string>
     <string name="font_use_app">App-Schriftart verwenden</string>
-    <string name="settings_widget_customization">Widget-Anpassung</string>
+    <string name="settings_widget">Widget</string>
     <string name="widget_customize">Widget anpassen</string>
     <string name="widget_customize_desc">Aussehen und Tippaktionen</string>
-    <string name="widget_customize_title">Widget anpassen</string>
     <string name="widget_add_home">Widget zum Startbildschirm hinzufügen</string>
+    <string name="widget_readd">Widget erneut hinzufügen</string>
+    <string name="widget_readd_desc">Auf deinem Startbildschirm ist bereits ein Widget. Entferne es zuerst vom Startbildschirm und füge es dann erneut hinzu.</string>
     <string name="widget_add_home_desc">System-Widget-Auswahl öffnen</string>
     <string name="widget_save">Widget-Aussehen speichern</string>
     <string name="widget_added">Widget hinzugefügt</string>

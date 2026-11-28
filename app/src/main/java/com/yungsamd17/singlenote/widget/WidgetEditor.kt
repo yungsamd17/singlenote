@@ -1,5 +1,7 @@
 package com.yungsamd17.singlenote.widget
 
+import android.content.Context
+import android.widget.RemoteViews
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -150,6 +152,14 @@ internal fun WidgetSizeChoice(
         )
 }
 
+/**
+ * A first-frame preview built synchronously, so the preview area is never blank
+ * while Glance composes the live one. The live RemoteViews replaces it as soon
+ * as it is ready.
+ */
+internal fun widgetPreviewPlaceholder(context: Context): RemoteViews =
+    RemoteViews(context.packageName, R.layout.widget_preview)
+
 /** The widget preview plus the shared appearance and behaviour rows. */
 @Composable
 internal fun WidgetEditorContent(
@@ -166,6 +176,7 @@ internal fun WidgetEditorContent(
         // The in-app screen supplies its own Compose preview; only reserve
         // space for the Glance RemoteViews when there actually is one.
         if (previewViews != null) {
+            SettingsSectionHeader(stringResource(R.string.widget_preview))
             Spacer(Modifier.height(12.dp))
             AndroidView(
                 factory = { android.widget.FrameLayout(it) },

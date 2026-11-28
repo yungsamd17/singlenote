@@ -59,6 +59,7 @@
     <string name="widget_config_system">Systeem</string>
     <string name="widget_config_light">Licht</string>
     <string name="widget_config_dark">Donker</string>
+    <string name="widget_preview">Widgetvoorbeeld</string>
     <string name="widget_preview_note">Je notitie in één oogopslag</string>
     <string name="widget_description">Toont je huidige notitie</string>
     <string name="settings_title">Instellingen</string>
@@ -344,11 +345,12 @@ Vragen: yungsamd@proton.me.
 Volledig privacybeleid: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
     <string name="settings_note_preview">Notitievoorbeeld</string>
     <string name="font_use_app">App-lettertype gebruiken</string>
-    <string name="settings_widget_customization">Widget-aanpassing</string>
+    <string name="settings_widget">Widget</string>
     <string name="widget_customize">Widget aanpassen</string>
     <string name="widget_customize_desc">Uiterlijk en tikacties</string>
-    <string name="widget_customize_title">Widget aanpassen</string>
     <string name="widget_add_home">Widget aan het startscherm toevoegen</string>
+    <string name="widget_readd">Widget opnieuw toevoegen</string>
+    <string name="widget_readd_desc">Er staat al een widget op je startscherm. Verwijder die eerst van het startscherm en voeg hem daarna opnieuw toe.</string>
     <string name="widget_add_home_desc">De systeemwidgetkiezer openen</string>
     <string name="widget_save">Widget-uiterlijk opslaan</string>
     <string name="widget_added">Widget toegevoegd</string>
