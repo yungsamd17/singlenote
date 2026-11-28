@@ -59,6 +59,7 @@
     <string name="widget_config_system">Système</string>
     <string name="widget_config_light">Clair</string>
     <string name="widget_config_dark">Sombre</string>
+    <string name="widget_preview">Aperçu du widget</string>
     <string name="widget_preview_note">Votre note en un coup d\'oeil</string>
     <string name="widget_description">Affiche votre note actuelle</string>
     <string name="settings_title">Paramètres</string>
@@ -315,11 +316,12 @@
     <string name="privacy_contact">CONTACT\nQuestions : yungsamd@proton.me.\n\nPolitique de confidentialité complète : [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
     <string name="settings_note_preview">Aperçu de la note</string>
     <string name="font_use_app">Utiliser la police de l\'application</string>
-    <string name="settings_widget_customization">Personnalisation du widget</string>
+    <string name="settings_widget">Widget</string>
     <string name="widget_customize">Personnaliser le widget</string>
     <string name="widget_customize_desc">Apparence et actions au toucher</string>
-    <string name="widget_customize_title">Personnalisation du widget</string>
     <string name="widget_add_home">Ajouter le widget à l\'écran d\'accueil</string>
+    <string name="widget_readd">Ajouter de nouveau le widget</string>
+    <string name="widget_readd_desc">Un widget est déjà sur votre écran d\'accueil. Supprimez-le d\'abord de l\'écran d\'accueil, puis ajoutez-le à nouveau.</string>
     <string name="widget_add_home_desc">Ouvrir le sélecteur de widgets du système</string>
     <string name="widget_save">Enregistrer l\'apparence du widget</string>
     <string name="widget_added">Widget ajouté</string>

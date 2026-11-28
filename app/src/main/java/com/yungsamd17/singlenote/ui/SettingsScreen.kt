@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.DashboardCustomize
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FontDownload
@@ -43,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -78,6 +81,7 @@ import com.yungsamd17.singlenote.data.NotePreferences.Companion.LINE_SPACINGS
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.SIZES
 import com.yungsamd17.singlenote.data.NotePreferences.Companion.THEMES
 import com.yungsamd17.singlenote.util.AppLanguage
+import com.yungsamd17.singlenote.widget.rememberAddWidgetRequest
 
 /** Shared rounded settings cards: callers provide row content, never nested cards. */
 @Composable
@@ -126,6 +130,7 @@ fun SettingsPage(
     onBack: () -> Unit,
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
     content: @Composable () -> Unit,
 ) {
     val scroll = rememberSettingsScrollState()
@@ -150,6 +155,7 @@ fun SettingsPage(
                         )
                     }
                 },
+                actions = actions,
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
@@ -197,6 +203,8 @@ fun SettingsScreen(
     val appFont by viewModel.appFont.collectAsStateWithLifecycle()
     val appIcon by viewModel.appIcon.collectAsStateWithLifecycle()
     val ready by viewModel.ready.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val addWidget = rememberAddWidgetRequest(snackbarHostState)
     var dialog by remember { mutableStateOf("") }
     if (!ready) return
     val title =
@@ -207,7 +215,13 @@ fun SettingsScreen(
             "notifications" -> R.string.settings_section_notifications
             else -> R.string.settings_title
         }
-    SettingsPage(stringResource(title), onBack) {
+    SettingsPage(
+        stringResource(title),
+        onBack,
+        snackbarHost = {
+            SwipeableSnackbarHost(snackbarHostState, modifier = AppSnackbarHostModifier)
+        },
+    ) {
         when (screen) {
             "settings" -> {
                 SettingsSectionHeader(stringResource(R.string.settings_section_personalization))
@@ -349,16 +363,26 @@ fun SettingsScreen(
                         )
                     })
                 )
-                SettingsSectionHeader(stringResource(R.string.settings_widget_customization))
+                SettingsSectionHeader(stringResource(R.string.settings_widget))
                 SettingsGroup(
-                    listOf({
-                        ValueRow(
-                            Icons.Outlined.Widgets,
-                            stringResource(R.string.widget_customize),
-                            stringResource(R.string.widget_customize_desc),
-                            { onOpenScreen("widget") },
-                        )
-                    })
+                    listOf(
+                        {
+                            ValueRow(
+                                Icons.Outlined.Widgets,
+                                stringResource(R.string.widget_customize),
+                                stringResource(R.string.widget_customize_desc),
+                                { onOpenScreen("widget") },
+                            )
+                        },
+                        {
+                            ValueRow(
+                                Icons.Outlined.DashboardCustomize,
+                                stringResource(R.string.widget_add_home),
+                                stringResource(R.string.widget_add_home_desc),
+                                addWidget,
+                            )
+                        },
+                    )
                 )
             }
             "typography" -> {

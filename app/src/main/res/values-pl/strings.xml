@@ -59,6 +59,7 @@
     <string name="widget_config_system">System</string>
     <string name="widget_config_light">Jasny</string>
     <string name="widget_config_dark">Ciemny</string>
+    <string name="widget_preview">Podgląd widżetu</string>
     <string name="widget_preview_note">Twoja notatka w pigułce</string>
     <string name="widget_description">Pokazuje Twoją aktualną notatkę</string>
     <string name="settings_title">Ustawienia</string>
@@ -315,11 +316,12 @@
     <string name="privacy_contact">KONTAKT\nPytania: yungsamd@proton.me.\n\nPełna polityka prywatności: [github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md](https://github.com/yungsamd17/singlenote/blob/main/docs/PRIVACY.md)</string>
     <string name="settings_note_preview">Podgląd notatki</string>
     <string name="font_use_app">Użyj czcionki aplikacji</string>
-    <string name="settings_widget_customization">Dostosowanie widżetu</string>
+    <string name="settings_widget">Widżet</string>
     <string name="widget_customize">Dostosuj widżet</string>
     <string name="widget_customize_desc">Wygląd i działania</string>
-    <string name="widget_customize_title">Dostosowanie widżetu</string>
     <string name="widget_add_home">Dodaj widżet do ekranu głównego</string>
+    <string name="widget_readd">Dodaj widżet ponownie</string>
+    <string name="widget_readd_desc">Na ekranie głównym jest już widżet. Najpierw usuń go z ekranu głównego, a potem dodaj ponownie.</string>
     <string name="widget_add_home_desc">Otwórz selector widgetów systemu</string>
     <string name="widget_save">Zapisz wygląd widżetu</string>
     <string name="widget_added">Dodano widżet</string>

@@ -5,13 +5,12 @@ import android.content.ComponentName
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material.icons.outlined.Widgets
+import androidx.compose.material.icons.outlined.DashboardCustomize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -43,6 +42,8 @@ import com.yungsamd17.singlenote.widget.WidgetEditorContent
 import com.yungsamd17.singlenote.widget.WidgetOptions
 import com.yungsamd17.singlenote.widget.WidgetStyleStore
 import com.yungsamd17.singlenote.widget.refreshSinglenoteWidgets
+import com.yungsamd17.singlenote.widget.rememberAddWidgetRequest
+import com.yungsamd17.singlenote.widget.widgetPreviewPlaceholder
 import kotlinx.coroutines.launch
 
 /**
@@ -56,6 +57,7 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val addWidget = rememberAddWidgetRequest(snackbarHostState)
     val systemDark = isSystemInDarkTheme()
 
     val prefs = remember { NotePreferences.get(context.applicationContext) }
@@ -105,10 +107,12 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
     val previewText = stringResource(R.string.widget_preview_note)
     val brand = stringResource(R.string.app_name)
     val renderer = remember { GlanceRemoteViews() }
-    var previewViews by remember { mutableStateOf<android.widget.RemoteViews?>(null) }
+    var previewViews by remember {
+        mutableStateOf<android.widget.RemoteViews?>(widgetPreviewPlaceholder(context))
+    }
     LaunchedEffect(options, appAccent, dynamic, monochrome, noteFont, appFont, previewText, brand, scheme.background) {
-        previewViews =
-            try {
+        try {
+            previewViews =
                 renderer
                     .compose(context = context, size = androidx.compose.ui.unit.DpSize(320.dp, 120.dp)) {
                         WidgetContent(
@@ -128,9 +132,9 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
                         )
                     }
                     .remoteViews
-            } catch (_: Exception) {
-                null
-            }
+        } catch (_: Exception) {
+            // Keep the first-frame placeholder when Glance cannot compose.
+        }
     }
 
     fun save() {
@@ -152,7 +156,7 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
 
     MaterialTheme(colorScheme = scheme, typography = appTypography(appFont)) {
         SettingsPage(
-            stringResource(R.string.widget_customize_title),
+            stringResource(R.string.widget_customize),
             onBack,
             snackbarHost = {
                 SwipeableSnackbarHost(snackbarHostState, modifier = AppSnackbarHostModifier)
@@ -166,11 +170,23 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
                     }
                 }
             },
+            actions = {
+                TooltipIconButton(
+                    tooltip = stringResource(R.string.widget_add_home),
+                    onClick = addWidget,
+                ) {
+                    Icon(
+                        Icons.Outlined.DashboardCustomize,
+                        contentDescription = stringResource(R.string.widget_add_home),
+                    )
+                }
+            },
         ) {
             WidgetEditorContent(
                 options = options,
                 onOptionsChange = { options = it },
                 header = {
+                    SettingsSectionHeader(stringResource(R.string.widget_preview))
                     AndroidView(
                         factory = { android.widget.FrameLayout(it) },
                         modifier = Modifier.fillMaxWidth().height(120.dp),
@@ -178,29 +194,6 @@ fun WidgetCustomizationScreen(onBack: () -> Unit) {
                             parent.removeAllViews()
                             previewViews?.apply(parent.context, parent)?.let { parent.addView(it) }
                         },
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    SettingsGroup(
-                        listOf({
-                            ValueRow(
-                                Icons.Outlined.Widgets,
-                                stringResource(R.string.widget_add_home),
-                                stringResource(R.string.widget_add_home_desc),
-                                {
-                                    // The public pin request shows the system
-                                    // confirmation and adds the widget without
-                                    // needing a hidden id-allocation API.
-                                    AppWidgetManager.getInstance(context).requestPinAppWidget(
-                                        ComponentName(context, SinglenoteWidgetReceiver::class.java),
-                                        null,
-                                        null,
-                                    )
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(context.getString(R.string.widget_added))
-                                    }
-                                },
-                            )
-                        }),
                     )
                 },
             )
