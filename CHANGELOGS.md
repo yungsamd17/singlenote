@@ -6,6 +6,15 @@ project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Add a widget from the app.** Settings → Appearance and the toolbar of the customize screen can open the system widget picker. Both ask for confirmation first; if a widget is already on the home screen, the dialog explains that the launcher must remove it first and clears its saved style so the next widget starts from the remembered look.
+
+### Changed
+
+- **Widget customization screens match.** The system configuration screen — used when adding a widget or editing one from the home screen — now has the same **Customize widget** top bar and **Widget preview** section as the in-app screen, with no extra buttons. Both previews show a first-frame placeholder instead of a blank box while Glance renders the live one.
+- **Clearer widget labels.** The Appearance section is now just **Widget**, and the customization screen title matches its **Customize widget** row. The old Add widget card was removed from the body of that screen; the toolbar button replaces it.
+
 ## [1.1.0] - 2026-11-27
 
 ### Added

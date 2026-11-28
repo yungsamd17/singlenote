@@ -34,7 +34,7 @@ See the [changelog](CHANGELOGS.md) for release history and pending changes.
 - **Save as note** — a share-sheet target: selected text or a link from any app becomes a new note, archiving the current one first
 - **Theming** — light / dark / system, accent palettes, dynamic colors and AMOLED
 - **Typography** — app font (system, Google Sans Flex, Inter or Roboto Slab); note font type including "Use app font", three line spacings and three text sizes, with a live note preview
-- **Widget customization** — adjust the widget preview, appearance and tap actions from Settings → Appearance, without adding or long-pressing a widget
+- **Widget customization** — add a widget from Settings → Appearance or the customize screen's toolbar, and adjust its preview, appearance and tap actions there or while adding/long-pressing a widget on the home screen
 - **Changelog & updates** — per-version release notes and update checks in About
 - **Languages** — English, Slovenčina, Deutsch, Español, Français, Italiano,
   Nederlands, Polski, Português (Brasil), Русский, Türkçe and 简体中文. Follows
